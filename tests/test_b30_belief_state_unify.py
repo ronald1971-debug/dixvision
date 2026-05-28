@@ -173,6 +173,7 @@ def test_b30_leaf_producer_set_matches_expected_canonical_set() -> None:
         {
             "intelligence_engine.engine",
             "intelligence_engine.signal_pipeline",
+            "intelligence_engine.intent_producer",
             "intelligence_engine.strategy_runtime.conflict_resolver",
             "intelligence_engine.plugins.footprint_delta.v1",
             "intelligence_engine.plugins.liquidity_physics.v1",
@@ -180,6 +181,7 @@ def test_b30_leaf_producer_set_matches_expected_canonical_set() -> None:
             "intelligence_engine.plugins.news_reaction.v1",
             "intelligence_engine.plugins.on_chain_pulse.v1",
             "intelligence_engine.plugins.order_book_pressure.v1",
+            "intelligence_engine.plugins.orderflow_imbalance.v1",
             "intelligence_engine.plugins.regime_classifier.v1",
             "intelligence_engine.plugins.sentiment_aggregator.v1",
             "intelligence_engine.plugins.trader_imitation.v1",

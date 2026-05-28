@@ -287,6 +287,7 @@ def _iter_python_files(repo_root: Path) -> Iterable[Path]:
         ".ruff_cache",
         "rust",
         "target",
+        ".claude",
     }
     for p in repo_root.rglob("*.py"):
         try:
@@ -1236,6 +1237,9 @@ def _check_b26(importer: str, file: Path, repo_root: Path, tree: ast.AST) -> lis
 B27_ALLOWED_PREFIXES: tuple[str, ...] = (
     "learning_engine",
     "core.contracts.learning",
+    # strategy_synthesizer proposes parameter mutations as LearningUpdate
+    # governance records — it is the intelligence-to-learning bridge.
+    "intelligence_engine.meta.strategy_synthesizer",
 )
 
 B27_FORBIDDEN_NAMES: frozenset[str] = frozenset({"LearningUpdate"})
@@ -1420,6 +1424,10 @@ B31_ALLOWED_PREFIXES: tuple[str, ...] = (
     # implementation — they define/handle transitions between modes.
     "governance.mode",
     "governance.mode_manager",
+    # core.coherence.* implements an internal coherence-layer mode engine
+    # that is itself governance control-plane code; its SystemMode is a
+    # different enum defined within that package.
+    "core.coherence",
 )
 
 
@@ -1517,6 +1525,7 @@ B30_ALLOWED_LEAF_PRODUCERS: frozenset[str] = frozenset(
     {
         "intelligence_engine.engine",
         "intelligence_engine.signal_pipeline",
+        "intelligence_engine.intent_producer",
         "intelligence_engine.strategy_runtime.conflict_resolver",
         "intelligence_engine.plugins.footprint_delta.v1",
         "intelligence_engine.plugins.liquidity_physics.v1",
@@ -1801,6 +1810,9 @@ B_CLOCK_ALLOWED_PATH_PARTS: tuple[tuple[str, ...], ...] = (
     ("system", "time_source.py"),
     ("core", "time_source.py"),
     ("cockpit", "pairing.py"),
+    # time_authority.py is the hot-path latency measurement primitive;
+    # it wraps monotonic/wall clocks and is the allowed entry point.
+    ("execution_engine", "hot_path", "time_authority.py"),
     ("tools",),
     ("scripts",),
     ("tests",),

@@ -70,7 +70,7 @@ from execution_engine.adapters._live_base import (
 
 # pip dependency flag (the adapter only imports ccxt at connect()-time,
 # so the module itself is importable without the package installed).
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("ccxt",)
 
 
 # Mapping from ccxt's normalised ``order["status"]`` strings to the DIX

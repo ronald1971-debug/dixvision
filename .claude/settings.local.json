@@ -23,3 +23,8 @@
     ]
   }
 }
+{
+  "env": {
+    "SOLANA_WS_URL": "wss://api.mainnet-beta.solana.com"
+  }
+}

@@ -92,7 +92,7 @@ import hashlib
 import math
 from typing import Any, Final
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("gymnasium",)
 """``gymnasium`` is needed only by the optional
 :func:`gymnasium_dix_base_env_factory`. The base class and stdlib
 space shadows are pure-stdlib."""

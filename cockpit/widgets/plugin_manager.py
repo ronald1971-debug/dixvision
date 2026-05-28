@@ -40,8 +40,8 @@ def toggle_plugin(plugin_id: str, enable: bool, operator_id: str) -> dict[str, A
 def request_reload(plugin_id: str) -> dict[str, Any]:
     try:
         from governance_engine.plugin_lifecycle.hot_reload_signal import get_reload_signal  # noqa: PLC0415
-        import time  # noqa: PLC0415
-        get_reload_signal().enqueue(plugin_id=plugin_id, ts_ns=time.time_ns())
+        from system.time_source import wall_ns  # noqa: PLC0415
+        get_reload_signal().enqueue(plugin_id=plugin_id, ts_ns=wall_ns())
         return {"accepted": True, "queued": True}
     except Exception as exc:  # noqa: BLE001
         return {"accepted": False, "reason": str(exc)}

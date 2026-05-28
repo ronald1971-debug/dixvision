@@ -160,3 +160,8 @@ class LiveAdapterBase:
 
 
 __all__ = ["AdapterState", "AdapterStatus", "LiveAdapterBase"]
+
+# Register LiveAdapterBase as a virtual BrokerAdapter so isinstance checks
+# against execution_engine.adapters.base.BrokerAdapter pass for live adapters.
+from execution_engine.adapters.base import BrokerAdapter as _BrokerAdapter  # noqa: E402
+_BrokerAdapter.register(LiveAdapterBase)

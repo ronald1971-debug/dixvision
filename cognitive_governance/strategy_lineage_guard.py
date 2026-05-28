@@ -147,8 +147,8 @@ class StrategyLineageGuard:
 
         Useful for periodic integrity sweeps of the strategy registry.
         """
-        import time
-        ts_ns = time.time_ns()
+        from system.time_source import wall_ns
+        ts_ns = wall_ns()
 
         with self._lock:
             node = self._registry.get(strategy_id)
