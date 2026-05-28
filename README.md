@@ -110,3 +110,4 @@ cloud one-click deploy, and Python from-source installation.
 - [Installation](docs/INSTALL.md) — Windows, cloud, from-source
 - [Neuromorphic Spec](docs/NEUROMORPHIC_TRIAD_SPEC.md) — SNN triad design
 - [Memecoin Trading](docs/MEMECOIN_TRADING_SPEC.md) — DEX trading spec
+"# dixbot" 
