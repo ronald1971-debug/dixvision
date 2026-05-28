@@ -31,6 +31,10 @@ from core.contracts.cognitive_governance import (
     CognitiveIntegrityStatus,
     MutationValidationResult,
 )
+from core.contracts.governance_constitution import (
+    DeploymentPhase,
+    COGNITIVE_INTEGRITY_DIRECTIVE,
+)
 from state.ledger.event_store import append_event
 
 # Guard imports (engine is the only module allowed to import other
@@ -79,6 +83,16 @@ from cognitive_governance.synthetic_feedback_detection import (
     SyntheticFeedbackDetector,
     get_synthetic_feedback_detector,
 )
+from cognitive_governance.cognitive_constitution import (
+    CognitiveConstitution,
+    GateDecision,
+    get_cognitive_constitution,
+)
+from cognitive_governance.learning_coherence import (
+    LearningCoherenceMonitor,
+    LearningCoherenceScore,
+    get_learning_coherence_monitor,
+)
 
 
 class CognitiveGovernanceEngine:
@@ -90,10 +104,11 @@ class CognitiveGovernanceEngine:
     methods for the three main event types.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, phase: DeploymentPhase = DeploymentPhase.DEVELOPMENT) -> None:
         self._lock = threading.Lock()
         self._last_status_ts: int = 0
         self._status_interval_ns: int = 60 * 1_000_000_000  # 60 seconds
+        self._phase = phase
 
         # Lazy-init guard references (populated on first access)
         self._belief_integrity: BeliefIntegrityGuard | None = None
@@ -107,6 +122,8 @@ class CognitiveGovernanceEngine:
         self._reward_hacking: RewardHackingDetector | None = None
         self._strategy_lineage: StrategyLineageGuard | None = None
         self._synthetic_feedback: SyntheticFeedbackDetector | None = None
+        self._constitution: CognitiveConstitution | None = None
+        self._coherence: LearningCoherenceMonitor | None = None
 
     # ------------------------------------------------------------------
     # Guard properties (lazy-init via module singletons)
@@ -178,6 +195,53 @@ class CognitiveGovernanceEngine:
             self._synthetic_feedback = get_synthetic_feedback_detector()
         return self._synthetic_feedback
 
+    @property
+    def constitution(self) -> CognitiveConstitution:
+        if self._constitution is None:
+            self._constitution = get_cognitive_constitution()
+        return self._constitution
+
+    @property
+    def coherence(self) -> LearningCoherenceMonitor:
+        if self._coherence is None:
+            self._coherence = get_learning_coherence_monitor()
+        return self._coherence
+
+    # ------------------------------------------------------------------
+    # P1 enforcement gates (cognitive violations BLOCK downstream actions)
+    # ------------------------------------------------------------------
+
+    def gate_mutation(self, ts_ns: int | None = None) -> GateDecision:
+        """
+        Gate a proposed mutation against the cognitive constitution.
+
+        Returns GateDecision.allowed=False if any BLOCKING cognitive
+        violation is active that applies to mutations.
+        Called by evolution_engine and learning_engine before applying
+        any parameter change.
+        """
+        return self.constitution.gate_mutation(ts_ns or _time.time_ns())
+
+    def gate_learning_update(self, ts_ns: int | None = None) -> GateDecision:
+        """Gate a learning parameter update."""
+        return self.constitution.gate_learning_update(ts_ns or _time.time_ns())
+
+    def gate_signal(self, ts_ns: int | None = None) -> GateDecision:
+        """Gate a cognitive signal from propagating (e.g. hallucination detected)."""
+        return self.constitution.gate_signal(ts_ns or _time.time_ns())
+
+    def learning_coherence_score(self, ts_ns: int | None = None) -> LearningCoherenceScore:
+        """Return the current composite learning coherence score."""
+        return self.coherence.score(ts_ns or _time.time_ns())
+
+    def register_violation(self, violation: "CognitiveViolationKind") -> None:
+        """Register an active violation in the cognitive constitution."""
+        self.constitution.record_violation(violation)
+
+    def clear_violation(self, violation: "CognitiveViolationKind") -> None:
+        """Clear a resolved violation from the cognitive constitution."""
+        self.constitution.clear_violation(violation)
+
     # ------------------------------------------------------------------
     # Unified health check
     # ------------------------------------------------------------------
@@ -198,6 +262,9 @@ class CognitiveGovernanceEngine:
         belief_ok = belief_ece < 0.15  # ECE_WARNING_THRESHOLD
         if not belief_ok:
             active_violations.append(CognitiveViolationKind.CALIBRATION_DRIFT)
+            self.constitution.record_violation(CognitiveViolationKind.CALIBRATION_DRIFT)
+        else:
+            self.constitution.clear_violation(CognitiveViolationKind.CALIBRATION_DRIFT)
 
         # Epistemic drift
         drift_score = self.epistemic_drift.get_drift_score()
@@ -205,14 +272,24 @@ class CognitiveGovernanceEngine:
         if not epistemic_ok:
             if drift_score >= 0.50:
                 active_violations.append(CognitiveViolationKind.EPISTEMIC_DRIFT_CRITICAL)
+                self.constitution.record_violation(CognitiveViolationKind.EPISTEMIC_DRIFT_CRITICAL)
+                self.constitution.clear_violation(CognitiveViolationKind.EPISTEMIC_DRIFT_WARNING)
             else:
                 active_violations.append(CognitiveViolationKind.EPISTEMIC_DRIFT_WARNING)
+                self.constitution.record_violation(CognitiveViolationKind.EPISTEMIC_DRIFT_WARNING)
+                self.constitution.clear_violation(CognitiveViolationKind.EPISTEMIC_DRIFT_CRITICAL)
+        else:
+            self.constitution.clear_violation(CognitiveViolationKind.EPISTEMIC_DRIFT_WARNING)
+            self.constitution.clear_violation(CognitiveViolationKind.EPISTEMIC_DRIFT_CRITICAL)
 
         # Learning truthfulness
         ext_ratio = self.learning_truthfulness.get_external_ratio()
         learning_truthful = ext_ratio >= 0.40  # TRUTHFULNESS_THRESHOLD
         if not learning_truthful:
             active_violations.append(CognitiveViolationKind.LEARNING_NOT_GROUNDED)
+            self.constitution.record_violation(CognitiveViolationKind.LEARNING_NOT_GROUNDED)
+        else:
+            self.constitution.clear_violation(CognitiveViolationKind.LEARNING_NOT_GROUNDED)
 
         # Memory, mutation, hallucination, causal, identity, synthetic,
         # reward, lineage — these are event-driven guards that do not

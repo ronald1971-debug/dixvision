@@ -1,0 +1,69 @@
+# registry/budgets.yaml
+# DIX VISION v42.2 — Capital Budget Registry
+#
+# Defines capital budgets per asset class, domain, and strategy tier.
+# Read by financial_governance/exposure_guard.py and
+# intelligence_engine/portfolio/capital_scheduler.py.
+# Operator sets the total_budget_usd ceiling; it is never breached.
+
+budgets:
+
+  # --- Master budget ceiling ---
+  total_budget_usd: 100000.0
+  operator_id: ronald
+
+  # --- Asset class budgets (subset of total) ---
+  asset_class:
+    crypto:
+      max_usd: 50000.0
+      warn_pct: 80.0
+    forex:
+      max_usd: 30000.0
+      warn_pct: 80.0
+    equities:
+      max_usd: 20000.0
+      warn_pct: 80.0
+    cfd:
+      max_usd: 10000.0
+      warn_pct: 80.0
+    defi:
+      max_usd: 5000.0
+      warn_pct: 80.0
+
+  # --- Domain budgets ---
+  domain:
+    NORMAL:
+      max_usd: 80000.0
+    COPY_TRADING:
+      max_usd: 15000.0
+    MEMECOIN:
+      max_usd: 5000.0
+
+  # --- Strategy tier allocations ---
+  strategy_tiers:
+    tier_1_proven:
+      allocation_pct: 60.0   # top-performing strategies
+      max_single_strategy_pct: 40.0
+    tier_2_candidate:
+      allocation_pct: 30.0   # strategies in evaluation
+      max_single_strategy_pct: 20.0
+    tier_3_experimental:
+      allocation_pct: 10.0   # new/untested strategies
+      max_single_strategy_pct: 5.0
+
+  # --- Capital scheduler parameters ---
+  scheduler:
+    floor_pct: 2.0     # minimum allocation per strategy
+    cap_pct: 40.0      # maximum allocation per strategy
+    regime_multipliers:
+      TREND_UP:   1.2
+      TREND_DOWN: 1.2
+      RANGE:      0.8
+      VOL_SPIKE:  0.4
+      UNKNOWN:    1.0
+
+  # --- Throttle ---
+  throttle:
+    max_per_minute_usd: 50000.0
+    window_minutes: 1
+    cooldown_minutes: 5

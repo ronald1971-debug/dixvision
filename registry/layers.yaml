@@ -1,0 +1,84 @@
+# registry/layers.yaml
+# DIX VISION v42.2 — System Layer Registry
+#
+# Defines the canonical layer topology and import boundaries.
+# Used by system_governance/topology_guard.py to enforce B1 constraints.
+
+layers:
+
+  # Layer 0 — Contracts and core utilities (no upward imports)
+  L0_core:
+    modules:
+      - core.contracts
+      - core.coherence
+      - core.charter
+    may_import: []
+    description: "Immutable contracts, coherence primitives, charter"
+
+  # Layer 1 — State and persistence
+  L1_state:
+    modules:
+      - state.ledger
+      - state.memory_tensor
+    may_import: [L0_core]
+    description: "Append-only ledger and memory stores"
+
+  # Layer 2 — Governance
+  L2_governance:
+    modules:
+      - cognitive_governance
+      - operator_governance
+      - system_governance
+      - financial_governance
+      - governance_engine
+    may_import: [L0_core, L1_state]
+    description: "All governance layers — enforce rules, cannot trade"
+
+  # Layer 3 — Intelligence
+  L3_intelligence:
+    modules:
+      - intelligence_engine
+    may_import: [L0_core, L1_state, L2_governance]
+    description: "Signal generation, strategy synthesis, debate rounds"
+
+  # Layer 4 — Execution
+  L4_execution:
+    modules:
+      - execution_engine
+    may_import: [L0_core, L1_state, L2_governance]
+    description: "Order management, adapters, hot path — no intelligence import"
+    b1_protected: true
+
+  # Layer 5 — Learning
+  L5_learning:
+    modules:
+      - learning_engine
+    may_import: [L0_core, L1_state, L2_governance]
+    description: "Online and offline learning — no hot-path import"
+
+  # Layer 6 — System
+  L6_system:
+    modules:
+      - system_engine
+    may_import: [L0_core, L1_state, L2_governance]
+    description: "Health monitors, hazard sensors, state management"
+
+  # Layer 7 — Evolution
+  L7_evolution:
+    modules:
+      - evolution_engine
+    may_import: [L0_core, L1_state, L2_governance, L5_learning]
+    description: "Genetic algorithms, patch pipeline — never on hot path"
+
+  # Layer 8 — Simulation
+  L8_simulation:
+    modules:
+      - simulation
+    may_import: [L0_core, L1_state, L3_intelligence, L4_execution]
+    description: "Backtesting and scenario simulation — offline only"
+
+# B1 protected domains — cross-engine imports trigger TopologyViolation
+b1_protected_domains:
+  - execution_engine.hot_path
+  - intelligence_engine.charter
+  - system_engine.hazard_sensors

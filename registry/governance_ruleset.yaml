@@ -1,0 +1,74 @@
+# registry/governance_ruleset.yaml
+# DIX VISION v42.2 — Governance Ruleset
+#
+# The canonical governance authority model. Defines priority ordering
+# by phase (dev vs live) and the core invariants that cannot be
+# violated regardless of operator instruction.
+
+governance:
+
+  # --- Priority Stack (dev phase) ---
+  # Cognitive-First Sovereignty Architecture (Executive Constitution vNext)
+  priority_dev:
+    1: cognitive_governance    # Cognitive Integrity — PRIMARY (learning, epistemic, mutation safety)
+    2: operator_governance     # Operator Sovereignty — constitutional authority
+    3: system_governance       # System Integrity — determinism, contracts, replay
+    4: financial_governance    # Capital Integrity — becomes co-equal in live phase
+
+  # --- Priority Stack (live phase) ---
+  priority_live:
+    1: cognitive_governance    # Cognitive Integrity — always highest
+    2: financial_governance    # Capital Integrity — co-equal once live capital is deployed
+    3: operator_governance     # Operator Sovereignty
+    4: system_governance       # System Integrity
+
+  # --- Operator Sovereignty Constraints (inviolable) ---
+  operator_sovereignty:
+    statement: >
+      The operator acknowledges the risk of trading and takes full responsibility.
+      The operator decides when to start trading. No autonomous subsystem may
+      supersede operator sovereignty.
+    execution_blocked_until_operator_enables: true
+    operator_id: ronald
+    constitutional_authority_cannot_be_delegated: true
+
+  # --- Core Invariants ---
+  invariants:
+    INV_15:
+      name: "Replay Determinism"
+      description: "Same inputs must produce identical outputs. No wall-clock, random, or IO in replay paths."
+      enforced_by: system_governance.replay_integrity
+
+    INV_12:
+      name: "Governance Approval for Parameter Mutations"
+      description: "All parameter changes must be proposed as LearningUpdate records and approved before deployment."
+      enforced_by: cognitive_governance
+
+    INV_08:
+      name: "Typed Events Across Domain Boundaries"
+      description: "All cross-domain communication uses frozen typed contracts."
+      enforced_by: system_governance.contract_integrity
+
+    INV_65:
+      name: "Credential Isolation"
+      description: "Credentials are passed explicitly, never read from os.environ in library code."
+      enforced_by: code_review
+
+    INV_53:
+      name: "Calibration Hook Requires Ledger Replay"
+      description: "Calibration must replay SYSTEM stream rows, not use live state."
+      enforced_by: learning_engine.calibration
+
+  # --- Override Priority Ordinal ---
+  override_priority:
+    KILL_SWITCH: 5
+    MODE_LOCK: 4
+    EXECUTION_HALT: 3
+    PARAMETER_OVERRIDE: 2
+    SUGGESTION: 1
+
+  # --- Constitutional Authority Hierarchy ---
+  authority_levels:
+    CONSTITUTIONAL: 3    # Cannot be delegated
+    ADMINISTRATIVE: 2
+    OBSERVER: 1

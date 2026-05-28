@@ -1,0 +1,95 @@
+# registry/data_pipelines.yaml
+# DIX VISION v42.2 — Data Pipeline Registry
+#
+# Defines all market data feed pipelines, their sources, symbols,
+# and routing to the normalizer and book builder.
+
+data_pipelines:
+
+  # --- Crypto pipelines ---
+  binance_spot:
+    pipeline_id: PIPE-001
+    source: binance
+    adapter: execution_engine.adapters.binance
+    kind: WEBSOCKET
+    enabled: true
+    symbols:
+      - BTC/USDT
+      - ETH/USDT
+      - SOL/USDT
+      - BNB/USDT
+    feeds:
+      - TICK
+      - ORDERBOOK
+      - TRADE
+    normalizer: execution_engine.market_data.normalizer
+    book_builder: execution_engine.market_data.book_builder
+    latency_profile: TIER1_CEX
+
+  kraken_spot:
+    pipeline_id: PIPE-002
+    source: kraken
+    adapter: execution_engine.adapters.kraken
+    kind: WEBSOCKET
+    enabled: false
+    symbols:
+      - BTC/USD
+      - ETH/USD
+    feeds:
+      - TICK
+      - ORDERBOOK
+    normalizer: execution_engine.market_data.normalizer
+    latency_profile: TIER1_CEX
+
+  # --- FX / CFD pipelines ---
+  oanda_fx:
+    pipeline_id: PIPE-003
+    source: oanda
+    adapter: execution_engine.adapters.oanda
+    kind: REST_POLLING
+    enabled: false
+    symbols:
+      - EUR/USD
+      - GBP/USD
+      - USD/JPY
+    feeds:
+      - TICK
+    poll_interval_ms: 500
+    normalizer: execution_engine.market_data.normalizer
+    latency_profile: TIER2_CEX
+
+  ig_cfd:
+    pipeline_id: PIPE-004
+    source: ig
+    adapter: execution_engine.adapters.ig
+    kind: REST_POLLING
+    enabled: false
+    symbols:
+      - EUR/USD
+      - UK100
+      - GER40
+    feeds:
+      - TICK
+    poll_interval_ms: 1000
+    normalizer: execution_engine.market_data.normalizer
+    latency_profile: TIER2_CEX
+
+  # --- Paper trading ---
+  paper_feed:
+    pipeline_id: PIPE-100
+    source: paper
+    adapter: execution_engine.adapters.paper
+    kind: REPLAY
+    enabled: true
+    symbols: []   # uses whatever symbols the backtester provides
+    feeds:
+      - TICK
+      - ORDERBOOK
+    normalizer: execution_engine.market_data.normalizer
+    latency_profile: PAPER
+
+# Routing
+routing:
+  default_normalizer: execution_engine.market_data.normalizer
+  default_book_depth: 20
+  buffer_size_per_symbol: 1000

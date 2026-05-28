@@ -1,0 +1,88 @@
+# registry/feature_flags.yaml
+# DIX VISION v42.2 — Feature Flags Registry
+#
+# Controls which system features are active. Operators change flags
+# via the operator interface; they take effect on the next cycle.
+# All live-execution flags default to DISABLED until operator enables.
+
+feature_flags:
+
+  # --- Execution ---
+  live_execution_enabled:
+    value: false
+    description: "Master switch for live order submission (operator sovereign)"
+    category: execution
+    operator_controlled: true
+
+  paper_trading_enabled:
+    value: true
+    description: "Paper trading mode (no real orders)"
+    category: execution
+
+  copy_trading_enabled:
+    value: false
+    description: "Mirror external trader signals"
+    category: execution
+    operator_controlled: true
+
+  # --- Learning ---
+  continual_learning_enabled:
+    value: true
+    description: "Enable online parameter updates from live data"
+    category: learning
+
+  federated_learning_enabled:
+    value: false
+    description: "Enable federated learning from remote nodes"
+    category: learning
+
+  experience_replay_enabled:
+    value: true
+    description: "Use experience replay buffer in RL training"
+    category: learning
+
+  # --- Evolution ---
+  genetic_evolution_enabled:
+    value: false
+    description: "Enable genetic algorithm strategy evolution"
+    category: evolution
+    operator_controlled: true
+
+  patch_pipeline_enabled:
+    value: false
+    description: "Enable automatic patch generation and sandboxing"
+    category: evolution
+    operator_controlled: true
+
+  # --- Simulation ---
+  simulation_enabled:
+    value: true
+    description: "Enable strategy simulation and backtesting"
+    category: simulation
+
+  scenario_generation_enabled:
+    value: true
+    description: "Generate synthetic market scenarios for testing"
+    category: simulation
+
+  # --- Monitoring ---
+  neuromorphic_hazard_detection:
+    value: true
+    description: "HAZ-15 spike-pattern hazard detection"
+    category: monitoring
+
+  repo_discovery_enabled:
+    value: false
+    description: "Monitor GitHub repos for dependency updates"
+    category: monitoring
+
+  # --- Governance ---
+  debate_rounds_enabled:
+    value: true
+    description: "Enable multi-agent debate rounds before execution"
+    category: governance
+
+  archetype_arena_enabled:
+    value: true
+    description: "Enable head-to-head archetype competition"
+    category: governance

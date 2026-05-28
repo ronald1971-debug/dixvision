@@ -1,0 +1,106 @@
+# registry/versions.yaml
+# DIX VISION v42.2 — Version Registry
+#
+# Tracks component versions, interface contract versions, and
+# compatibility requirements. Used by system_governance/contract_integrity.py
+# to validate cross-subsystem interface compatibility.
+
+versions:
+
+  # --- System version ---
+  system:
+    version: "42.2"
+    codename: "Archon"
+    release_date: "2026-01-01"
+    min_python: "3.11"
+
+  # --- Interface contract versions ---
+  # Increment MAJOR on breaking change, MINOR on compatible addition
+  contracts:
+    ExecutionIntent:
+      version: "2.1"
+      module: core.contracts.execution
+      breaking_since: "2.0"
+
+    LedgerEvent:
+      version: "1.3"
+      module: state.ledger.event_store
+      breaking_since: "1.0"
+
+    AgentDecisionTrace:
+      version: "1.2"
+      module: core.contracts.decisions
+      breaking_since: "1.0"
+
+    FillReport:
+      version: "1.1"
+      module: execution_engine.adapters.base
+      breaking_since: "1.0"
+
+    LearningUpdate:
+      version: "1.0"
+      module: core.contracts.learning
+      breaking_since: "1.0"
+
+    OperatorGovernanceStatus:
+      version: "1.0"
+      module: core.contracts.operator_governance
+      breaking_since: "1.0"
+
+    SystemGovernanceStatus:
+      version: "1.0"
+      module: core.contracts.system_governance
+      breaking_since: "1.0"
+
+    FinancialGovernanceStatus:
+      version: "1.0"
+      module: core.contracts.financial_governance
+      breaking_since: "1.0"
+
+    HazardEvent:
+      version: "1.0"
+      module: system_engine.hazard_sensors.base
+      breaking_since: "1.0"
+
+    NormalizedTick:
+      version: "1.0"
+      module: execution_engine.market_data.normalizer
+      breaking_since: "1.0"
+
+  # --- Adapter API versions ---
+  adapters:
+    binance:
+      api_version: "v3"
+      ws_version: "v3"
+      last_checked: "2026-01-01"
+
+    kraken:
+      api_version: "v2"
+      ws_version: "v2"
+      last_checked: "2026-01-01"
+
+    oanda:
+      api_version: "v20"
+      last_checked: "2026-01-01"
+
+    ig:
+      api_version: "v1"
+      last_checked: "2026-01-01"
+
+  # --- Dependency pinning ---
+  dependencies:
+    core:
+      python: ">=3.11"
+    optional:
+      krakenex: ">=2.1.0"
+      trading_ig: ">=0.0.12"
+      ccxt: ">=4.0.0"
+
+  # --- Compatibility matrix ---
+  compatibility:
+    # operator_governance ↔ financial_governance interface
+    operator_to_financial:
+      required_financial_version: ">=1.0"
+    # learning_engine ↔ governance bridge
+    learning_to_governance:
+      required_learning_update_version: ">=1.0"

@@ -1,0 +1,89 @@
+# registry/alerts.yaml
+# DIX VISION v42.2 — Alert Configuration Registry
+#
+# Defines alert thresholds, channels, and escalation paths.
+# Read by system_engine health monitors and governance engines.
+
+alerts:
+
+  # --- Channels ---
+  channels:
+    log:
+      enabled: true
+      level: WARNING
+    console:
+      enabled: true
+      min_severity: HIGH
+    webhook:
+      enabled: false
+      url: ""
+      min_severity: CRITICAL
+
+  # --- Governance Alerts ---
+  governance:
+    operator_consent_timeout:
+      severity: HIGH
+      message: "Consent request expired without operator response"
+      channel: [log, console]
+
+    kill_switch_triggered:
+      severity: CRITICAL
+      message: "Kill switch activated — all trading halted"
+      channel: [log, console, webhook]
+
+    authority_violation:
+      severity: HIGH
+      message: "Authority level violation detected"
+      channel: [log, console]
+
+    drawdown_limit_reached:
+      severity: CRITICAL
+      message: "Portfolio drawdown limit reached — halting"
+      channel: [log, console, webhook]
+
+  # --- Hazard Alerts ---
+  hazards:
+    severity_thresholds:
+      CRITICAL:
+        notify_immediately: true
+        halt_trading: true
+      HIGH:
+        notify_immediately: true
+        halt_trading: false
+      MEDIUM:
+        notify_immediately: false
+        log_only: true
+      LOW:
+        notify_immediately: false
+        log_only: true
+
+    specific:
+      HAZ_01_liquidity_crisis:
+        severity: CRITICAL
+        halt_on_trigger: true
+      HAZ_15_neuromorphic_spike:
+        severity: HIGH
+        halt_on_trigger: false
+
+  # --- System Health Alerts ---
+  system_health:
+    memory_warn_mb: 3072
+    memory_critical_mb: 4096
+    thread_warn: 256
+    thread_critical: 512
+    coherence_warn: 0.6
+    coherence_critical: 0.4
+
+  # --- Latency Alerts ---
+  latency:
+    execution_warn_ms: 500
+    execution_critical_ms: 2000
+    data_feed_warn_ms: 100
+    data_feed_critical_ms: 500
+
+  # --- P&L Alerts ---
+  pnl:
+    daily_loss_warn_usd: 2000
+    daily_loss_critical_usd: 5000
+    drawdown_warn_pct: 10
+    drawdown_critical_pct: 15

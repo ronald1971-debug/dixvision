@@ -1,0 +1,88 @@
+# registry/enforcement_policies.yaml
+# DIX VISION v42.2 — Enforcement Policy Registry
+#
+# Defines how governance violations are enforced. Each policy specifies
+# the action taken when a rule is violated: WARN, BLOCK, or HALT.
+# Policies are read by governance engines at boot.
+
+enforcement_policies:
+
+  # --- Cognitive Governance (P1) ---
+  cognitive:
+    belief_confidence_floor:
+      threshold: 0.3
+      action: BLOCK
+      description: "Block signals when belief confidence below 30%"
+
+    coherence_violation:
+      action: HALT
+      description: "Halt on coherence invariant violation"
+
+    drift_detection:
+      action: WARN
+      description: "Warn on distribution drift, log for review"
+
+  # --- Operator Governance (P2 — sovereign) ---
+  operator:
+    execution_without_consent:
+      action: HALT
+      description: "Any live execution attempt without operator consent is HALTED"
+
+    authority_escalation_denied:
+      action: BLOCK
+      description: "Block operations requiring elevated authority when denied"
+
+    lockout_scope_breach:
+      action: HALT
+      description: "Any operation attempted during lockout is halted immediately"
+
+    constitutional_delegation_attempt:
+      action: HALT
+      description: "CONSTITUTIONAL authority cannot be delegated — always HALT"
+
+  # --- Financial Governance (P3 dev, P2 live) ---
+  financial:
+    exposure_warn_threshold_pct: 80.0
+    exposure_block_threshold_pct: 95.0
+    exposure_breach:
+      action: BLOCK
+      description: "Block new positions when exposure limit approached"
+
+    leverage_breach:
+      action: BLOCK
+      description: "Block orders that would breach leverage limits"
+
+    liquidation_risk_critical:
+      action: HALT
+      description: "Halt if any position approaches critical liquidation distance"
+
+    drawdown_limit:
+      pct: 15.0
+      action: HALT
+      description: "Halt all trading when portfolio drawdown exceeds limit"
+
+    capital_throttle_breach:
+      action: BLOCK
+      description: "Block capital deployment exceeding throttle rate"
+
+  # --- System Governance (P4) ---
+  system:
+    topology_b1_violation:
+      action: BLOCK
+      description: "Block import that crosses B1 engine boundaries"
+
+    contract_version_mismatch:
+      action: WARN
+      description: "Warn on interface version mismatch between subsystems"
+
+    replay_determinism_failure:
+      action: WARN
+      description: "Warn when replay produces different checksum"
+
+    convergence_diverging:
+      action: WARN
+      description: "Warn when system convergence score drops below 0.4"
+
+    circular_import:
+      action: BLOCK
+      description: "Block circular import detection"

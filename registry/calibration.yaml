@@ -1,0 +1,22 @@
+# registry/calibration.yaml
+# [NEW v3.3] INV-53 / INV-55 — calibration loop parameters.
+# Consumed by learning_engine/calibration/coherence_calibrator.py and
+# sim_realism_tracker.py. All numeric thresholds are dimensionless
+# fractions unless noted.
+
+version: "v1"
+coherence_calibrator:
+  window_ns: 86400000000000          # 24h in nanoseconds
+  min_samples_per_window: 50
+  belief_drift_threshold: 0.15       # INV-53: max acceptable belief drift
+  pressure_drift_threshold: 0.20     # INV-53: max acceptable pressure drift
+  critical_threshold: 0.35           # SAFE-49: triggers governance alert
+  n_consecutive_critical: 3          # SAFE-49: N consecutive breaches before alert
+
+sim_realism_tracker:
+  window_ns: 86400000000000          # 24h in nanoseconds
+  min_samples_per_window: 20
+  divergence_threshold: 0.10         # INV-55: max sim-vs-live divergence
+  overconfidence_penalty_scale: 0.5  # multiplier on sim_overconfidence_penalty
+  critical_threshold: 0.25           # SAFE-50: triggers governance alert
+  n_consecutive_critical: 2          # SAFE-50: N consecutive breaches before alert

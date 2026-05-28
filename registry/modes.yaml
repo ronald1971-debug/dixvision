@@ -1,0 +1,92 @@
+# registry/modes.yaml
+# DIX VISION v42.2 — System Mode Registry
+#
+# Defines all system modes, legal transitions, and the capabilities
+# allowed in each mode. Read by core/coherence/mode_engine.py.
+
+modes:
+
+  # --- Mode definitions ---
+  BOOTSTRAP:
+    description: "System starting up — minimal operations"
+    allows_learning: false
+    allows_execution: false
+    allows_simulation: false
+    initial_mode: true
+
+  LEARNING:
+    description: "Active learning from historical/live data"
+    allows_learning: true
+    allows_execution: false
+    allows_simulation: true
+
+  OBSERVING:
+    description: "Monitoring markets without taking positions"
+    allows_learning: true
+    allows_execution: false
+    allows_simulation: true
+
+  SHADOW:
+    description: "Shadow mode — generating signals but paper-only execution"
+    allows_learning: true
+    allows_execution: false  # paper only
+    allows_simulation: true
+    paper_execution: true
+
+  LIVE:
+    description: "Full live trading — requires explicit operator consent"
+    allows_learning: true
+    allows_execution: true   # BLOCKED until operator enables
+    allows_simulation: true
+    requires_operator_consent: true
+    execution_blocked_by_default: true
+
+  HALTED:
+    description: "Emergency halt — no operations except governance"
+    allows_learning: false
+    allows_execution: false
+    allows_simulation: false
+    emergency_mode: true
+
+  # --- Legal mode transitions ---
+  transitions:
+    BOOTSTRAP:
+      - LEARNING
+      - OBSERVING
+    LEARNING:
+      - OBSERVING
+      - SHADOW
+      - HALTED
+    OBSERVING:
+      - LEARNING
+      - SHADOW
+      - HALTED
+    SHADOW:
+      - OBSERVING
+      - LIVE
+      - HALTED
+    LIVE:
+      - SHADOW
+      - OBSERVING
+      - HALTED
+    HALTED:
+      - OBSERVING   # can only return to observe after halt
+
+  # --- Transition guards ---
+  transition_guards:
+    SHADOW_to_LIVE:
+      requires_operator_consent: true
+      min_shadow_hours: 24
+      min_sharpe_threshold: 1.0
+
+    OBSERVING_to_SHADOW:
+      requires_operator_consent: false
+      min_learning_cycles: 100
+
+    any_to_HALTED:
+      requires_operator_consent: false
+      immediate: true
+
+  # --- Initial boot mode ---
+  boot_mode: BOOTSTRAP
+  default_operational_mode: OBSERVING

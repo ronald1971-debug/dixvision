@@ -1,0 +1,24 @@
+# registry/regime_hysteresis.yaml
+# [NEW v3.2] INV-49 — regime hysteresis activation thresholds.
+# Prevents rapid oscillation between regimes by requiring a regime
+# to persist for `persistence_ticks` bars and exceed `confidence_delta`
+# above the previous regime's confidence before a transition fires.
+
+version: "v1"
+hysteresis:
+  persistence_ticks: 3
+  confidence_delta: 0.08
+
+  # Per-transition overrides (optional).
+  overrides:
+    - from_regime: "bull"
+      to_regime: "bear"
+      persistence_ticks: 5
+      confidence_delta: 0.12
+      note: "Bearish transitions require stronger signal to avoid whipsaw."
+
+    - from_regime: "ranging"
+      to_regime: "volatile"
+      persistence_ticks: 2
+      confidence_delta: 0.06
+      note: "Volatility spikes are fast; lower bar for transition."

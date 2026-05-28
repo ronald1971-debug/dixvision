@@ -1,0 +1,46 @@
+# registry/reward_components.yaml
+# [NEW v3.3] B18 allowlist of RewardBreakdown.components keys.
+# Per INV-47 EXTENDED: every key in a RewardBreakdown must appear here.
+# Versioned alongside learning_engine/performance_analysis/reward_shaping.py.
+
+version: "v1"
+components:
+  - key: "pnl"
+    description: "Raw realised PnL (base component)."
+    sign: positive
+
+  - key: "risk_adj"
+    description: "Risk-adjusted scaling (Sharpe/vol-target denominator)."
+    sign: positive
+
+  - key: "drawdown_pen"
+    description: "Penalty for contributing to drawdown breaches."
+    sign: negative
+
+  - key: "latency_pen"
+    description: "Penalty for execution above latency target."
+    sign: negative
+
+  - key: "slippage_pen"
+    description: "Penalty for slippage above modelled expectation."
+    sign: negative
+
+  - key: "confidence_bonus"
+    description: "Bonus for high-confidence signals that prove correct."
+    sign: positive
+
+  - key: "regime_alignment"
+    description: "Bonus/penalty for signal regime alignment with actual regime."
+    sign: positive
+
+  - key: "lens_calibration_penalty"
+    description: "Penalty applied when belief/pressure lens diverges from realised."
+    sign: negative
+
+  - key: "sim_overconfidence_penalty"
+    description: "Penalty when sim-vs-live divergence exceeds threshold (INV-55)."
+    sign: negative
+
+  - key: "fallback_pen"
+    description: "Penalty applied when MetaController used fallback lane (INV-48)."
+    sign: negative

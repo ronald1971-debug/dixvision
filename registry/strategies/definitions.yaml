@@ -1,0 +1,58 @@
+# registry/strategies/definitions.yaml
+# Canonical strategy definitions registry (REG-09)
+# Each entry declares a strategy's identity, type, and parameter schema.
+# Mutable parameters that learning may update must be listed under
+# mutable_params (consulted by UpdateValidator — Wave-04.6 PR-E).
+
+version: "v1"
+strategies:
+  - id: "microstructure_v1"
+    name: "Microstructure V1"
+    kind: "IND-L02"
+    description: "Order-flow imbalance + spread-compression alpha."
+    plugin_chain: ["microstructure_v1"]
+    mutable_params:
+      - name: "confidence_threshold"
+        type: float
+        min: 0.1
+        max: 0.99
+        default: 0.65
+      - name: "lookback_bars"
+        type: int
+        min: 5
+        max: 200
+        default: 20
+
+  - id: "momentum_alpha_v1"
+    name: "Momentum Alpha V1"
+    kind: "IND-L18"
+    description: "Trend-following momentum with volatility filter."
+    plugin_chain: ["momentum_alpha_v1"]
+    mutable_params:
+      - name: "momentum_window"
+        type: int
+        min: 3
+        max: 100
+        default: 14
+      - name: "vol_threshold"
+        type: float
+        min: 0.001
+        max: 0.5
+        default: 0.02
+
+  - id: "mean_reversion_v1"
+    name: "Mean Reversion V1"
+    kind: "IND-L19"
+    description: "Statistical mean reversion on spread z-score."
+    plugin_chain: ["mean_reversion_v1"]
+    mutable_params:
+      - name: "zscore_entry"
+        type: float
+        min: 0.5
+        max: 5.0
+        default: 2.0
+      - name: "zscore_exit"
+        type: float
+        min: 0.1
+        max: 3.0
+        default: 0.5

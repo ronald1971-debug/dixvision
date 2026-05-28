@@ -1,0 +1,107 @@
+# registry/integrations.yaml
+# DIX VISION v42.2 — External Integrations Registry
+#
+# Defines all external service integrations: exchanges, data providers,
+# notification services, and infrastructure dependencies.
+# Credentials are NOT stored here — use the credentials subsystem.
+
+integrations:
+
+  # --- Exchange adapters ---
+  exchanges:
+    binance:
+      adapter: execution_engine.adapters.binance
+      enabled: true
+      sandbox: true          # start in sandbox mode
+      capabilities: [SPOT, FUTURES]
+      rate_limit_per_sec: 10.0
+      timeout_ms: 5000
+      requires_credentials: [BINANCE_API_KEY, BINANCE_SECRET]
+
+    kraken:
+      adapter: execution_engine.adapters.kraken
+      enabled: false
+      sandbox: true
+      capabilities: [SPOT, FUTURES]
+      requires_credentials: [KRAKEN_API_KEY, KRAKEN_SECRET]
+
+    oanda:
+      adapter: execution_engine.adapters.oanda
+      enabled: false
+      sandbox: true
+      capabilities: [SPOT]    # FX/CFD
+      requires_credentials: [OANDA_API_KEY, OANDA_ACCOUNT_ID]
+
+    ig:
+      adapter: execution_engine.adapters.ig
+      enabled: false
+      sandbox: true
+      capabilities: [SPOT]    # CFD/spread-bet
+      requires_credentials: [IG_API_KEY, IG_USERNAME, IG_PASSWORD]
+
+    paper:
+      adapter: execution_engine.adapters.paper
+      enabled: true
+      sandbox: true
+      capabilities: [SPOT, FUTURES, PAPER]
+      requires_credentials: []
+
+  # --- Market data providers ---
+  market_data:
+    alphavantage:
+      enabled: false
+      requires_credentials: [ALPHAVANTAGE_API_KEY]
+
+    polygon:
+      enabled: false
+      requires_credentials: [POLYGON_API_KEY]
+
+    helius:
+      enabled: false
+      description: "Solana on-chain data"
+      requires_credentials: [HELIUS_API_KEY]
+
+  # --- News / sentiment feeds ---
+  news:
+    coindesk_rss:
+      enabled: true
+      url: "https://www.coindesk.com/arc/outboundfeeds/rss/"
+      poll_interval_s: 300
+
+    fred:
+      enabled: false
+      description: "Federal Reserve economic data"
+      requires_credentials: [FRED_API_KEY]
+
+  # --- Infrastructure ---
+  infrastructure:
+    database:
+      primary: sqlite    # sqlite | postgres | lmdb
+      path: data/ledger.db
+
+    message_bus:
+      backend: local     # local | kafka | nats | redis
+      enabled: true
+
+    telemetry:
+      jaeger:
+        enabled: false
+        endpoint: "http://localhost:14268/api/traces"
+      prometheus:
+        enabled: false
+        port: 9090
+
+  # --- GitHub integration (for repo_discovery) ---
+  github:
+    enabled: false
+    requires_credentials: [GITHUB_TOKEN]
+    tracked_repos: []
+
+  # --- Notification webhooks ---
+  notifications:
+    slack:
+      enabled: false
+      requires_credentials: [SLACK_WEBHOOK_URL]
+    discord:
+      enabled: false
+      requires_credentials: [DISCORD_WEBHOOK_URL]

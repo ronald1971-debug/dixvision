@@ -1,0 +1,73 @@
+# registry/simulation_config.yaml
+# DIX VISION v42.2 — Simulation Configuration Registry
+#
+# Parameters for the simulation engine, strategy arena, and
+# backtesting pipeline.
+
+simulation:
+
+  # --- Global ---
+  enabled: true
+  default_initial_capital_usd: 100000.0
+  default_commission_bps: 5.0    # 0.05% commission per trade
+  default_slippage_bps: 3.0      # 0.03% slippage model
+
+  # --- Latency model ---
+  latency_model:
+    default_profile: TIER1_CEX
+    venues:
+      binance:
+        profile: TIER1_CEX
+        congestion_factor: 1.0
+      kraken:
+        profile: TIER1_CEX
+        congestion_factor: 1.1
+      oanda:
+        profile: TIER2_CEX
+        congestion_factor: 1.0
+      ig:
+        profile: TIER2_CEX
+        congestion_factor: 1.2
+      paper:
+        profile: PAPER
+
+  # --- Scenario generator ---
+  scenario_generator:
+    default_num_bars: 500
+    bar_interval_seconds: 60
+    scenario_kinds:
+      - TREND_UP
+      - TREND_DOWN
+      - RANGE_BOUND
+      - VOLATILITY_SPIKE
+      - FLASH_CRASH
+
+  # --- Scoring engine ---
+  scoring:
+    weights:
+      sharpe: 0.35
+      calmar: 0.25
+      win_rate: 0.20
+      profit_factor: 0.10
+      recovery_factor: 0.10
+    min_trades_for_valid_score: 10
+
+  # --- Strategy arena ---
+  strategy_arena:
+    capital_per_strategy_usd: 10000.0
+    min_simulation_bars: 200
+    promotion_threshold: 0.6   # composite score needed for promotion
+    max_concurrent_simulations: 8
+
+  # --- State snapshots ---
+  snapshots:
+    enabled: true
+    checkpoint_every_bars: 100
+    max_snapshots_per_run: 50
+
+  # --- Adversarial scenarios ---
+  adversarial:
+    enabled: true
+    flash_crash_probability: 0.05
+    liquidity_crisis_probability: 0.03
+    regime_shift_probability: 0.10

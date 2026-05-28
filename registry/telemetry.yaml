@@ -1,0 +1,87 @@
+# registry/telemetry.yaml
+# DIX VISION v42.2 — Telemetry Configuration Registry
+#
+# Configures observability: structured logging, metrics, tracing,
+# and health monitoring. All telemetry is opt-in and operator-controlled.
+
+telemetry:
+
+  # --- Structured logging ---
+  logging:
+    level: INFO             # DEBUG | INFO | WARNING | ERROR | CRITICAL
+    format: JSON            # JSON | TEXT
+    include_ts_ns: true
+    include_source: true
+    output:
+      console: true
+      file:
+        enabled: false
+        path: logs/dixvision.log
+        max_size_mb: 100
+        backup_count: 5
+
+  # --- Metrics ---
+  metrics:
+    enabled: true
+    export_interval_s: 60
+    backends:
+      prometheus:
+        enabled: false
+        port: 9090
+        path: /metrics
+      statsd:
+        enabled: false
+        host: localhost
+        port: 8125
+
+    # Key metrics to collect
+    collect:
+      - name: execution_latency_ms
+        type: histogram
+        labels: [venue, symbol, side]
+      - name: fill_count
+        type: counter
+        labels: [adapter_id, domain]
+      - name: pnl_usd
+        type: gauge
+        labels: [strategy_id, regime]
+      - name: hazard_events
+        type: counter
+        labels: [hazard_id, severity]
+      - name: governance_decisions
+        type: counter
+        labels: [layer, decision]
+      - name: system_mode
+        type: gauge
+        labels: [mode]
+
+  # --- Distributed tracing ---
+  tracing:
+    enabled: false
+    backend: jaeger       # jaeger | zipkin | otlp
+    sample_rate: 0.1      # 10% of requests
+    service_name: dixvision_v42
+
+  # --- Health endpoints ---
+  health:
+    enabled: true
+    port: 8080
+    endpoints:
+      liveness: /health/live
+      readiness: /health/ready
+      metrics: /health/metrics
+
+  # --- Audit trail ---
+  audit:
+    ledger_emit_enabled: true
+    emit_governance_decisions: true
+    emit_execution_fills: true
+    emit_hazard_events: true
+    emit_mode_transitions: true
+    retention_days: 90
+
+  # --- Performance profiling ---
+  profiling:
+    enabled: false
+    sample_interval_s: 600   # profile every 10 minutes
+    output_dir: profiles/

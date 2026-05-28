@@ -1,0 +1,35 @@
+# registry/strategies/performance.yaml
+# Per-strategy performance tracking registry.
+# Updated by learning_engine.performance_analysis after each closed batch.
+
+version: "v1"
+performance:
+  - strategy_id: "microstructure_v1"
+    sharpe_ratio: 1.42
+    max_drawdown_pct: 0.031
+    win_rate: 0.58
+    avg_pnl_per_trade: 0.0014
+    sample_count: 1240
+    last_updated_ns: 0
+
+  - strategy_id: "momentum_alpha_v1"
+    sharpe_ratio: 0.89
+    max_drawdown_pct: 0.048
+    win_rate: 0.52
+    avg_pnl_per_trade: 0.0008
+    sample_count: 312
+    last_updated_ns: 0
+
+  - strategy_id: "mean_reversion_v1"
+    sharpe_ratio: 0.0
+    max_drawdown_pct: 0.0
+    win_rate: 0.0
+    avg_pnl_per_trade: 0.0
+    sample_count: 0
+    last_updated_ns: 0
+
+thresholds:
+  min_sharpe_for_canary: 0.8
+  min_sharpe_for_live: 1.0
+  max_drawdown_for_live: 0.10
+  min_sample_count_for_canary: 100

@@ -1,0 +1,215 @@
+# registry/governance_constitution.yaml
+# DIX VISION v42.2 — Executive Governance Constitution (machine-readable)
+#
+# This is the canonical authoritative source for the DIXVISION governance
+# philosophy. All governance engines load from this file at startup.
+#
+# Source-of-truth companion: core/contracts/governance_constitution.py
+# (frozen dataclass mirror of every rule below)
+
+constitution:
+
+  # --- System Identity ---
+  identity:
+    primary: "Adaptive Cognitive Market Intelligence Operating System"
+    version: "v42.2"
+    codename: "Archon"
+    manifestations:
+      - "Cognitive operating system"
+      - "Trader intelligence ecosystem"
+      - "Self-evolving market cognition engine"
+      - "Epistemic learning framework"
+      - "Live execution environment (future manifestation)"
+    governance_target: >
+      Preserve cognitive integrity, operator sovereignty, system integrity,
+      and capital integrity — simultaneously, in priority order by phase.
+
+  # --- Priority Stacks ---
+  priority_stacks:
+    development:
+      # Phase 0–3: cognitive build-out; capital protection subordinate
+      P1: cognitive_governance     # Cognitive Integrity — ALWAYS highest
+      P2: operator_governance      # Operator Sovereignty — constitutional authority
+      P3: system_governance        # System Integrity — determinism, contracts, replay
+      P4: financial_governance     # Capital Integrity — subordinate until live capital deployed
+    live:
+      # Phase 4+: real capital at risk; capital becomes co-equal
+      P1: cognitive_governance     # Cognitive Integrity — always highest
+      P2: financial_governance     # Capital Integrity — co-equal once live capital deployed
+      P3: operator_governance      # Operator Sovereignty
+      P4: system_governance        # System Integrity
+
+  # --- Four Constitutional Directives ---
+  directives:
+
+    CONST-01:
+      title: "Cognitive Integrity"
+      priority: P1
+      blocking: true
+      enforced_by: "cognitive_governance.engine"
+      text: >
+        The system shall prioritise truthful cognition over profitable cognition.
+        No subsystem may corrupt learning lineage, fabricate confidence, reinforce
+        hallucinated alpha, mutate beyond traceability, poison memory structures,
+        create irreversible self-modifications, or bypass epistemic validation.
+        This is the PRIMARY directive during all development phases.
+      violation_response: BLOCK_AND_ESCALATE
+
+    CONST-02:
+      title: "Operator Sovereignty"
+      priority: P2
+      blocking: true
+      enforced_by: "operator_governance.engine"
+      text: >
+        The operator retains supreme constitutional authority. No autonomous process
+        may remove operator visibility, bypass explicit operator restrictions, escalate
+        autonomy without governance approval, or suppress operator intervention capability.
+        CONSTITUTIONAL authority cannot be delegated to any autonomous subsystem.
+        The operator decides when to start trading.
+      violation_response: HALT_AND_ALERT
+      operator_id: ronald
+      execution_blocked_until_operator_enables: true
+      constitutional_authority_cannot_be_delegated: true
+
+    CONST-03:
+      title: "System Integrity"
+      priority: P3
+      blocking: true
+      enforced_by: "system_governance.engine"
+      text: >
+        All system evolution must remain deterministic, auditable, replayable,
+        contract-valid, and reversibly traceable. Architectural convergence is mandatory:
+        every subsystem must consume real contracts, produce measurable outputs, integrate
+        into runtime, emit governance artifacts, support replay, support observability,
+        support mutation lineage, and support operator visibility.
+        Speculative divergence without runtime integration is prohibited.
+      violation_response: BLOCK_MUTATION
+
+    CONST-04:
+      title: "Capital Integrity"
+      priority: P4_dev_P2_live
+      blocking: true
+      enforced_by: "financial_governance.engine"
+      text: >
+        Capital protection mechanisms shall activate proportionally to the system's
+        live financial authority level. Before live deployment: focus on realism
+        validation and execution simulation integrity. During live deployment: risk
+        governance becomes fully active. Capital protection becomes co-equal with
+        cognitive protection once real capital is at risk.
+      violation_response: HALT_EXECUTION
+
+  # --- Cognitive Governance Enforcement Rules ---
+  cognitive_enforcement:
+
+    # Violations that BLOCK downstream operations
+    blocking_gates:
+      EPISTEMIC_DRIFT_CRITICAL:
+        gate: BLOCK_LEARNING
+        applies_to: [learning_update, reward_update, distillation]
+      MUTATION_IRREVERSIBLE:
+        gate: BLOCK_MUTATION
+        applies_to: [mutation, parameter_update, evolution]
+      MUTATION_OUT_OF_BUDGET:
+        gate: BLOCK_MUTATION
+        applies_to: [mutation, parameter_update, evolution]
+      HALLUCINATION_LOOP:
+        gate: BLOCK_SIGNAL
+        applies_to: [signal, intent, execution]
+      CALIBRATION_DRIFT:
+        gate: BLOCK_STRATEGY_SEL
+        applies_to: [strategy_selection, archetype_promotion]
+      REWARD_HACKING:
+        gate: BLOCK_LEARNING
+        applies_to: [learning_update, reward_update, distillation]
+      MEMORY_CONTAMINATION:
+        gate: BLOCK_LEARNING
+        applies_to: [learning_update, reward_update, distillation]
+      LINEAGE_CYCLE:
+        gate: BLOCK_MUTATION
+        applies_to: [mutation, parameter_update, evolution]
+      LINEAGE_GAP:
+        gate: BLOCK_MUTATION
+        applies_to: [mutation, parameter_update, evolution]
+      SELF_REFERENTIAL_REWARD:
+        gate: BLOCK_LEARNING
+        applies_to: [learning_update, reward_update, distillation]
+      SYNTHETIC_FEEDBACK:
+        gate: BLOCK_LEARNING
+        applies_to: [learning_update, reward_update, distillation]
+
+    # Violations that generate WARNING only (no block)
+    warning_only:
+      - EPISTEMIC_DRIFT_WARNING
+      - LEARNING_NOT_GROUNDED
+      - IDENTITY_INSTABILITY
+      - CAUSAL_GHOST
+      - CAUSAL_DOMAIN_LEAK
+      - OVERCONFIDENCE
+      - MAGICAL_BELIEF_JUMP
+      - EMBEDDING_COLLAPSE
+
+  # --- Learning Coherence Thresholds ---
+  learning_coherence:
+    halt_threshold: 0.60          # halt learning updates below this
+    levels:
+      HIGH:     { min: 0.80, action: none }
+      MEDIUM:   { min: 0.60, action: monitor }
+      LOW:      { min: 0.40, action: halt_learning }
+      CRITICAL: { min: 0.00, action: halt_and_escalate }
+    composite_blend:
+      geometric_weight: 0.60      # penalises weakest dimension
+      arithmetic_weight: 0.40
+    dimensions:
+      - epistemic_grounding       # external vs. synthetic signal ratio
+      - belief_calibration        # ECE quality (lower ECE = higher score)
+      - mutation_safety           # fraction of mutations approved
+      - memory_integrity          # inverse contamination score
+      - identity_stability        # cosine similarity + long-horizon drift
+      - reward_alignment          # reward–objective correlation
+
+  # --- Long-Horizon Memory Thresholds ---
+  long_horizon_memory:
+    max_patterns_per_subject: 20
+    max_observations_per_pattern: 500
+    drift_rate_concern_threshold: -0.05   # per-week; negative = degrading
+    identity_stability_blend:
+      short_horizon_weight: 0.70  # cosine similarity
+      long_horizon_weight: 0.30   # drift signal
+    horizon_windows:
+      SHORT:   { max_span_hours: 24 }
+      MEDIUM:  { max_span_days: 7 }
+      LONG:    { max_span_days: 28 }
+      EPOCH:   { min_span_days: 28 }
+
+  # --- Architectural Convergence Requirements ---
+  architectural_convergence:
+    every_subsystem_must:
+      - consume_real_contracts: true
+      - produce_measurable_outputs: true
+      - integrate_into_runtime: true
+      - emit_governance_artifacts: true
+      - support_replay: true
+      - support_observability: true
+      - support_mutation_lineage: true
+      - support_operator_visibility: true
+    prohibited:
+      - speculative_divergence_without_runtime_integration
+      - cross_engine_imports_at_b1_domains
+      - wall_clock_in_replay_paths
+      - random_in_replay_paths
+      - credentials_from_os_environ
+
+  # --- Override Priority Ordinal ---
+  # Higher = takes precedence when multiple overrides are active
+  override_priority:
+    KILL_SWITCH:       5
+    MODE_LOCK:         4
+    EXECUTION_HALT:    3
+    PARAMETER_OVERRIDE: 2
+    SUGGESTION:        1
+
+  # --- Authority Levels ---
+  authority_levels:
+    CONSTITUTIONAL: 3   # Cannot be delegated to autonomous subsystems
+    ADMINISTRATIVE: 2
+    OBSERVER: 1

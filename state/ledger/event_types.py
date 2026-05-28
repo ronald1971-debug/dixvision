@@ -1,0 +1,189 @@
+"""state/ledger/event_types.py
+DIX VISION v42.2 — Ledger Event Type Registry
+
+Defines all canonical event type constants for each ledger stream.
+Used by writers (append.py) and readers to agree on sub_type strings
+without magic-string duplication.
+
+No imports from other project modules — this file must be importable
+at the very start of the boot sequence (before any engine is ready).
+"""
+
+from __future__ import annotations
+
+
+# ---------------------------------------------------------------------------
+# Stream kind constants
+# ---------------------------------------------------------------------------
+
+STREAM_MARKET = "MARKET"
+STREAM_SYSTEM = "SYSTEM"
+STREAM_GOVERNANCE = "GOVERNANCE"
+STREAM_HAZARD = "HAZARD"
+STREAM_AUTHORITY = "AUTHORITY"
+
+
+# ---------------------------------------------------------------------------
+# MARKET stream sub-types
+# ---------------------------------------------------------------------------
+
+MARKET_TICK = "TICK"
+MARKET_OHLCV = "OHLCV"
+MARKET_ORDERBOOK = "ORDERBOOK"
+MARKET_TRADE = "TRADE"
+MARKET_FUNDING = "FUNDING"
+MARKET_LIQUIDATION = "LIQUIDATION"
+
+
+# ---------------------------------------------------------------------------
+# SYSTEM stream sub-types
+# ---------------------------------------------------------------------------
+
+SYSTEM_BOOT_START = "BOOT_START"
+SYSTEM_BOOT_COMPLETE = "BOOT_COMPLETE"
+SYSTEM_SHUTDOWN = "SHUTDOWN"
+SYSTEM_MODE_CHANGE = "MODE_CHANGE"
+SYSTEM_HEALTH_REPORT = "HEALTH_REPORT"
+SYSTEM_ENGINE_START = "ENGINE_START"
+SYSTEM_ENGINE_STOP = "ENGINE_STOP"
+SYSTEM_ERROR = "ERROR"
+SYSTEM_WARNING = "WARNING"
+SYSTEM_COHERENCE_VIOLATION = "COHERENCE_VIOLATION"
+SYSTEM_REPLAY_START = "REPLAY_START"
+SYSTEM_REPLAY_COMPLETE = "REPLAY_COMPLETE"
+
+
+# ---------------------------------------------------------------------------
+# GOVERNANCE stream sub-types
+# ---------------------------------------------------------------------------
+
+GOV_COGOV_DECISION = "COGOV_DECISION"
+GOV_COGOV_VIOLATION = "COGOV_VIOLATION"
+GOV_OPGOV_DECISION = "OPGOV_DECISION"
+GOV_OPGOV_AUTHORITY_CHANGE = "OPGOV_AUTHORITY_CHANGE"
+GOV_OPGOV_LOCKOUT = "OPGOV_LOCKOUT"
+GOV_OPGOV_CONSENT = "OPGOV_CONSENT"
+GOV_SYSGOV_TOPOLOGY = "SYSGOV_TOPOLOGY"
+GOV_SYSGOV_CONTRACT = "SYSGOV_CONTRACT"
+GOV_FINGOV_EXPOSURE = "FINGOV_EXPOSURE"
+GOV_FINGOV_KILL_SWITCH = "FINGOV_KILL_SWITCH"
+GOV_LEARNING_UPDATE = "LEARNING_UPDATE"
+GOV_STRATEGY_APPROVAL = "STRATEGY_APPROVAL"
+GOV_PARAMETER_CHANGE = "PARAMETER_CHANGE"
+
+
+# ---------------------------------------------------------------------------
+# HAZARD stream sub-types
+# ---------------------------------------------------------------------------
+
+HAZARD_DETECTED = "DETECTED"
+HAZARD_RESOLVED = "RESOLVED"
+HAZARD_ESCALATED = "ESCALATED"
+
+# Specific hazard kinds (align with hazard sensor IDs)
+HAZARD_LIQUIDITY_CRISIS = "HAZ_01"
+HAZARD_FLASH_CRASH = "HAZ_02"
+HAZARD_REGIME_SHOCK = "HAZ_03"
+HAZARD_CORRELATION_BREAKDOWN = "HAZ_04"
+HAZARD_MOMENTUM_REVERSAL = "HAZ_05"
+HAZARD_VOLATILITY_SPIKE = "HAZ_06"
+HAZARD_MICROSTRUCTURE_NOISE = "HAZ_07"
+HAZARD_FUNDING_STRESS = "HAZ_08"
+HAZARD_EXCHANGE_OUTAGE = "HAZ_09"
+HAZARD_DATA_FEED_DISRUPTION = "HAZ_10"
+HAZARD_DRAWDOWN_BREACH = "HAZ_11"
+HAZARD_POSITION_CONCENTRATION = "HAZ_12"
+HAZARD_LEVERAGE_BREACH = "HAZ_13"
+HAZARD_LIQUIDATION_RISK = "HAZ_14"
+HAZARD_NEUROMORPHIC_SPIKE = "HAZ_15"
+
+
+# ---------------------------------------------------------------------------
+# AUTHORITY stream sub-types
+# ---------------------------------------------------------------------------
+
+AUTH_MODE_LOCK = "MODE_LOCK"
+AUTH_MODE_UNLOCK = "MODE_UNLOCK"
+AUTH_STRATEGY_APPROVE = "STRATEGY_APPROVE"
+AUTH_STRATEGY_REVOKE = "STRATEGY_REVOKE"
+AUTH_OPERATOR_OVERRIDE = "OPERATOR_OVERRIDE"
+AUTH_KILL_SWITCH_TRIGGER = "KILL_SWITCH_TRIGGER"
+AUTH_KILL_SWITCH_CLEAR = "KILL_SWITCH_CLEAR"
+AUTH_ESCALATION_REQUEST = "ESCALATION_REQUEST"
+AUTH_ESCALATION_APPROVED = "ESCALATION_APPROVED"
+AUTH_ESCALATION_DENIED = "ESCALATION_DENIED"
+
+
+__all__ = [
+    # Streams
+    "STREAM_AUTHORITY",
+    "STREAM_GOVERNANCE",
+    "STREAM_HAZARD",
+    "STREAM_MARKET",
+    "STREAM_SYSTEM",
+    # Market
+    "MARKET_FUNDING",
+    "MARKET_LIQUIDATION",
+    "MARKET_OHLCV",
+    "MARKET_ORDERBOOK",
+    "MARKET_TICK",
+    "MARKET_TRADE",
+    # System
+    "SYSTEM_BOOT_COMPLETE",
+    "SYSTEM_BOOT_START",
+    "SYSTEM_COHERENCE_VIOLATION",
+    "SYSTEM_ENGINE_START",
+    "SYSTEM_ENGINE_STOP",
+    "SYSTEM_ERROR",
+    "SYSTEM_HEALTH_REPORT",
+    "SYSTEM_MODE_CHANGE",
+    "SYSTEM_REPLAY_COMPLETE",
+    "SYSTEM_REPLAY_START",
+    "SYSTEM_SHUTDOWN",
+    "SYSTEM_WARNING",
+    # Governance
+    "GOV_COGOV_DECISION",
+    "GOV_COGOV_VIOLATION",
+    "GOV_FINGOV_EXPOSURE",
+    "GOV_FINGOV_KILL_SWITCH",
+    "GOV_LEARNING_UPDATE",
+    "GOV_OPGOV_AUTHORITY_CHANGE",
+    "GOV_OPGOV_CONSENT",
+    "GOV_OPGOV_DECISION",
+    "GOV_OPGOV_LOCKOUT",
+    "GOV_PARAMETER_CHANGE",
+    "GOV_STRATEGY_APPROVAL",
+    "GOV_SYSGOV_CONTRACT",
+    "GOV_SYSGOV_TOPOLOGY",
+    # Hazard
+    "HAZARD_CORRELATION_BREAKDOWN",
+    "HAZARD_DATA_FEED_DISRUPTION",
+    "HAZARD_DETECTED",
+    "HAZARD_DRAWDOWN_BREACH",
+    "HAZARD_ESCALATED",
+    "HAZARD_EXCHANGE_OUTAGE",
+    "HAZARD_FLASH_CRASH",
+    "HAZARD_FLASH_CRASH",
+    "HAZARD_FUNDING_STRESS",
+    "HAZARD_LEVERAGE_BREACH",
+    "HAZARD_LIQUIDATION_RISK",
+    "HAZARD_LIQUIDITY_CRISIS",
+    "HAZARD_MICROSTRUCTURE_NOISE",
+    "HAZARD_MOMENTUM_REVERSAL",
+    "HAZARD_NEUROMORPHIC_SPIKE",
+    "HAZARD_POSITION_CONCENTRATION",
+    "HAZARD_REGIME_SHOCK",
+    "HAZARD_RESOLVED",
+    "HAZARD_VOLATILITY_SPIKE",
+    # Authority
+    "AUTH_ESCALATION_APPROVED",
+    "AUTH_ESCALATION_DENIED",
+    "AUTH_ESCALATION_REQUEST",
+    "AUTH_KILL_SWITCH_CLEAR",
+    "AUTH_KILL_SWITCH_TRIGGER",
+    "AUTH_MODE_LOCK",
+    "AUTH_MODE_UNLOCK",
+    "AUTH_OPERATOR_OVERRIDE",
+    "AUTH_STRATEGY_APPROVE",
+    "AUTH_STRATEGY_REVOKE",
+]

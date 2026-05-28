@@ -1,0 +1,85 @@
+# registry/execution_policies.yaml
+# DIX VISION v42.2 — Execution Policy Registry
+#
+# Defines order execution policies: order types allowed, pre-trade
+# checks, retry logic, and post-trade reconciliation requirements.
+# All execution passes through governance_engine before reaching adapters.
+
+execution_policies:
+
+  # --- Master execution gate ---
+  master:
+    live_execution_requires_operator_consent: true
+    governance_signed_intent_required: true
+    max_intent_age_ms: 5000    # reject intents older than 5s
+    require_fill_reconciliation: true
+
+  # --- Order types ---
+  allowed_order_types:
+    NORMAL:
+      - MARKET
+      - LIMIT
+      - STOP_MARKET
+      - STOP_LIMIT
+    COPY_TRADING:
+      - MARKET
+      - LIMIT
+    MEMECOIN:
+      - MARKET
+
+  # --- Pre-trade checks (executed by execution_engine before submission) ---
+  pre_trade_checks:
+    - check: MAX_POSITION_SIZE
+      enabled: true
+      max_usd: 10000.0
+    - check: PORTFOLIO_EXPOSURE
+      enabled: true
+    - check: LEVERAGE_LIMIT
+      enabled: true
+    - check: DRAWDOWN_CHECK
+      enabled: true
+    - check: KILL_SWITCH
+      enabled: true
+    - check: OPERATOR_LOCKOUT
+      enabled: true
+
+  # --- Retry policy ---
+  retry:
+    max_retries: 3
+    backoff_ms: 500
+    retry_on:
+      - TIMEOUT
+      - NETWORK_ERROR
+      - RATE_LIMIT
+    no_retry_on:
+      - REJECTED
+      - INSUFFICIENT_FUNDS
+      - INVALID_SYMBOL
+
+  # --- Slippage limits ---
+  slippage:
+    max_acceptable_bps:
+      NORMAL: 25.0
+      COPY_TRADING: 30.0
+      MEMECOIN: 100.0
+    reject_fill_if_exceeded: true
+
+  # --- Post-trade reconciliation ---
+  reconciliation:
+    enabled: true
+    max_reconcile_window_ms: 30000
+    alert_on_unmatched_fill: true
+    emit_fill_to_ledger: true
+
+  # --- Execution domains ---
+  domain_isolation:
+    NORMAL:
+      allowed_venues: [binance, kraken, oanda, ig]
+      allowed_asset_classes: [crypto, forex, equities, cfd]
+    COPY_TRADING:
+      allowed_venues: [binance, kraken]
+      allowed_asset_classes: [crypto]
+    MEMECOIN:
+      allowed_venues: [binance]
+      allowed_asset_classes: [crypto]
+      max_position_usd: 500.0

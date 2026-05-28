@@ -1,0 +1,91 @@
+# registry/agents.yaml
+# DIX VISION v42.2 — Agent Registry
+#
+# Registers all intelligence_engine agents with their IDs, archetypes,
+# and enabled/disabled state. Read at boot by the intelligence engine
+# orchestrator.
+
+agents:
+
+  # --- Trend-Following Agents ---
+  AGT_01_trend_follower:
+    agent_id: AGT-01
+    class: intelligence_engine.agents.trend_follower.TrendFollowerAgent
+    archetype: TREND_FOLLOWER
+    enabled: true
+    domain: NORMAL
+    description: "EMA crossover + momentum trend-following strategy"
+    params:
+      fast_ema: 12
+      slow_ema: 26
+      signal_ema: 9
+      atr_period: 14
+
+  AGT_02_momentum_surfer:
+    agent_id: AGT-02
+    class: intelligence_engine.agents.momentum_surfer.MomentumSurferAgent
+    archetype: MOMENTUM_SURFER
+    enabled: true
+    domain: NORMAL
+    description: "Multi-timeframe momentum with regime filter"
+
+  AGT_03_mean_reversion:
+    agent_id: AGT-03
+    class: intelligence_engine.agents.mean_reversion.MeanReversionAgent
+    archetype: MEAN_REVERSION
+    enabled: true
+    domain: NORMAL
+    description: "Bollinger Band mean-reversion with RSI confirmation"
+
+  AGT_04_breakout_hunter:
+    agent_id: AGT-04
+    class: intelligence_engine.agents.breakout_hunter.BreakoutHunterAgent
+    archetype: BREAKOUT_HUNTER
+    enabled: true
+    domain: NORMAL
+    description: "Donchian channel breakout with volume confirmation"
+
+  AGT_05_swing_trader:
+    agent_id: AGT-05
+    class: intelligence_engine.agents.swing_trader.SwingTraderAgent
+    archetype: SWING_TRADER
+    enabled: true
+    domain: NORMAL
+    description: "Multi-day swing trading with Chandelier Exit"
+    params:
+      atr_period: 22
+      chandelier_multiplier: 3.0
+      trend_filter_ema: 200
+
+  AGT_06_liquidity_provider:
+    agent_id: AGT-06
+    class: intelligence_engine.agents.liquidity_provider.LiquidityProviderAgent
+    archetype: LIQUIDITY_PROVIDER
+    enabled: false
+    domain: NORMAL
+    description: "Market-making / liquidity provision strategy"
+    operator_approval_required: true
+
+  AGT_07_adversarial_observer:
+    agent_id: AGT-07
+    class: intelligence_engine.agents.adversarial_observer.AdversarialObserverAgent
+    archetype: ADVERSARIAL_OBSERVER
+    enabled: true
+    domain: NORMAL
+    description: "Adversarial stress-tester for other agents"
+    observer_only: true
+
+  # --- Governance Agents ---
+  INDIRA:
+    agent_id: INDIRA
+    voice: INDIRA
+    class: intelligence_engine.charter.indira
+    description: "Chief intelligence orchestrator — synthesises signals from all agents"
+    enabled: true
+
+  DYON:
+    agent_id: DYON
+    voice: DYON
+    class: intelligence_engine.charter.dyon
+    description: "Execution validator — verifies intents before submission"
+    enabled: true

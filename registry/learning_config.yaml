@@ -1,0 +1,80 @@
+# registry/learning_config.yaml
+# DIX VISION v42.2 — Learning Engine Configuration Registry
+#
+# Parameters for all learning lanes: online learning, continual
+# distillation, RAL, experience replay, and calibration.
+
+learning:
+
+  # --- Global learning gate ---
+  enabled: true
+  live_parameter_updates_require_governance_approval: true   # INV-12
+
+  # --- Experience base ---
+  experience_base:
+    capacity: 10000
+    sampling_strategy: PRIORITY     # UNIFORM | PRIORITY
+    min_samples_before_learning: 100
+
+  # --- Self-learning loop ---
+  self_learning_loop:
+    enabled: true
+    cycle_interval_s: 300    # run every 5 minutes
+    batch_size: 64
+    learning_rate: 0.001
+    max_gradient_norm: 5.0
+    warmup_cycles: 10
+
+  # --- Reward shaping ---
+  reward_shaping:
+    kind: RISK_ADJUSTED    # RAW | RISK_ADJUSTED | SHARPE_INCREMENTAL | POTENTIAL_BASED
+    drawdown_eps: 0.0001
+    potential_gamma: 0.99
+
+  # --- Continual distillation ---
+  continual_distillation:
+    enabled: true
+    distillation_interval_cycles: 50
+    temperature: 2.0
+    student_capacity: 0.5   # fraction of teacher model size
+
+  # --- RAL (Retrospective Action Learning) ---
+  ral:
+    enabled: true
+    lookback_bars: 100
+    attribution_method: COUNTERFACTUAL
+
+  # --- Trader abstraction ---
+  trader_abstraction:
+    encoder:
+      price_window: 20
+      volume_window: 20
+      normalise: true
+      max_features: 64
+    embedder:
+      input_dim: 64
+      embed_dim: 16
+      normalise_output: true
+      seed: 42
+
+  # --- Performance analysis ---
+  performance_analysis:
+    slippage_window: 200
+    latency_impact_window: 200
+    archetype_eval_window: 500
+
+  # --- Calibration ---
+  calibration:
+    sim_realism_tracker:
+      enabled: true
+      window: 100
+      calibration_threshold: 0.20    # >20% divergence triggers calibration
+      calibration_interval_hours: 24
+
+  # --- Federated learning ---
+  federated:
+    enabled: false
+    min_participants: 3
+    aggregation_rounds: 10
+    differential_privacy: true
+    dp_epsilon: 1.0

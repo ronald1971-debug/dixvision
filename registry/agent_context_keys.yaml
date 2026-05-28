@@ -1,0 +1,30 @@
+# registry/agent_context_keys.yaml
+# [NEW v3.2] B15 allowlist of typed SignalEvent.agent_context keys.
+# Only keys listed here may appear in agent_context; lint rule B15
+# rejects any key not in this allowlist.
+
+version: "v1"
+allowlist:
+  - key: "horizon"
+    type: str
+    description: "Signal time horizon (e.g. '1m', '5m', '1h', '1d')."
+    allowed_values: ["1m", "5m", "15m", "1h", "4h", "1d", "1w"]
+
+  - key: "conviction_type"
+    type: str
+    description: "Nature of the conviction (trend, mean_revert, momentum, breakout)."
+    allowed_values: ["trend", "mean_revert", "momentum", "breakout", "regime_shift"]
+
+  - key: "memory_ref"
+    type: str
+    description: "Episodic memory reference ID that influenced this signal."
+
+  - key: "regime_assumption"
+    type: str
+    description: "Regime the agent assumed when generating the signal."
+    allowed_values: ["bull", "bear", "ranging", "volatile", "unknown"]
+
+  - key: "confidence_band"
+    type: str
+    description: "Categorical confidence band (low/medium/high/very_high)."
+    allowed_values: ["low", "medium", "high", "very_high"]

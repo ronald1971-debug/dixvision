@@ -1,0 +1,32 @@
+# registry/meta_controller.yaml
+# [NEW v3.3] INV-52 shadow MetaController + INV-48 fallback lane parameters.
+# Consumed by intelligence_engine/meta_controller/policy/.
+
+version: "v1"
+shadow_policy:
+  # INV-52: maximum number of consecutive ticks the shadow diverges
+  # before a META_DIVERGENCE SystemEvent is emitted.
+  n_consecutive_divergence_ticks: 5
+  # Latency budget multiplier: shadow runs with this multiplier applied
+  # to the primary policy's latency budget (SAFE-48).
+  latency_budget_multiplier: 1.5
+  divergence_log_max: 1000           # max divergence records in ring buffer
+
+fallback_lane:
+  # INV-48: latency budget (ns) before _fallback_lane() is activated.
+  latency_budget_ns: 1000000         # 1ms
+  # Stale threshold: if upstream belief/pressure is older than this (ns),
+  # the fallback lane is activated regardless of latency.
+  stale_threshold_ns: 5000000000     # 5s
+
+confidence_engine:
+  # Composite confidence weights (must sum to 1.0).
+  weights:
+    sharpe_component: 0.30
+    bayesian_component: 0.25
+    entropy_component: 0.15
+    stability_component: 0.15
+    alignment_component: 0.10
+    safety_modifier: 0.05
+  min_confidence_for_execute: 0.55
+  min_confidence_for_shadow: 0.35

@@ -1,0 +1,37 @@
+# registry/strategies/lifecycle.yaml
+# Strategy lifecycle state registry.
+# Valid states: PROPOSED → SHADOW → CANARY → LIVE → RETIRED | ROLLED_BACK
+
+version: "v1"
+lifecycle_states:
+  - strategy_id: "microstructure_v1"
+    state: "LIVE"
+    promoted_at_ns: 0
+    notes: "Phase 3 baseline strategy."
+
+  - strategy_id: "momentum_alpha_v1"
+    state: "SHADOW"
+    promoted_at_ns: 0
+    notes: "Pending canary gate."
+
+  - strategy_id: "mean_reversion_v1"
+    state: "PROPOSED"
+    promoted_at_ns: 0
+    notes: "Awaiting sandbox approval."
+
+valid_transitions:
+  PROPOSED:
+    - SHADOW
+    - REJECTED
+  SHADOW:
+    - CANARY
+    - ROLLED_BACK
+  CANARY:
+    - LIVE
+    - ROLLED_BACK
+  LIVE:
+    - RETIRED
+    - ROLLED_BACK
+  RETIRED: []
+  ROLLED_BACK: []
+  REJECTED: []

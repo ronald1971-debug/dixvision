@@ -1,0 +1,54 @@
+# registry/risk.yaml
+# DIX VISION v42.2 — Risk Parameter Registry
+#
+# Global risk limits and parameters. These values are read at boot
+# and enforced by financial_governance/exposure_guard.py and
+# execution_engine/hot_path/fast_risk_cache.py.
+# Operator can update via the operator interface.
+
+risk:
+
+  # --- Portfolio limits ---
+  max_portfolio_drawdown_pct: 15.0    # halt trading at 15% drawdown
+  warn_portfolio_drawdown_pct: 10.0   # warn at 10%
+  max_position_concentration_pct: 20.0  # max single position as % of portfolio
+  max_correlation_cluster_pct: 40.0   # max correlated cluster as % of portfolio
+
+  # --- Per-trade limits ---
+  max_single_trade_usd: 10000.0
+  max_daily_loss_usd: 5000.0
+  max_daily_trades: 100
+
+  # --- Leverage ---
+  max_leverage_crypto: 3.0
+  max_leverage_forex: 10.0
+  max_leverage_equities: 2.0
+  max_leverage_cfd: 5.0
+
+  # --- Slippage and latency ---
+  max_acceptable_slippage_bps: 25.0   # reject fills with slippage > 25bps
+  max_execution_latency_ms: 2000.0    # warn if order latency > 2s
+
+  # --- Capital deployment throttle ---
+  max_capital_per_minute_usd: 50000.0
+  throttle_window_minutes: 1
+
+  # --- Liquidation risk ---
+  liquidation_warning_distance_pct: 15.0
+  liquidation_critical_distance_pct: 3.0
+
+  # --- Asset class budgets ---
+  budgets:
+    crypto:     50000.0
+    forex:      30000.0
+    equities:   20000.0
+    cfd:        10000.0
+    defi:       5000.0
+
+  # --- Regime overrides ---
+  regime_risk_multipliers:
+    TREND_UP:   1.0
+    TREND_DOWN: 0.8
+    RANGE:      0.7
+    VOL_SPIKE:  0.3
+    UNKNOWN:    0.5
