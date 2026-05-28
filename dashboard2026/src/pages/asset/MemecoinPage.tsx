@@ -16,15 +16,10 @@ import { RugScore } from "@/widgets/memecoin/RugScore";
 import { SignalTracker } from "@/widgets/memecoin/SignalTracker";
 import { SniperQueue } from "@/widgets/memecoin/SniperQueue";
 import { WalletCluster } from "@/widgets/memecoin/WalletCluster";
+import { useVisibilityWrappedItems } from "@/state/widgetVisibility";
 
 import { AssetPageShell } from "./AssetPageShell";
 
-/**
- * Memecoin gets its own dashboard surface — separate route, dedicated
- * widget set — per the operator's explicit directive ("memecoin should
- * have its own dashboard as planned") and PR-#2 spec §3.4 (copy +
- * normal + sniper trio).
- */
 const SYMBOL = "BONK/SOL";
 
 const ITEMS: GridItemSpec[] = [
@@ -211,13 +206,14 @@ const ITEMS: GridItemSpec[] = [
 ];
 
 export function MemecoinPage() {
+  const visibleItems = useVisibilityWrappedItems("memecoin", ITEMS);
   return (
     <AssetPageShell
       title="Memecoin"
       asset="MEMECOIN"
       description="Dedicated memecoin surface — copy + signal + sniper trio per PR-#2 spec §3.4. Holder distribution, rug score, dev-dump watchdog, sniper bundles, copy leaders all share the same governed kill-switch + SL/TP engine as every other form."
     >
-      <AssetGrid storageKey="memecoin" defaultItems={ITEMS} />
+      <AssetGrid storageKey="memecoin" defaultItems={visibleItems} />
     </AssetPageShell>
   );
 }

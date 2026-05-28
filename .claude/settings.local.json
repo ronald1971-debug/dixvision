@@ -12,7 +12,14 @@
       "Bash(Measure-Object)",
       "PowerShell($base = \"c:\\\\dix_vision_v42_2\"; @\\(\"governance_engine\\\\services\\\\opa_policy.py\", \"governance_engine\\\\control_plane\\\\invariant_verifier.py\"\\) | ForEach-Object { Join-Path $base $_ | Resolve-Path -Relative })",
       "Bash(Select-Object -ExpandProperty Count)",
-      "Bash(grep -rn \"^\\\\s*\\\\.\\\\.\\\\.\\\\s*$\" --include=\"*.py\" --exclude-dir=\".venv\" --exclude-dir=\"dixvision.egg-info\" .)"
+      "Bash(grep -rn \"^\\\\s*\\\\.\\\\.\\\\.\\\\s*$\" --include=\"*.py\" --exclude-dir=\".venv\" --exclude-dir=\"dixvision.egg-info\" .)",
+      "Bash(npx tsc *)",
+      "PowerShell(cd c:\\\\dix_vision_v42_2\\\\dashboard2026; npx tsc --noEmit; echo \"Exit: $LASTEXITCODE\")",
+      "Bash(dir)",
+      "Bash(dir c:\\\\dix_vision_v42_2\\\\execution /b)",
+      "Bash(dir c:\\\\dix_vision_v42_2\\\\governance_engine\\\\services /b)",
+      "Bash(dir c:\\\\dix_vision_v42_2\\\\governance_engine\\\\plugin_lifecycle /b)",
+      "Bash(dir c:\\\\dix_vision_v42_2\\\\governance_engine\\\\risk_engine /b)"
     ]
   }
 }
