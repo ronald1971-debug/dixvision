@@ -58,7 +58,7 @@ from learning_engine.lanes.federated import (
 )
 
 FEDML_VERSION = "v3.7-C10"
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("fedml",)
 
 
 # ---------------------------------------------------------------------------

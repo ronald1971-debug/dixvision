@@ -61,7 +61,7 @@ from enum import Enum
 from typing import Any, Final
 
 ANALYZER_VERSION: Final[str] = "v1.0-I26"
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("codeql",)
 
 MAX_QUERY_NAME_LEN: Final[int] = 128
 MAX_PATTERN_LEN: Final[int] = 256

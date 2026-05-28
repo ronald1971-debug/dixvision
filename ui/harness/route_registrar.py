@@ -44,8 +44,9 @@ The thirteen canonical domains:
  4. ``admin`` — env-flagged debug surface
     (``/api/admin/learning/tick``,
     ``/api/admin/route_inventory``).
- 5. ``cognitive`` — ``/api/cognitive/chat/*`` (status, turn,
-    approvals).
+ 5. ``cognitive`` — ``/api/cognitive/chat/*`` (status, turn, approvals),
+    ``/api/cognitive/stream`` (SSE — INDIRA + DYON real-time projection),
+    ``/api/cognitive/snapshot`` (JSON snapshot for initial load).
  6. ``engine`` — hot-path tick / signal / events / backtest
     (``/api/tick``, ``/api/signal``, ``/api/events``,
     ``/api/testing/backtest``).
@@ -109,6 +110,10 @@ _GOVERNANCE_ROUTES: frozenset[RouteKey] = frozenset(
 _EXECUTION_ROUTES: frozenset[RouteKey] = frozenset(
     {
         ("GET", "/api/execution/adapters"),
+        # D1 — scaffold-honest position / order / circuit-breaker surfaces
+        ("GET", "/api/execution/positions"),
+        ("GET", "/api/execution/orders"),
+        ("GET", "/api/execution/circuit_breaker"),
     }
 )
 
@@ -193,6 +198,12 @@ _COGNITIVE_ROUTES: frozenset[RouteKey] = frozenset(
         ("GET", "/api/cognitive/chat/approvals"),
         ("POST", "/api/cognitive/chat/approvals/{request_id}/approve"),
         ("POST", "/api/cognitive/chat/approvals/{request_id}/reject"),
+        # P3/P4 — cognitive governance status panel + SL/TP bracket calculator
+        ("GET", "/api/cognitive/governance"),
+        ("POST", "/api/cognitive/sl_tp/propose"),
+        # COGNITIVE ACTIVATION PHASE — real-time stream projection for INDIRA + DYON
+        ("GET", "/api/cognitive/stream"),
+        ("GET", "/api/cognitive/snapshot"),
     }
 )
 
@@ -213,6 +224,7 @@ _DASHBOARD_ROUTES: frozenset[RouteKey] = frozenset(
         ("GET", "/api/dashboard/strategies"),
         ("GET", "/api/dashboard/decisions"),
         ("GET", "/api/dashboard/memecoin"),
+        ("GET", "/api/dashboard/coherence"),
         ("GET", "/api/dashboard/summary"),
         # P1.5 — projection routes for the six PR #351 widgets.
         ("GET", "/api/dashboard/dex/route"),

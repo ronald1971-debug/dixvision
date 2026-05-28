@@ -47,6 +47,7 @@ from core.contracts.engine import (
 )
 from core.contracts.events import Event, SignalEvent, SystemEvent
 from core.contracts.market import MarketTick
+from intelligence_engine.cognitive import observability_emitter as _obs
 from intelligence_engine.learning_gate import LearningGate
 from intelligence_engine.meta_controller import MetaControllerHotPath
 from intelligence_engine.meta_controller.policy import ExecutionDecision
@@ -79,6 +80,9 @@ class IntelligenceEngine(RuntimeEngine):
 
         self._meta_controller_hot_path = meta_controller_hot_path
         self._signal_window: deque[SignalEvent] = deque(maxlen=signal_window_size)
+        self._last_confidence: float = 0.0  # tracks confidence for shift detection
+        self._last_regime: str = "UNKNOWN"  # tracks regime for belief evolution detection
+        self._last_regime_confidence: float = 0.0
         # PR-DEV-B — Operator Master Development Mode learning gate.
         # ``None`` is the migration sentinel (fail-open) so pre-PR-DEV-B
         # offline tests that construct an engine without a governance
@@ -221,7 +225,53 @@ class IntelligenceEngine(RuntimeEngine):
             vol_spike_z=context.vol_spike_z,
             elapsed_ns=context.elapsed_ns,
         )
+        self._emit_cognition_events(tick.ts_ns, decision)
         return emitted + extras, decision, ledger
+
+    def _emit_cognition_events(self, ts_ns: int, decision: ExecutionDecision) -> None:
+        """Best-effort cognitive observability emission. Never raises."""
+        new_conf = decision.confidence
+        _obs.emit_thought_stream(
+            ts_ns=ts_ns,
+            reasoning_step="meta_controller_tick",
+            context=(
+                f"side={decision.side.value} "
+                f"size={decision.size_fraction:.3f} "
+                f"fallback={decision.fallback}"
+            ),
+            confidence=new_conf,
+            inputs=(f"signal_window_size={len(self._signal_window)}",),
+            conclusion=(
+                f"ExecutionDecision: {decision.side.value} "
+                f"confidence={new_conf:.3f}"
+            ),
+        )
+        _obs.emit_confidence_shift(
+            ts_ns=ts_ns,
+            subject="meta_controller.composite_confidence",
+            old_confidence=self._last_confidence,
+            new_confidence=new_conf,
+            driver="meta_controller_tick",
+        )
+        self._last_confidence = new_conf
+        # Emit BeliefEvolutionEvent when the committed regime transitions.
+        hot = self._meta_controller_hot_path
+        if hot is not None:
+            rs = hot.state.router_state
+            new_regime = rs.current_regime.value
+            new_regime_conf = rs.current_confidence
+            if new_regime != self._last_regime:
+                _obs.emit_belief_evolution(
+                    ts_ns=ts_ns,
+                    belief_id=f"regime_belief_{ts_ns}",
+                    subject="market.committed_regime",
+                    old_value=self._last_regime_confidence if self._last_regime != "UNKNOWN" else None,
+                    new_value=new_regime_conf,
+                    driver=f"regime_transition:{self._last_regime}→{new_regime}",
+                    confidence=new_regime_conf,
+                )
+                self._last_regime = new_regime
+                self._last_regime_confidence = new_regime_conf
 
     def process(self, event: Event) -> Sequence[Event]:
         # Bus-side passthrough; SignalEvents flow on the canonical bus.

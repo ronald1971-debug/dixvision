@@ -55,7 +55,7 @@ from typing import Any
 
 from evolution_engine.patch_pipeline.pipeline import PatchStage, StageVerdict
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("tree-sitter", "tree-sitter-python")
 TREE_SITTER_ADAPTER_VERSION: str = "1"
 GOVERNANCE_BOUNDARY_PREFIXES: tuple[str, ...] = (
     "core/contracts/",

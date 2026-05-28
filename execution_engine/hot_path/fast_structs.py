@@ -89,7 +89,7 @@ def _canonical_loads(blob: bytes) -> Any:
     return json.loads(bytes(blob).decode("utf-8"))
 
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("msgspec",)
 """Canonical declaration of the third-party packages this module would
 *adopt* once the research-acceptance gate clears.  Declared but never
 imported at module level (AST-pinned).

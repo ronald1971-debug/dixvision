@@ -51,7 +51,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Final, Protocol
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("torchrl", "tensordict", "torch")
 TORCHRL_DISTILLER_VERSION: Final[str] = "c-28-torchrl-actor-critic-1"
 
 MAX_TRAJECTORIES: Final[int] = 1024

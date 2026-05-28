@@ -43,7 +43,7 @@ from typing import Any, Final, Generic, TypeVar
 K = TypeVar("K")
 V = TypeVar("V")
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("cachetools",)
 
 DEFAULT_RESPONSE_MAXSIZE: Final[int] = 100
 

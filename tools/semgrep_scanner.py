@@ -60,7 +60,7 @@ from enum import Enum
 from typing import Any, Final
 
 SCANNER_VERSION: Final[str] = "v1.0-I25"
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("semgrep",)
 
 MAX_RULE_ID_LEN: Final[int] = 128
 MAX_MESSAGE_LEN: Final[int] = 1024

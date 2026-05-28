@@ -68,7 +68,7 @@ from typing import Protocol, runtime_checkable
 
 SNN_LIF_VERSION: str = "snn-lif/v1"
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("torch",)
 """Optional production backend (lazy-imported via
 ``torch_lif_cell_factory``). Pure-Python detector has zero deps."""
 

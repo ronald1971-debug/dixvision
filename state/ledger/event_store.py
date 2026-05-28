@@ -159,6 +159,30 @@ class EventStore:
 
         return event
 
+    def query_since(
+        self,
+        since_id: int,
+        event_type: str | None = None,
+        source: str | None = None,
+        limit: int = 200,
+    ) -> list[dict]:
+        """Return events with id > since_id, oldest-first."""
+        parts: list[str] = ["id > ?"]
+        params: list[Any] = [since_id]
+        if event_type:
+            parts.append("event_type = ?")
+            params.append(event_type)
+        if source:
+            parts.append("source = ?")
+            params.append(source)
+        where = "WHERE " + " AND ".join(parts)
+        params.append(limit)
+        cur = self._conn.execute(
+            f"SELECT * FROM events {where} ORDER BY id ASC LIMIT ?", params
+        )
+        cols = [d[0] for d in cur.description]
+        return [dict(zip(cols, row, strict=False)) for row in cur.fetchall()]
+
     def query(self, event_type: str = None, source: str = None, limit: int = 100) -> list[dict]:
         parts, params = [], []
         if event_type:

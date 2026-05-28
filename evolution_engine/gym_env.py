@@ -95,7 +95,7 @@ import math
 from collections.abc import Callable, Mapping
 from typing import Any, Protocol, runtime_checkable
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("gymnasium", "stable-baselines3")
 """``gymnasium`` is needed only by the optional
 :func:`gymnasium_dix_strategy_env` factory; ``stable-baselines3`` is
 needed only by the A-01.2 sandbox module that imports this env. The

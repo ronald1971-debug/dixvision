@@ -81,8 +81,8 @@ from typing import Protocol, runtime_checkable
 
 SNNTORCH_DETECTOR_VERSION: str = "snntorch-detector/v1"
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
-"""Production lazy backends. The pure-Python detector has zero deps."""
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("snntorch", "torch")
+"""Optional lazy backends for the hardware-accelerated spike detector."""
 
 MAX_WINDOW: int = 4_096
 """Hard cap on the per-call window length. Same as B-14 to keep the

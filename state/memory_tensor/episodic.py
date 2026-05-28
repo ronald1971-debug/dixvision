@@ -175,6 +175,27 @@ class EpisodicMemoryStore:
             del self._episodes[oldest_id]
 
         self._episodes[episode.episode_id] = episode
+        self._emit_memory_formation(episode)
+
+    @staticmethod
+    def _emit_memory_formation(episode: "Episode") -> None:
+        """Best-effort MemoryFormationEvent emission. Never raises."""
+        try:
+            from intelligence_engine.cognitive.observability_emitter import emit_memory_formation
+            subject = episode.payload.get("subject", episode.episode_id[:32])
+            content = episode.payload.get("content_summary", f"episodic vector dim={episode.dim}")
+            source = episode.payload.get("source", "unknown")
+            emit_memory_formation(
+                ts_ns=episode.ts_ns,
+                memory_kind="episodic",
+                subject=subject,
+                content_summary=content,
+                source=source,
+                confidence=float(episode.payload.get("confidence", "0.5")),
+                memory_id=episode.episode_id,
+            )
+        except Exception:  # pragma: no cover
+            pass
 
     def delete(self, episode_id: str) -> bool:
         """Remove an episode by id. Returns ``True`` if it was present."""

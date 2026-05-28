@@ -57,7 +57,7 @@ __all__ = (
 )
 
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("great_expectations",)
 
 
 # ---------------------------------------------------------------------------

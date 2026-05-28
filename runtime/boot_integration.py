@@ -48,6 +48,8 @@ class RuntimeBootstrap:
         "_readiness",
         "_fault_handler",
         "_lifecycle_mgr",
+        "_propagator",
+        "_kernel",
     )
 
     def __init__(self, tick_interval_ms: float = 100.0) -> None:
@@ -61,6 +63,8 @@ class RuntimeBootstrap:
         self._readiness: Any = None
         self._fault_handler: Any = None
         self._lifecycle_mgr: Any = None
+        self._propagator: Any = None
+        self._kernel: Any = None
 
     def attach(self, app: Any, state: Any) -> None:
         """Attach runtime kernel to FastAPI app lifecycle.
@@ -81,7 +85,7 @@ class RuntimeBootstrap:
 
     async def _boot(self, state: Any) -> None:
         """Initialize all runtime components and start tick loop."""
-        from runtime.event_fabric import EventFabric
+        from runtime.event_fabric import get_event_fabric
         from runtime.execution_lifecycle import get_lifecycle_manager
         from runtime.fault_handler import FaultHandler
         from runtime.governance.runtime_enforcer import RuntimeGovernanceEnforcer
@@ -89,8 +93,10 @@ class RuntimeBootstrap:
         from runtime.reconciliation import StateReconciler
         from runtime.replay_validator import ReplayValidator
 
-        # Initialize components
-        self._fabric = EventFabric()
+        # Initialize components — use the process-level singleton so all
+        # publishers (cognitive_governance, system events, etc.) and
+        # subscribers share ONE fabric instance.
+        self._fabric = get_event_fabric()
         self._enforcer = RuntimeGovernanceEnforcer(store=_get_authority_store(state))
         self._reconciler = StateReconciler(store=_get_authority_store(state))
         self._replay = ReplayValidator()
@@ -101,6 +107,51 @@ class RuntimeBootstrap:
         # Register subsystems with reconciler
         self._register_subsystems(state)
 
+        # Wire the ModePropagator to the GOVERNANCE channel so critical
+        # cognitive violations drive synchronous mode transitions through
+        # the kernel (canonical mode authority).
+        from core.contracts.governance import SystemMode  # noqa: PLC0415
+        from runtime.event_fabric import EventAck, EventChannel  # noqa: PLC0415
+        from runtime.governance.mode_propagator import ModePropagator  # noqa: PLC0415
+
+        # Sync propagator initial mode with kernel's current mode (if available).
+        _initial_mode = "PAPER"
+        if hasattr(state, "system_kernel"):
+            _initial_mode = state.system_kernel.snapshot.mode.name
+        self._propagator = ModePropagator(initial_mode=_initial_mode)
+        self._kernel = getattr(state, "system_kernel", None)
+
+        def _on_governance_event(event: Any) -> Any:
+            """Route critical cognitive violations through the kernel FSM.
+
+            SystemKernel is the canonical mode writer.  We never call
+            propagator.propagate() directly here — the snapshot listener
+            below takes care of broadcasting after the kernel commits.
+            """
+            if event.event_type in ("COGOV_CRITICAL_VIOLATION",):
+                try:
+                    if self._kernel is not None:
+                        self._kernel.transition_mode(
+                            SystemMode.SAFE,
+                            reason="cognitive_governance",
+                        )
+                    else:
+                        # Kernel not available yet — fall back to direct propagation.
+                        self._propagator.propagate(
+                            "SAFE",
+                            triggered_by="cognitive_governance",
+                        )
+                except Exception:
+                    pass
+            return EventAck(
+                event_sequence=event.sequence,
+                subscriber_id="runtime_bootstrap",
+                accepted=True,
+            )
+
+        self._fabric.subscribe(EventChannel.GOVERNANCE, "runtime_bootstrap", _on_governance_event)
+        logger.info("ModePropagator subscribed to EventFabric.GOVERNANCE channel")
+
         # Step 10 — bind the kernel-backed authority shim so writes
         # to the legacy RuntimeAuthorityStore flow through SystemKernel.
         if hasattr(state, "system_kernel"):
@@ -108,6 +159,37 @@ class RuntimeBootstrap:
             if hasattr(authority_store, "bind_kernel"):
                 authority_store.bind_kernel(state.system_kernel)
                 logger.info("RuntimeAuthorityStore bound to SystemKernel (Step 10)")
+
+        # Governance alignment — register a kernel snapshot listener that
+        # keeps ModePropagator in sync and publishes MODE_TRANSITION to the
+        # AUDIT channel whenever the canonical mode changes.
+        if self._kernel is not None:
+            _last_mode: list[str] = [self._kernel.snapshot.mode.name]
+
+            def _on_kernel_snapshot(snap: Any) -> None:
+                new_name = snap.mode.name
+                if new_name == _last_mode[0]:
+                    return
+                old_name = _last_mode[0]
+                _last_mode[0] = new_name
+                # Broadcast to registered subsystems via propagator.
+                try:
+                    self._propagator.propagate(new_name, triggered_by="kernel_fsm")
+                except Exception:
+                    pass
+                # Publish an audit event so the mode transition is observable.
+                try:
+                    self._fabric.publish(
+                        EventChannel.AUDIT,
+                        "MODE_TRANSITION",
+                        {"old_mode": old_name, "new_mode": new_name},
+                        source="runtime_bootstrap",
+                    )
+                except Exception:
+                    pass
+
+            self._kernel.on_snapshot_change(_on_kernel_snapshot)
+            logger.info("Kernel snapshot listener registered for governance alignment")
 
         # Run initial readiness check
         report = self._readiness.assess()
@@ -217,6 +299,14 @@ class RuntimeBootstrap:
     @property
     def readiness(self) -> Any:
         return self._readiness
+
+    @property
+    def propagator(self) -> Any:
+        return self._propagator
+
+    @property
+    def kernel(self) -> Any:
+        return self._kernel
 
 
 def _get_authority_store(state: Any) -> Any:

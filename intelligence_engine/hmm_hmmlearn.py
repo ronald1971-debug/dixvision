@@ -109,7 +109,7 @@ import math
 from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ( "hmmlearn", "numpy", "scipy", "scikit-learn", )
 
 MIN_N_COMPONENTS: int = 1
 """Hard lower bound on :attr:`HMMSpec.n_components`."""

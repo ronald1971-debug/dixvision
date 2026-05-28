@@ -101,7 +101,7 @@ import json
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Protocol, runtime_checkable
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("dspy-ai",)
 """A-06 introduces a runtime-optional dependency on dspy-ai.
 
 The package is **only** required if the operator wires

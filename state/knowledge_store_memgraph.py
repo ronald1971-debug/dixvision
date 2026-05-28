@@ -84,7 +84,7 @@ from state.knowledge_store_memgraph_queries import (
 MEMGRAPH_STORE_VERSION: str = "1"
 """Serialisation version pin (incremented on breaking schema changes)."""
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("gqlalchemy",)
 """Live transport requires ``gqlalchemy``; in-memory fallback has no deps."""
 
 

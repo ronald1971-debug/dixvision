@@ -120,7 +120,7 @@ import math
 from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("pyro-ppl", "torch", "numpy")
 
 MIN_NUM_SITES: int = 1
 """Hard lower bound on :attr:`SVIInferenceResult.site_summaries` length."""

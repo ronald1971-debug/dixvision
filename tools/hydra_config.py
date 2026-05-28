@@ -56,7 +56,7 @@ from dataclasses import dataclass, field
 from typing import Any, Final
 
 CONFIG_VERSION: Final[str] = "v1.0-I29"
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("hydra-core",)
 
 MAX_NAME_LEN: Final[int] = 64
 MAX_GROUP_DEPTH: Final[int] = 16

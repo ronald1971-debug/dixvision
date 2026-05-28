@@ -120,7 +120,7 @@ from evolution_engine.gym_env import (
     TradeAction,
 )
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("gymnasium", "stable-baselines3")
 
 MAX_TOTAL_TIMESTEPS: int = 10_000_000
 """Hard upper bound on the SB3 ``total_timesteps`` argument. Mirrors

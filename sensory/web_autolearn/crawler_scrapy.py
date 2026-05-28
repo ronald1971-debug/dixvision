@@ -105,7 +105,7 @@ __all__ = (
 # pip dependency flag — the adapter lazy-imports ``scrapy`` at
 # connect()-time, so the module itself is importable without the
 # package installed.
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("scrapy",)
 
 DEFAULT_DOWNLOAD_DELAY_SEC: Final[float] = 1.0
 """Rate-limit per spec line 1505: ``max 1 req/sec default``.

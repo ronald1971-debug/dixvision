@@ -51,7 +51,7 @@ from typing import Protocol, runtime_checkable
 
 
 EXPERIMENT_TRACKING_VERSION = "experiment-tracking/v1"
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("mlflow",)
 
 
 # ----------------------------------------------------- exceptions

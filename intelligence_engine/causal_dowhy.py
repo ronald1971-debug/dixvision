@@ -101,7 +101,7 @@ import math
 from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("dowhy", "pandas", "numpy", "scipy")
 
 MIN_N_SAMPLES: int = 1
 MAX_N_SAMPLES: int = 10_000_000

@@ -86,7 +86,7 @@ __all__ = [
 # Module identity
 # ---------------------------------------------------------------------------
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("prometheus-client",)
 PROMETHEUS_ADAPTER_VERSION: str = "1"
 
 EXECUTIONS_TOTAL: str = "executions_total"

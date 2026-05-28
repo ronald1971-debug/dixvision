@@ -80,7 +80,7 @@ from typing import Final
 
 from core.contracts.macro_regime import MacroRegime
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("polars",)
 """S-10.2 reuses the ``polars`` pip dep declared by S-10.1.
 
 Polars is **lazy-imported inside** :func:`compute_regime_stats` so this

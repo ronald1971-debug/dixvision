@@ -79,7 +79,7 @@ from sensory.web_autolearn.contracts import RawDocument
 # connect()-time, so the module itself is importable without the
 # package installed. The package distributes as ``firecrawl-py`` on
 # PyPI but exposes the ``firecrawl`` import name.
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("firecrawl-py",)
 
 
 # --------------------------------------------------------------------

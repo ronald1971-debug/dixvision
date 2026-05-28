@@ -104,7 +104,7 @@ HASH_CHAIN_VERSION: Final[int] = 1
 #: writer maintains. ``esdbclient`` would only be needed if/when an
 #: EventStoreDB mirror is wired as an alternative backend (governance research
 #: gate — not in scope for OFFLINE_ONLY).
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("esdbclient",)
 
 #: ``\x1e`` Record Separator — divides the top-level row fields.
 FIELD_SEPARATOR: Final[str] = "\x1e"

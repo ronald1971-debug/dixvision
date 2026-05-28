@@ -135,7 +135,7 @@ from evolution_engine.gym_env import (
     TradeAction,
 )
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("tianshou", "gymnasium", "torch")
 
 MAX_STEP_PER_EPOCH: int = 10_000_000
 """Hard upper bound on :attr:`TianshouArguments.step_per_epoch` —

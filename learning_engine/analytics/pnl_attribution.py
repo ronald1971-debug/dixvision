@@ -79,7 +79,7 @@ from typing import TYPE_CHECKING, Final, Literal
 if TYPE_CHECKING:  # pragma: no cover — imports for type checkers only
     pass
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("polars",)
 """S-10.1 introduces a single new pip dep: ``polars``.
 
 Polars is **lazy-imported inside** :func:`attribute_pnl_polars` so this

@@ -127,7 +127,7 @@ import math
 from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("arviz", "numpy", "xarray")
 
 MIN_NUM_VARS: int = 1
 """Hard lower bound on :attr:`ArviZDiagnosticResult.variable_summaries` length."""

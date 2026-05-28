@@ -197,6 +197,23 @@ _DECLARED_NODE_SPECS: tuple[_DeclaredNodeSpec, ...] = (
         ),
         state_attr="evolution",
     ),
+    _DeclaredNodeSpec(
+        node=RuntimeNode(
+            node_id="cognitive_governance",
+            kind=NodeKind.ENGINE,
+            tier=NodeTier.T1,
+            declared_version="v1.0",
+            capabilities=frozenset(
+                {
+                    "governance.cognitive_integrity",
+                    "governance.mutation_gate",
+                    "governance.learning_gate",
+                    "governance.signal_gate",
+                }
+            ),
+        ),
+        state_attr="cognitive_governance_engine",
+    ),
     # --- LOOPS (T2) ------------------------------------------------------
     _DeclaredNodeSpec(
         node=RuntimeNode(

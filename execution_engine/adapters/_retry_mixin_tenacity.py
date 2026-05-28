@@ -80,7 +80,7 @@ from execution_engine.adapters._retry_mixin import (
 
 T = TypeVar("T")
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("tenacity",)
 
 #: Canonical-doc defaults: ``stop_after_attempt(5)`` and
 #: ``wait_random_exponential(min=1, max=60)``. ``max_attempts`` counts

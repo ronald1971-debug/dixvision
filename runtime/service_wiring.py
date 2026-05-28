@@ -216,6 +216,7 @@ def register_all_services(kernel: Any) -> int:
         ("hazard_detector", "system_monitor.hazard_detector", "get_hazard_detector"),
         ("hazard_bus", "system_monitor.hazard_bus", "get_hazard_bus"),
         ("heartbeat_monitor", "system_monitor.heartbeat_monitor", "get_heartbeat_monitor"),
+        ("cognitive_governance", "cognitive_governance.engine", "get_cognitive_governance"),
     ]
 
     for name, mod_path, factory_name in factories:

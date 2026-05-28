@@ -145,7 +145,7 @@ from typing import Protocol, runtime_checkable
 
 NENGO_COGNITIVE_VERSION: str = "nengo-cognitive/v1"
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("nengo", "numpy")
 """Optional production backend (lazy-imported via
 :func:`nengo_cognitive_engine`). Pure-Python ensemble has zero
 deps."""

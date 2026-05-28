@@ -48,7 +48,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("psutil",)
 
 # ---------------------------------------------------------------------------
 # Canonical defaults (pinned by tests).

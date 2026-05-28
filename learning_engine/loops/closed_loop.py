@@ -184,6 +184,7 @@ class ClosedLearningLoop:
         "_sample_builder",
         "_update_builder",
         "_previous_snapshot",
+        "_cognitive_gate",
     )
 
     def __init__(
@@ -195,6 +196,7 @@ class ClosedLearningLoop:
         policy_supplier: FreezePolicySupplier,
         sample_builder: SampleBuilder | None = None,
         update_builder: UpdateBuilder | None = None,
+        cognitive_gate: Callable[[], bool] | None = None,
     ) -> None:
         if getattr(learner, "_freeze", None) is not None:
             raise ValueError(
@@ -213,6 +215,7 @@ class ClosedLearningLoop:
         self._sample_builder = sample_builder or _empty_sample_builder
         self._update_builder = update_builder or _empty_update_builder
         self._previous_snapshot: ParameterSnapshot | None = None
+        self._cognitive_gate = cognitive_gate
 
     @property
     def previous_snapshot(self) -> ParameterSnapshot | None:
@@ -230,6 +233,20 @@ class ClosedLearningLoop:
         policy = self._policy_supplier()
         drained = self._feedback.drain()
         if policy.is_frozen():
+            return LoopTickResult(
+                ts_ns=ts_ns,
+                frozen=True,
+                drained_outcomes=drained,
+                submitted_samples=(),
+                snapshot=None,
+                emitted_events=(),
+                policy_mode_name=policy.mode.name,
+                operator_override=policy.operator_override,
+            )
+        # Cognitive gate: blocks the unfrozen path when the cognitive
+        # governance engine reports a blocking violation (caller supplies
+        # the gate as a closure — B1/L2 boundary preserved).
+        if self._cognitive_gate is not None and not self._cognitive_gate():
             return LoopTickResult(
                 ts_ns=ts_ns,
                 frozen=True,

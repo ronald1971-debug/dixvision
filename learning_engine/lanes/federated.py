@@ -61,7 +61,7 @@ from dataclasses import dataclass, field
 from core.contracts.learning import LearningUpdate
 
 FEDERATED_VERSION = "v3.7-C09"
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("flwr",)
 MIN_CLIENTS_PER_ROUND = 2
 PRIVACY_FORBIDDEN_META_KEYS: frozenset[str] = frozenset(
     {

@@ -248,7 +248,9 @@ from ui.cognitive_chat_runtime import (
 from ui.cognitive_chat_runtime import (
     build_runtime as build_cognitive_chat_runtime,
 )
+from ui.cognitive_governance_routes import build_cognitive_governance_router
 from ui.cognitive_routes import build_cognitive_router
+from ui.cognitive_stream_routes import build_cognitive_stream_router
 from ui.dashboard_projection_routes import build_projection_router
 from ui.dashboard_routes import build_dashboard_router
 from ui.execution_routes import build_execution_router
@@ -718,6 +720,11 @@ class _State:
         self.intelligence.set_learning_gate(
             LearningGate(policy_supplier=lambda: self.development_mode_policy)
         )
+        # Cognitive governance engine — single process-level instance. Stored
+        # on _State so the runtime topology registrar can track it as an
+        # active declared node (STARTED vs DORMANT).
+        from cognitive_governance.engine import get_cognitive_governance as _cogov  # noqa: PLC0415
+        self.cognitive_governance_engine = _cogov()
 
     def _build_event_buffers(self) -> None:
         """P1.2 — ``_State.__init__`` section: event_buffers."""
@@ -962,6 +969,7 @@ class _State:
             FeedbackSample,
         )
         self._closed_loop_update_builder = make_diff_update_builder()
+        from cognitive_governance.engine import get_cognitive_governance as _get_cogov  # noqa: PLC0415
         self.closed_learning_loop = ClosedLearningLoop(
             feedback_collector=self.feedback_collector,
             learner=self.slow_loop_learner,
@@ -969,6 +977,7 @@ class _State:
             policy_supplier=self._live_freeze_policy,
             sample_builder=self._closed_loop_sample_builder,
             update_builder=self._closed_loop_update_builder,
+            cognitive_gate=lambda: _get_cogov().gate_learning_update().allowed,
         )
         # PR-Z2 — rolling per-strategy outcome aggregator. Observed
         # from drained outcomes between the closed + structural tick
@@ -990,6 +999,7 @@ class _State:
             policy_supplier=self._live_freeze_policy,
             stats_supplier=self._structural_stats_supplier,
             evidence_builder=self._structural_evidence_builder,
+            cognitive_gate=lambda: _get_cogov().gate_mutation().allowed,
         )
 
     def _live_freeze_policy(self) -> LearningEvolutionFreezePolicy:
@@ -1821,6 +1831,14 @@ app.include_router(build_feeds_router(lambda: STATE))
 # and ``approval_edge`` through the same lambda-state-accessor pattern
 # the dashboard / governance / execution / runtime routers use.
 app.include_router(build_cognitive_router(lambda: STATE))
+# P3/P4 — cognitive governance status (13-guard integrity panel) +
+# SL/TP bracket calculator.
+app.include_router(build_cognitive_governance_router())
+# COGNITIVE ACTIVATION PHASE — real-time SSE projection of INDIRA and DYON
+# cognitive event streams to the operator dashboard.
+# GET /api/cognitive/stream   — SSE (channel "indira" | "dyon")
+# GET /api/cognitive/snapshot — JSON snapshot for initial load
+app.include_router(build_cognitive_stream_router())
 
 
 # C-2 / P2-4 / R-1 part 4 — operator-management surface (summary /

@@ -91,7 +91,7 @@ from sensory.neuromorphic.contracts import RiskPulse
 
 # ===================================================================== version
 SNN_GOVERNANCE_VERSION: str = "snn-governance-risk/v1"
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("bindsnet",)
 
 # ===================================================================== limits
 MAX_WINDOW: int = 4_096

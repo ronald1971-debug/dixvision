@@ -43,14 +43,32 @@ class MT5Adapter:
             for s in raw_signals
         ]
 
-    def fetch_market_data(self, *, symbol: str, timeframe: str, bars: int) -> list[dict[str, Any]]:
-        """Fetch OHLCV market data from MT5."""
-        # Placeholder — actual implementation would connect to MT5 terminal
+    def fetch_market_data(
+        self,
+        *,
+        raw_bars: list[dict[str, Any]],
+        symbol: str = "",
+        timeframe: str = "H1",
+        bars: int = 0,
+    ) -> list[dict[str, Any]]:
+        """Normalize OHLCV bars from an MT5 terminal export.
+
+        MT5 exports bars as dicts with keys: time, open, high, low, close,
+        tick_volume, spread, real_volume.
+        """
         return [
             {
                 "platform": self.platform,
-                "symbol": symbol,
+                "symbol": str(b.get("symbol", symbol)),
                 "timeframe": timeframe,
-                "bars_requested": bars,
+                "open": float(b.get("open", 0.0)),
+                "high": float(b.get("high", 0.0)),
+                "low": float(b.get("low", 0.0)),
+                "close": float(b.get("close", 0.0)),
+                "tick_volume": int(b.get("tick_volume", 0)),
+                "real_volume": int(b.get("real_volume", b.get("tick_volume", 0))),
+                "spread": int(b.get("spread", 0)),
+                "ts_ns": int(b.get("ts_ns", b.get("time", 0))),
             }
+            for b in raw_bars[:bars] if b
         ]

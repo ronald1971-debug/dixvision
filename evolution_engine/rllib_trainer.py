@@ -141,7 +141,7 @@ from evolution_engine.gym_env import (
     TradeAction,
 )
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("ray[rllib]",)
 
 MAX_AGENTS: int = 64
 """Hard upper bound on the number of agents per training run. Mirrors

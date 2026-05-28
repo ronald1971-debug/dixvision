@@ -145,13 +145,20 @@ class ArenaEngine:
 
         return slot
 
-    def tick(self) -> list[StrategySlot]:
+    def tick(self, *, ts_ns: int = 0) -> list[StrategySlot]:
         """Run one arena cycle: transition states + reallocate capital.
+
+        Args:
+            ts_ns: Optional caller-supplied timestamp for cognitive
+                observability events. Defaults to 0 (no emission) when
+                not provided for backward-compatibility.
 
         Returns list of strategies that were killed this tick.
         """
         killed: list[StrategySlot] = []
         active = self.active_slots
+        # Capture pre-tick composite scores for ArchetypeEvolutionEvent emission.
+        pre_scores: dict[str, float] = {s.strategy_id: s.composite_score for s in active}
 
         if not active:
             return killed
@@ -202,4 +209,29 @@ class ArenaEngine:
                 for slot in alive:
                     slot.allocation_pct /= total_alloc
 
+        if ts_ns > 0:
+            self._emit_archetype_events(ts_ns, pre_scores)
         return killed
+
+    def _emit_archetype_events(
+        self, ts_ns: int, pre_scores: dict[str, float]
+    ) -> None:
+        """Best-effort ArchetypeEvolutionEvent emission. Never raises."""
+        try:
+            from intelligence_engine.cognitive.observability_emitter import (
+                emit_archetype_evolution,
+            )
+            for slot in self.active_slots:
+                old = pre_scores.get(slot.strategy_id)
+                new = slot.composite_score
+                emit_archetype_evolution(
+                    ts_ns=ts_ns,
+                    archetype_id=slot.archetype_id,
+                    archetype_name=slot.archetype_id,
+                    old_fitness=old,
+                    new_fitness=new,
+                    regime=slot.state.value,
+                    evaluation_basis="arena_composite_score",
+                )
+        except Exception:  # pragma: no cover
+            pass

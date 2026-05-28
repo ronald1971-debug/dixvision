@@ -65,7 +65,7 @@ from execution_engine.market_data.aggregator import (
 #: lazy-imported only inside :func:`sortedcontainers_orderbook_factory`.
 #: Callers that stay on :class:`PurePyPriceLevelMap` need zero new
 #: third-party packages.
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("sortedcontainers",)
 
 
 # ---------------------------------------------------------------------------

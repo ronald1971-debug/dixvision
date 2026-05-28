@@ -57,7 +57,7 @@ __all__ = [
 
 
 WATCHER_VERSION: Final[str] = "v1.0-I10"
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("watchdog",)
 
 #: File globs the canonical registry hot-reloader cares about. The
 #: watcher refuses to register a :class:`RegistryWatchSpec` with an

@@ -69,7 +69,7 @@ from typing import Any
 CAUSAL_GRAPH_VERSION: str = "1"
 """Serialisation version pin (incremented on breaking schema changes)."""
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("networkx",)
 """Optional — required only for :func:`CausalGraph.networkx_export`."""
 
 

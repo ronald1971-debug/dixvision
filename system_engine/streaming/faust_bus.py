@@ -88,7 +88,7 @@ from typing import Any, Generic, TypeVar
 
 FAUST_BUS_VERSION: int = 1
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("faust-streaming",)
 """Declared so the canonical pin-set is complete.
 
 The package itself is NEVER imported in this module — see the module

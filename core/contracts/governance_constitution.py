@@ -54,9 +54,9 @@ DEV_PRIORITY_STACK: dict[GovernancePriority, int] = {
 
 LIVE_PRIORITY_STACK: dict[GovernancePriority, int] = {
     GovernancePriority.P1_COGNITIVE: 1,
-    GovernancePriority.P4_CAPITAL:   2,   # capital becomes co-equal in live
-    GovernancePriority.P2_OPERATOR:  3,
-    GovernancePriority.P3_SYSTEM:    4,
+    GovernancePriority.P2_OPERATOR:  2,   # Operator Sovereignty remains P2 in all phases
+    GovernancePriority.P3_SYSTEM:    3,
+    GovernancePriority.P4_CAPITAL:   4,   # Capital enforcement becomes FULLY ACTIVE in live, but rank stays P4
 }
 
 
@@ -159,23 +159,26 @@ class ArchitectureIdentity:
 
 
 DIXVISION_IDENTITY = ArchitectureIdentity(
-    primary_identity="Adaptive Cognitive Market Intelligence Operating System",
+    primary_identity="Dual-Cognition Autonomous Evolution System",
     manifestations=(
-        "Cognitive operating system",
-        "Trader intelligence ecosystem",
-        "Self-evolving market cognition engine",
-        "Epistemic learning framework",
-        "Live execution environment (future manifestation)",
+        "INDIRA — Cognitive Market Intelligence (trader cognition, reasoning, strategy, archetype evolution)",
+        "DYON — Autonomous Engineering Intelligence (system maintenance, architectural coherence, self-repair)",
+        "Governance — four-layer constitutional protection (Cognitive → Operator → System → Capital)",
+        "Evolution — continuous observe/learn/simulate/critique/mutate/validate/evolve cycle",
+        "Trading — one possible downstream expression of cognition (not the primary identity)",
     ),
     governance_target=(
-        "Preserve cognitive integrity, operator sovereignty, system integrity, "
-        "and capital integrity — simultaneously, in priority order by phase."
+        "Protect simultaneously: (1) Cognitive Integrity — truthful reasoning, no false learning or memory poisoning; "
+        "(2) Operator Sovereignty — operator is final authority, never overrideable by any autonomous process; "
+        "(3) System Integrity — deterministic, auditable, replayable, contract-valid evolution; "
+        "(4) Capital Integrity — fully enforced when live capital deployed, never overrides operator sovereignty."
     ),
     development_priority=(
         "P1 Cognitive → P2 Operator → P3 System → P4 Capital"
     ),
     live_priority=(
-        "P1 Cognitive → P2 Capital → P3 Operator → P4 System"
+        "P1 Cognitive → P2 Operator → P3 System → P4 Capital "
+        "(Capital enforcement fully active in live; priority rank unchanged — Operator Sovereignty never demoted)"
     ),
 )
 

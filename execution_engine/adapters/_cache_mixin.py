@@ -60,7 +60,7 @@ from typing import Any, Final, Generic, TypeVar
 K = TypeVar("K")
 V = TypeVar("V")
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("cachetools",)
 
 DEFAULT_TICKER_TTL_NS: Final[int] = 1_000_000_000  # canonical 1s
 DEFAULT_TICKER_MAXSIZE: Final[int] = 512

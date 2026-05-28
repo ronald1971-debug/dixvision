@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import stat
 from pathlib import Path
 
@@ -128,7 +129,12 @@ def test_update_is_atomic_and_chmod_0600(tmp_path: Path) -> None:
     p = tmp_path / ".env"
     update_dotenv_file(p, {"FOO": "bar"})
     mode = stat.S_IMODE(os.stat(p).st_mode)
-    assert mode == 0o600
+    if platform.system() == "Windows":
+        # Windows doesn't support POSIX owner/group/other bits; chmod(0o600)
+        # yields 0o666 (writable) since the file is not read-only.
+        assert mode in (0o600, 0o666)
+    else:
+        assert mode == 0o600
 
 
 def test_update_rejects_invalid_name(tmp_path: Path) -> None:

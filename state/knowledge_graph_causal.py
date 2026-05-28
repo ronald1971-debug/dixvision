@@ -105,7 +105,7 @@ from typing import Protocol, runtime_checkable
 # Module identity / dependency declaration.
 # ---------------------------------------------------------------------------
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("causalnex", "pandas", "numpy")
 """Live learner requires ``causalnex``; the Protocol seam allows fake
 injection for tests (no deps)."""
 

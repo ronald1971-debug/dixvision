@@ -195,6 +195,43 @@ def build_dashboard_router(provider: _WidgetsProvider) -> APIRouter:
         widgets = provider()
         return {"memecoin": _to_dict(widgets.memecoin.status())}
 
+    @router.get("/coherence")
+    def get_coherence() -> dict[str, Any]:
+        """Belief-state coherence snapshot for the dashboard coherence panel.
+
+        Returns regime, confidence, consensus side, and mode flags from the
+        kernel's canonical BeliefState. When the kernel is not yet booted,
+        returns ``available=False`` with safe defaults so the widget shows
+        an amber chip rather than a blank panel.
+        """
+        proj = get_state_projection()
+        if not proj.is_booted:
+            return {
+                "available": False,
+                "regime": "UNKNOWN",
+                "regime_confidence": 0.0,
+                "consensus_side": "HOLD",
+                "signal_count": 0,
+                "avg_confidence": 0.0,
+                "symbols": [],
+                "mode": "PAPER",
+                "freeze_active": False,
+                "ts_ns": 0,
+            }
+        belief = proj.belief
+        return {
+            "available": True,
+            "regime": belief.regime.value,
+            "regime_confidence": belief.regime_confidence,
+            "consensus_side": belief.consensus_side.value,
+            "signal_count": belief.signal_count,
+            "avg_confidence": belief.avg_confidence,
+            "symbols": list(belief.symbols),
+            "mode": proj.mode.value,
+            "freeze_active": proj.freeze_active,
+            "ts_ns": belief.ts_ns,
+        }
+
     # ------------------------------------------------------------------
     # DASH-2 — operator action endpoints
     # ------------------------------------------------------------------

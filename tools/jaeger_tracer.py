@@ -56,7 +56,7 @@ from dataclasses import dataclass, field
 from typing import Any, Final
 
 TRACER_VERSION: Final[str] = "v1.0-I30"
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("jaeger-client",)
 
 MAX_SERVICE_NAME_LEN: Final[int] = 64
 MAX_SPAN_NAME_LEN: Final[int] = 128

@@ -56,7 +56,7 @@ from simulation.parallel_runner import (
     _percentile_sorted,
 )
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("ray[default]",)
 
 
 # ---------------------------------------------------------------------------

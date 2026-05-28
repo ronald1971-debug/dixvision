@@ -102,7 +102,7 @@ __all__ = (
 )
 
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("haystack-ai",)
 
 
 # ---------------------------------------------------------------------------

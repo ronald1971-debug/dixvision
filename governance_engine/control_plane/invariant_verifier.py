@@ -95,7 +95,7 @@ from typing import Any, Protocol
 # :func:`z3_backend_factory`. The module itself is importable
 # without z3 installed; tests run against
 # :class:`InProcessSMTBackend`.
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("z3-solver",)
 
 DEFAULT_SOLVER_TIMEOUT_MS: int = 30_000
 """Hard solver timeout (CI must stay bounded)."""

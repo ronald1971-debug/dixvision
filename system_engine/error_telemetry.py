@@ -52,7 +52,7 @@ from typing import Any, Protocol, runtime_checkable
 # ---------------------------------------------------------------------------
 # Module identity
 # ---------------------------------------------------------------------------
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("sentry-sdk",)
 ERROR_TELEMETRY_ADAPTER_VERSION: str = "1"
 
 MAX_TAG_VALUE_LEN: int = 200

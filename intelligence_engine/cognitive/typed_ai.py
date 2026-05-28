@@ -70,7 +70,7 @@ from pydantic import BaseModel, ValidationError
 
 from core.cognitive_router import AIProvider, TaskClass
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("pydantic-ai",)
 """S-06 introduces a runtime-optional dependency on pydantic-ai.
 
 The package is **only** required if the operator wires

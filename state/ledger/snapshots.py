@@ -124,7 +124,7 @@ __all__ = (
 # Public sentinels
 # ---------------------------------------------------------------------------
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("pyarrow",)
 """Lazy pip dependency surfaced for tooling — never imported at top level."""
 
 SCHEMA_VERSION: Final[str] = "dix-events-v1"

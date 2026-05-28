@@ -166,6 +166,28 @@ class StateProjection:
             })
         return rows
 
+    # -- Cognitive governance projection --------------------------------
+
+    def cognitive_integrity(self) -> dict[str, Any]:
+        """Read-only cognitive integrity projection for dashboard widgets.
+
+        Reads the kernel-registered ``cognitive_governance`` service health
+        (no direct engine import — authority constraint preserved). Returns
+        a dict safe for JSON serialisation.
+
+        When cognitive governance is not yet registered or is unavailable,
+        returns a safe-default ``"unavailable"`` payload so the widget can
+        show an amber chip rather than crashing.
+        """
+        svc = self.services.get("cognitive_governance")
+        if svc is None:
+            return {"available": False, "healthy": False, "detail": "not_registered"}
+        return {
+            "available": True,
+            "healthy": svc.healthy,
+            "detail": svc.detail or "",
+        }
+
     # -- JSON-safe summary for API endpoints ----------------------------
 
     def summary(self) -> dict[str, Any]:

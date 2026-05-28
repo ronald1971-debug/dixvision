@@ -86,7 +86,7 @@ from learning_engine.lanes.federated import (
 )
 
 OPENFL_VERSION = "v3.7-C11"
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("openfl",)
 
 
 # ---------------------------------------------------------------------------

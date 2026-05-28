@@ -89,7 +89,7 @@ from typing import Protocol
 
 NEURO_PROTOTYPE_VERSION: str = "neuro-prototype/v1"
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("brian2",)
 """Brian2 is a RESEARCH dependency. It is never imported at module
 load — only lazy-imported inside :func:`brian2_prototype_factory` by
 offline research scripts."""

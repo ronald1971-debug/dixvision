@@ -57,7 +57,7 @@ NATS_BUS_VERSION: Final[int] = 1
 """Bumped on any wire-shape change to subject grammar / record
 shape / digest."""
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("nats-py",)
 """PyPI packages activated by the lazy seams below. Declared so the
 canonical pin-set is complete, but the package itself is NEVER
 imported in this module.

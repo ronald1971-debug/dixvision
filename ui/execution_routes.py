@@ -40,6 +40,64 @@ def build_execution_router() -> APIRouter:
             ],
         }
 
+    @router.get("/positions")
+    def list_positions() -> dict[str, Any]:
+        """Open positions snapshot.
+
+        Returns scaffold-honest ``wired=False`` until an adapter exposes a
+        position book over the registry.  The dashboard renders this as an
+        amber chip rather than a blank panel.
+        """
+        reg = default_registry()
+        snap = reg.snapshot()
+        any_ready = any(s.state.value == "READY" for s in snap)
+        return {
+            "wired": any_ready,
+            "positions": [],
+            "detail": (
+                "position book not yet exposed by any adapter"
+                if not any_ready
+                else "adapter READY but position query not yet implemented"
+            ),
+        }
+
+    @router.get("/orders")
+    def list_orders() -> dict[str, Any]:
+        """Open orders snapshot.
+
+        Returns scaffold-honest ``wired=False`` until the order book is
+        wired to the adapter lifecycle registry.
+        """
+        reg = default_registry()
+        snap = reg.snapshot()
+        any_ready = any(s.state.value == "READY" for s in snap)
+        return {
+            "wired": any_ready,
+            "orders": [],
+            "detail": (
+                "order book not yet wired; all adapters DISCONNECTED"
+                if not any_ready
+                else "adapter READY but order query not yet implemented"
+            ),
+        }
+
+    @router.get("/circuit_breaker")
+    def circuit_breaker_status() -> dict[str, Any]:
+        """Circuit breaker state snapshot.
+
+        Returns the high-level breaker state from the protections layer.
+        Currently scaffold-honest: the CircuitBreaker value object is
+        per-order and not aggregated at the registry level yet.
+        """
+        return {
+            "wired": False,
+            "state": "ARMED",
+            "trade_limit": 4,
+            "lookback_period": "60m",
+            "locked_until_ns": None,
+            "detail": "circuit breaker not yet aggregated at execution registry level",
+        }
+
     return router
 
 

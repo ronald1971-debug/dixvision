@@ -49,7 +49,7 @@ from dataclasses import dataclass
 from typing import Any, Final
 
 CLI_VERSION: Final[str] = "v1.0-I06-I07"
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("typer", "rich")
 
 _ALLOWED_OPTION_TYPES: Final[tuple[type, ...]] = (str, int, float, bool)
 

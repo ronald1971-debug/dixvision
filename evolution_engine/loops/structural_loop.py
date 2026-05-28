@@ -43,6 +43,7 @@ from core.contracts.learning import PatchProposal, StrategyStats
 from core.contracts.learning_evolution_freeze import (
     LearningEvolutionFreezePolicy,
 )
+from evolution_engine.charter import dyon_observability_emitter as _dyon_obs
 from evolution_engine.intelligence_loops.mutation_proposer import (
     MutationProposer,
 )
@@ -146,6 +147,10 @@ class StructuralEvolutionLoop:
         "_evidence_builder",
         "_approve_reason",
         "_ts_ns_for_run",
+        "_cognitive_gate",
+        "_topo_scan_interval",
+        "_topo_scan_counter",
+        "_topo_root",
     )
 
     def __init__(
@@ -158,6 +163,9 @@ class StructuralEvolutionLoop:
         evidence_builder: EvidenceBuilder,
         approve_reason: str = "canary_clean",
         ts_ns_for_run: RunTimestampDerivation = _default_run_ts,
+        cognitive_gate: Callable[[], bool] | None = None,
+        topo_scan_interval: int = 0,
+        topo_root: str | None = None,
     ) -> None:
         if getattr(proposer, "_freeze", None) is not None:
             raise ValueError(
@@ -173,6 +181,10 @@ class StructuralEvolutionLoop:
         self._evidence_builder = evidence_builder
         self._approve_reason = approve_reason
         self._ts_ns_for_run = ts_ns_for_run
+        self._cognitive_gate = cognitive_gate
+        self._topo_scan_interval = topo_scan_interval  # 0 = disabled
+        self._topo_scan_counter = 0
+        self._topo_root = topo_root
 
     def tick(self, *, ts_ns: int) -> StructuralLoopTickResult:
         """Drive one structural-loop tick.
@@ -185,6 +197,20 @@ class StructuralEvolutionLoop:
         policy = self._policy_supplier()
         stats_batch = tuple(self._stats_supplier())
         if policy.is_frozen():
+            return StructuralLoopTickResult(
+                ts_ns=ts_ns,
+                frozen=True,
+                drained_stats=stats_batch,
+                proposals=(),
+                runs=(),
+                emitted_events=(),
+                policy_mode_name=policy.mode.name,
+                operator_override=policy.operator_override,
+            )
+        # Cognitive gate: blocks mutation proposals when the cognitive
+        # governance engine reports a blocking violation (caller supplies
+        # the gate as a closure — authority boundary preserved).
+        if self._cognitive_gate is not None and not self._cognitive_gate():
             return StructuralLoopTickResult(
                 ts_ns=ts_ns,
                 frozen=True,
@@ -214,7 +240,7 @@ class StructuralEvolutionLoop:
                 all_runs.append(run)
                 all_events.extend(run.events)
                 proposal_index += 1
-        return StructuralLoopTickResult(
+        result = StructuralLoopTickResult(
             ts_ns=ts_ns,
             frozen=False,
             drained_stats=stats_batch,
@@ -224,6 +250,40 @@ class StructuralEvolutionLoop:
             policy_mode_name=policy.mode.name,
             operator_override=policy.operator_override,
         )
+        self._emit_dyon_observations(ts_ns, result)
+        self._maybe_run_topo_scan(ts_ns)
+        return result
+
+    def _maybe_run_topo_scan(self, ts_ns: int) -> None:
+        """Best-effort periodic DYON topology scan. Never raises."""
+        if self._topo_scan_interval <= 0:
+            return
+        self._topo_scan_counter += 1
+        if self._topo_scan_counter < self._topo_scan_interval:
+            return
+        self._topo_scan_counter = 0
+        try:
+            import pathlib
+            from evolution_engine.dyon.topology_scanner import get_scanner
+            root = pathlib.Path(self._topo_root) if self._topo_root else pathlib.Path(".")
+            get_scanner().scan_and_emit(root, ts_ns=ts_ns)
+        except Exception:  # pragma: no cover
+            pass
+
+    def _emit_dyon_observations(
+        self, ts_ns: int, result: StructuralLoopTickResult
+    ) -> None:
+        """Best-effort DYON cognitive observability emission. Never raises."""
+        for proposal in result.proposals:
+            _dyon_obs.emit_patch_proposal(
+                ts_ns=ts_ns,
+                proposal_id=proposal.patch_id,
+                target_module=proposal.target_strategy,
+                patch_kind="REFACTOR",
+                description=f"Strategy mutation: {proposal.target_strategy}",
+                rationale=proposal.rationale,
+                governance_status="PROPOSED",
+            )
 
 
 __all__ = [

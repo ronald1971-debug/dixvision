@@ -34,7 +34,7 @@ from typing import Any, Final
 from system_engine.codec.json_codec import CodecError, canonical_dumps
 
 LOGGER_VERSION: Final[str] = "v1.0-I04"
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("structlog",)
 
 
 class LogLevel(str, Enum):  # noqa: UP042 - str subclass needed for byte-stable JSON output

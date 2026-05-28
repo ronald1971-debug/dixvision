@@ -128,7 +128,7 @@ import math
 from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("numpyro", "jax", "numpy")
 
 MIN_NUM_SITES: int = 1
 """Hard lower bound on :attr:`NumpyroInferenceResult.site_summaries` length."""

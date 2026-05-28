@@ -58,7 +58,7 @@ from typing import Final
 REDIS_STORE_VERSION: Final[int] = 1
 """Bumped on any wire-shape change to keys / values / digest."""
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("redis", "hiredis")
 """PyPI packages activated by the lazy seams below. Declared so the
 canonical pin-set is complete, but the packages themselves are
 NEVER imported in this module.

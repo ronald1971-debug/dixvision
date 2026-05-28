@@ -93,7 +93,7 @@ import hashlib
 import math
 from typing import Any, Final
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("pettingzoo", "gymnasium")
 """``pettingzoo`` is needed only by the optional
 :func:`pettingzoo_multiagent_env_factory`; ``gymnasium`` is needed
 only by the lazy seam. The core :class:`DIXMultiAgentEnv` class is

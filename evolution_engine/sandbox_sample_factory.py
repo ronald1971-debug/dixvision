@@ -136,7 +136,7 @@ from evolution_engine.gym_env import (
     TradeAction,
 )
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("sample-factory", "gymnasium", "torch")
 
 MAX_TRAIN_FOR_ENV_STEPS: int = 10_000_000
 """Hard upper bound on

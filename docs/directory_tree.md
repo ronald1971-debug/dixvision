@@ -541,9 +541,24 @@ dixvision-v42.2/
 │       ├── test_snapshot_boundary.py
 │       └── test_no_hidden_channels.py
 │
-├── ui/                                                        # FastAPI test harness  [EXISTS]
+├── ui/                                                        # FastAPI backend (server + route modules)  [EXISTS]
 │   ├── __init__.py                                            # [EXISTS]
-│   ├── server.py                                              # [EXISTS]
+│   ├── server.py                                              # [EXISTS] — FastAPI app + _State assembly
+│   ├── state_projection.py                                    # [EXISTS] — read-only kernel-backed StateProjection (P3)
+│   ├── cognitive_chat_runtime.py                              # [EXISTS] — CognitiveChatRuntime wrapper
+│   ├── dashboard_routes.py                                    # [EXISTS] — /api/dashboard/* (mode/engines/strategies/decisions/memecoin/coherence)
+│   ├── dashboard_projection_routes.py                         # [EXISTS] — /api/dashboard/{dex,perps}/* (6 PR#351 widgets)
+│   ├── cognitive_routes.py                                    # [EXISTS] — /api/cognitive/chat/* (5 chat + approval endpoints)
+│   ├── cognitive_governance_routes.py                         # [EXISTS] — /api/cognitive/governance + /api/cognitive/sl_tp/propose (P3/P4)
+│   ├── execution_routes.py                                    # [EXISTS] — /api/execution/{adapters,positions,orders,circuit_breaker}
+│   ├── governance_routes.py                                   # [EXISTS] — /api/governance/{promotion_gates,drift,sources,hazards}
+│   ├── operator_routes.py                                     # [EXISTS] — /api/operator/*
+│   ├── authority_routes.py                                    # [EXISTS] — /api/authority/*
+│   ├── plugin_routes.py                                       # [EXISTS] — /api/plugins/*
+│   ├── runtime_routes.py                                      # [EXISTS] — /api/runtime/*
+│   ├── feeds_routes.py                                        # [EXISTS] — /api/feeds/*
+│   ├── cockpit_routes.py                                      # [EXISTS] — cockpit shim
+│   ├── feeds/                                                 # [EXISTS] — WebSocket feed runners
 │   └── static/{index.html, app.js, styles.css}                # [EXISTS]
 │
 ├── cockpit/                                                   # COCKPIT-01..11
@@ -570,6 +585,10 @@ dixvision-v42.2/
 │   │   └── governance_panel.py                                # COCKPIT-10
 │   └── cli/
 │       └── dix_plugin.py                                      # PLUGIN-ACT-04
+│
+├── dixbot/                                                    # Operator notification bridge (Discord + Telegram)
+│   ├── __init__.py                                            # [EXISTS] — DixBot export
+│   └── bot.py                                                 # [EXISTS] — DixBot dispatcher (Discord webhook + Telegram bot API)
 │
 ├── dashboard/                                                 # DASH-01..32 (TypeScript) + Dashboard OS
 │   ├── package.json

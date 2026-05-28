@@ -90,7 +90,7 @@ from state.knowledge_graph_queries import (
 KNOWLEDGE_GRAPH_VERSION: str = "1"
 """Serialisation version pin (incremented on breaking schema changes)."""
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("neo4j",)
 """Live transport requires ``neo4j``; in-memory fallback has no deps."""
 
 

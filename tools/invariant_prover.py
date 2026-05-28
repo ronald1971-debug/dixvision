@@ -58,7 +58,7 @@ from enum import Enum
 from typing import Any, Final
 
 PROVER_VERSION: Final[str] = "v1.0-I24"
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("crosshair-tool",)
 
 MAX_SAMPLES: Final[int] = 1_000_000
 MIN_SAMPLES: Final[int] = 1

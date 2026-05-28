@@ -74,7 +74,7 @@ from typing import Any, Protocol, runtime_checkable
 
 from core.cognitive_router import AIProvider, TaskClass
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("litellm",)
 """S-12 introduces a runtime-optional dependency on litellm.
 
 The package is **only** required if the operator wires

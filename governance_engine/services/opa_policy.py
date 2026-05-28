@@ -116,7 +116,7 @@ __all__ = [
 # spec line 1022. The package is lazy-imported only inside
 # :func:`opa_http_transport_factory`; this module imports cleanly
 # without it being installed.
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("opa-python-client",)
 
 OPA_ADAPTER_VERSION: str = "1"
 DEFAULT_POLICY_PACKAGE: str = "dix.governance"

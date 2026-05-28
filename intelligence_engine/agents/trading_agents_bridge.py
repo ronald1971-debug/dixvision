@@ -122,7 +122,7 @@ __all__ = (
 # ``NEW_PIP_DEPENDENCIES`` clause is satisfied. The runtime path
 # does not depend on the upstream package: the committee runs
 # entirely on the caller-supplied :class:`RoleSpeaker`.
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("tradingagents",)
 
 
 # ---------------------------------------------------------------------------

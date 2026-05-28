@@ -110,7 +110,7 @@ __all__ = (
 
 #: Pip dependencies introduced by this module. The pip-dep audit reads
 #: this constant to flag new wheels in CI.
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("polars",)
 
 
 # ---------------------------------------------------------------------

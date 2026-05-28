@@ -70,7 +70,7 @@ from execution_engine.adapters._live_base import (
     LiveAdapterBase,
 )
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("solana", "solders", "anchorpy", "base58")
 
 
 _VENUE_FAMILY: Final[str] = "solana"

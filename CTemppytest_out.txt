@@ -1,0 +1,99 @@
+.............ssss.........ss............................................ [  0%]
+........................................................................ [  1%]
+........................................................................ [  1%]
+........................................................................ [  2%]
+........................................................................ [  2%]
+........................................................................ [  3%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  4%]
+.........ss............................................................. [  5%]
+........................................F
+================================== FAILURES ===================================
+E   AssertionError: B31 runtime\boot_integration.py:135: 'runtime.boot_integration' imports 'SystemMode.SAFE' -- Mode-effect table (Wave-04.6 PR-A): only the governance control plane and the mode UI may name SystemMode members. Engines and adapters must call core.contracts.mode_effects.effect_for(mode).<flag> instead of hard-coding a comparison against a specific mode.
+    assert [Violation(ru...cific mode.')] == []
+      
+      Left contains one more item: Violation(rule='B31', file=WindowsPath('C:/dix_vision_v42_2/runtime/boot_integration.py'), line=135, importer='runtime...call core.contracts.mode_effects.effect_for(mode).<flag> instead of hard-coding a comparison against a specific mode.')
+      Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=236s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=236s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=5s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=235s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=235s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=5s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=235s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=5s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=234s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=233s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=5s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=5s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=229s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=229s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=5s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=5s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=5s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=223s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=5s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=223s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=221s
+WARNING  ui.feeds.raydium_pools:raydium_pools.py:290 raydium_pools: GET https://api.raydium.io/v2/main/pairs -> 429 (rate-limited); retry-after=217s
+C:\dix_vision_v42_2\tests\test_authority_lint.py:59: AssertionError: B31 runtime\boot_integration.py:135: 'runtime.boot_integration' imports 'SystemMode.SAFE' -- Mode-effect table (Wave-04.6 PR-A): only the governance control plane and the mode UI may name SystemMode members. Engines and adapters must call core.contracts.mode_effects.effect_for(mode).<flag> instead of hard-coding a comparison against a specific mode.
+============================== warnings summary ===============================
+.venv\Lib\site-packages\_pytest\config\__init__.py:1434
+  C:\dix_vision_v42_2\.venv\Lib\site-packages\_pytest\config\__init__.py:1434: PytestConfigWarning: Unknown config option: timeout
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+.venv\Lib\site-packages\_pytest\config\__init__.py:1434
+  C:\dix_vision_v42_2\.venv\Lib\site-packages\_pytest\config\__init__.py:1434: PytestConfigWarning: Unknown config option: timeout_method
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+runtime\boot_integration.py:76
+tests/test_audit_p1_7_learning_override_route.py::test_boot_seed_honours_env_var
+tests/test_audit_p1_7_learning_override_route.py::test_boot_seed_honours_env_var
+tests/test_audit_p2_1_backtest_endpoint.py::test_backtest_endpoint_returns_canonical_shape
+tests/test_audit_p2_1_backtest_endpoint.py::test_backtest_endpoint_is_replay_deterministic
+tests/test_audit_p2_1_backtest_endpoint.py::test_backtest_endpoint_seed_changes_on_param_change
+tests/test_audit_p2_1_backtest_endpoint.py::test_backtest_endpoint_rejects_bad_iso_with_400
+tests/test_audit_p2_1_backtest_endpoint.py::test_backtest_endpoint_rejects_negative_slippage_with_422
+  C:\dix_vision_v42_2\runtime\boot_integration.py:76: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+.venv\Lib\site-packages\fastapi\applications.py:4598: 2 warnings
+tests/test_audit_p1_7_learning_override_route.py: 4 warnings
+tests/test_audit_p2_1_backtest_endpoint.py: 10 warnings
+  C:\dix_vision_v42_2\.venv\Lib\site-packages\fastapi\applications.py:4598: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)  # ty: ignore[deprecated]
+
+runtime\boot_integration.py:80
+tests/test_audit_p1_7_learning_override_route.py::test_boot_seed_honours_env_var
+tests/test_audit_p1_7_learning_override_route.py::test_boot_seed_honours_env_var
+tests/test_audit_p2_1_backtest_endpoint.py::test_backtest_endpoint_returns_canonical_shape
+tests/test_audit_p2_1_backtest_endpoint.py::test_backtest_endpoint_is_replay_deterministic
+tests/test_audit_p2_1_backtest_endpoint.py::test_backtest_endpoint_seed_changes_on_param_change
+tests/test_audit_p2_1_backtest_endpoint.py::test_backtest_endpoint_rejects_bad_iso_with_400
+tests/test_audit_p2_1_backtest_endpoint.py::test_backtest_endpoint_rejects_negative_slippage_with_422
+  C:\dix_vision_v42_2\runtime\boot_integration.py:80: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("shutdown")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_authority_lint.py::test_real_repo_passes_zero_violations - ...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!

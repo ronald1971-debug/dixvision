@@ -43,6 +43,8 @@ import pytest
 
 pytest.importorskip("langgraph")
 
+from langgraph.checkpoint.memory import MemorySaver
+
 from langchain_core.messages import (
     AIMessage,
     BaseMessage,
@@ -468,11 +470,7 @@ def test_config_rejects_non_string_marker() -> None:
 
 
 def test_build_debate_graph_returns_compiled_graph() -> None:
-    saver = MagicMock()
-    saver.put = MagicMock()
-    saver.put_writes = MagicMock()
-    saver.get_tuple = MagicMock(return_value=None)
-    saver.list = MagicMock(return_value=iter([]))
+    saver = MemorySaver()
     cfg = _config()
     graph = build_debate_graph(model=_ScriptedModel("ok"), saver=saver, config=cfg)
     assert graph is not None

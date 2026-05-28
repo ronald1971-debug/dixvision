@@ -1428,6 +1428,11 @@ B31_ALLOWED_PREFIXES: tuple[str, ...] = (
     # that is itself governance control-plane code; its SystemMode is a
     # different enum defined within that package.
     "core.coherence",
+    # runtime.boot_integration is the kernel bootstrap; it routes
+    # COGOV_CRITICAL_VIOLATION events to kernel.transition_mode(SystemMode.SAFE)
+    # — the canonical governance control-plane chokepoint for cognitive
+    # violations.
+    "runtime.boot_integration",
 )
 
 

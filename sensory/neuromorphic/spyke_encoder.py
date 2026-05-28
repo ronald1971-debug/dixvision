@@ -67,7 +67,7 @@ from enum import StrEnum
 from typing import Protocol, runtime_checkable
 
 SPYKE_ENCODER_VERSION = "spyke-encoder/v1"
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("spyketorch",)
 
 
 # ---------------------------------------------------------------------------

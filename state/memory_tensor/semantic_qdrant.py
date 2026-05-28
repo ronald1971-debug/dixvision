@@ -87,7 +87,7 @@ from state.memory_tensor.contracts import (
 # ---------------------------------------------------------------------------
 # Module-level metadata
 # ---------------------------------------------------------------------------
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("qdrant-client",)
 QDRANT_ADAPTER_VERSION: str = "1"
 _SERIALIZATION_VERSION: int = 1
 

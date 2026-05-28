@@ -74,7 +74,7 @@ from typing import Any, Final
 import yaml
 
 CONFIG_VERSION: Final[str] = "v1.0-I28"
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("pydantic-settings",)
 
 
 # ---------------------------------------------------------------------------

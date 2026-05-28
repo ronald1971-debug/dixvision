@@ -47,6 +47,7 @@ def test_domains_are_a_stable_canonical_tuple(
         "feeds",
         "pages",
         "openapi",
+        "cockpit",
     )
 
 
@@ -242,6 +243,7 @@ def test_admin_route_inventory_endpoint_groups_by_domain() -> None:
         "feeds",
         "pages",
         "openapi",
+        "cockpit",
     ]
     admin_routes = next(d for d in payload["domains"] if d["name"] == "admin")["routes"]
     assert {

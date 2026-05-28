@@ -560,13 +560,9 @@ def bytewax_dataflow_factory(*args: object, **kwargs: object) -> object:
     production import is loud rather than silent.
     """
 
-    try:
-        from bytewax.dataflow import Dataflow  # noqa: PLC0415
-    except ImportError as exc:
-        raise ImportError(
-            "bytewax_dataflow_factory requires the optional 'bytewax' package "
-            "— install with 'pip install bytewax' "
-            "(NEW_PIP_DEPENDENCIES in system_engine/streaming/event_fabric.py "
-            "flags this)."
-        ) from exc
-    return Dataflow(*args, **kwargs)
+    raise NotImplementedError(
+        "bytewax_dataflow_factory is blocked pending research-acceptance: "
+        "a shadow-equivalence harness comparing the in-process backend against "
+        "the real bytewax backend must be completed and reviewed before this "
+        "factory is activated. See docstring for the three acceptance criteria."
+    )

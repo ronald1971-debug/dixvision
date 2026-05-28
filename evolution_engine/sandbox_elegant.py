@@ -137,7 +137,7 @@ from evolution_engine.gym_env import (
     TradeAction,
 )
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("elegantrl", "gymnasium", "torch")
 
 MAX_TARGET_STEP: int = 10_000_000
 """Hard upper bound on :attr:`ElegantArguments.target_step` — ElegantRL's

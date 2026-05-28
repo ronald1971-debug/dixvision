@@ -48,14 +48,16 @@ def test_engines_endpoint_returns_six_rows(client):
     assert r.status_code == 200
     rows = r.json()["engines"]
     names = {row["engine_name"] for row in rows}
-    assert names == {
+    # The six canonical engines must always be present; additional kernel
+    # services (cognitive_governance, hazard_bus, etc.) may also appear.
+    assert {
         "intelligence",
         "execution",
         "system",
         "governance",
         "learning",
         "evolution",
-    }
+    } <= names
     for row in rows:
         # Operator-facing buckets per Build Compiler Spec §6.
         assert row["bucket"] in {"alive", "degraded", "halted", "offline"}

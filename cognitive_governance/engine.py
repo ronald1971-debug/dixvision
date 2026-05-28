@@ -467,27 +467,42 @@ class CognitiveGovernanceEngine:
                 self._last_status_ts = ts_ns
 
         if should_emit:
+            _payload: dict = {
+                "overall_healthy": status.overall_healthy,
+                "belief_integrity_ok": status.belief_integrity_ok,
+                "memory_clean": status.memory_clean,
+                "mutation_safe": status.mutation_safe,
+                "no_hallucination": status.no_hallucination,
+                "epistemic_current": status.epistemic_current,
+                "learning_truthful": status.learning_truthful,
+                "lineage_intact": status.lineage_intact,
+                "identity_stable": status.identity_stable,
+                "no_synthetic_feedback": status.no_synthetic_feedback,
+                "no_reward_hacking": status.no_reward_hacking,
+                "causal_consistent": status.causal_consistent,
+                "active_violations": [v.value for v in status.active_violations],
+                "detail": status.detail,
+            }
             append_event(
                 "GOVERNANCE",
                 "COGOV_INTEGRITY_STATUS",
                 "cognitive_governance.engine",
-                {
-                    "overall_healthy": status.overall_healthy,
-                    "belief_integrity_ok": status.belief_integrity_ok,
-                    "memory_clean": status.memory_clean,
-                    "mutation_safe": status.mutation_safe,
-                    "no_hallucination": status.no_hallucination,
-                    "epistemic_current": status.epistemic_current,
-                    "learning_truthful": status.learning_truthful,
-                    "lineage_intact": status.lineage_intact,
-                    "identity_stable": status.identity_stable,
-                    "no_synthetic_feedback": status.no_synthetic_feedback,
-                    "no_reward_hacking": status.no_reward_hacking,
-                    "causal_consistent": status.causal_consistent,
-                    "active_violations": [v.value for v in status.active_violations],
-                    "detail": status.detail,
-                },
+                _payload,
             )
+            # Publish to the unified EventFabric so governance subscribers
+            # (enforcement gate, mode propagator, operator surfaces) see
+            # cognitive integrity state without polling the ledger.
+            try:
+                from runtime.event_fabric import EventChannel, EventPriority, get_event_fabric  # noqa: PLC0415
+                get_event_fabric().publish(
+                    EventChannel.GOVERNANCE,
+                    "COGOV_INTEGRITY_STATUS",
+                    _payload,
+                    source="cognitive_governance.engine",
+                    priority=EventPriority.NORMAL,
+                )
+            except Exception:
+                pass  # fabric not yet initialised at boot — best-effort
 
             # Escalate CRITICAL violations to the hazard bus
             critical = [

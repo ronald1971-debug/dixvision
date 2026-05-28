@@ -108,7 +108,7 @@ from typing import Final, Protocol
 
 # ----------------------------------------------------------------------------- public deps
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("torch",)
 """``torch`` is the only true new dep. It is lazy-imported only inside
 :func:`cleanrl_ppo_distiller_factory` so the module stays importable on
 hosts without PyTorch installed."""

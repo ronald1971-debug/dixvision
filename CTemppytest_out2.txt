@@ -1,0 +1,2336 @@
+.............ssss.........ss............................................ [  0%]
+........................................................................ [  1%]
+........................................................................ [  1%]
+........................................................................ [  2%]
+........................................................................ [  2%]
+........................................................................ [  3%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  4%]
+.........ss............................................................. [  5%]
+........................................................................ [  5%]
+........................................................................ [  6%]
+........................................................................ [  7%]
+........................................................................ [  7%]
+........................................................................ [  8%]
+........................................................................ [  8%]
+........................................................................ [  9%]
+........................................................................ [  9%]
+........................................................................ [ 10%]
+........................................................................ [ 10%]
+........................................................................ [ 11%]
+..s..................................................................... [ 11%]
+........................................................................ [ 12%]
+.....................................................................sss [ 12%]
+........................................................................ [ 13%]
+........................................................................ [ 14%]
+........................................................................ [ 14%]
+.............ss......................................................... [ 15%]
+........................................................................ [ 15%]
+........................................................................ [ 16%]
+........................................................................ [ 16%]
+........................................................................ [ 17%]
+........................................................................ [ 17%]
+........................................................................ [ 18%]
+........................................................................ [ 18%]
+........................................................................ [ 19%]
+............................................F
+================================== FAILURES ===================================
+E   AssertionError: assert False
+     +  where False = <built-in method startswith of str object at 0x00000283B776A5B0>('2023-11-14T22:13:20')
+     +    where <built-in method startswith of str object at 0x00000283B776A5B0> = '2026-05-28T18:37:54.546207+00:00'.startswith
+C:\dix_vision_v42_2\tests\test_dashboard_stream_sse.py:171: AssertionError: assert False
+============================== warnings summary ===============================
+.venv\Lib\site-packages\_pytest\config\__init__.py:1434
+  C:\dix_vision_v42_2\.venv\Lib\site-packages\_pytest\config\__init__.py:1434: PytestConfigWarning: Unknown config option: timeout
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+.venv\Lib\site-packages\_pytest\config\__init__.py:1434
+  C:\dix_vision_v42_2\.venv\Lib\site-packages\_pytest\config\__init__.py:1434: PytestConfigWarning: Unknown config option: timeout_method
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+runtime\boot_integration.py:76: 1 warning
+tests/test_audit_p1_7_learning_override_route.py: 2 warnings
+tests/test_audit_p2_1_backtest_endpoint.py: 5 warnings
+tests/test_dash_meme_mount.py: 5 warnings
+  C:\dix_vision_v42_2\runtime\boot_integration.py:76: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+.venv\Lib\site-packages\fastapi\applications.py:4598: 2 warnings
+tests/test_audit_p1_7_learning_override_route.py: 4 warnings
+tests/test_audit_p2_1_backtest_endpoint.py: 10 warnings
+tests/test_dash_meme_mount.py: 10 warnings
+  C:\dix_vision_v42_2\.venv\Lib\site-packages\fastapi\applications.py:4598: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)  # ty: ignore[deprecated]
+
+runtime\boot_integration.py:80: 1 warning
+tests/test_audit_p1_7_learning_override_route.py: 2 warnings
+tests/test_audit_p2_1_backtest_endpoint.py: 5 warnings
+tests/test_dash_meme_mount.py: 5 warnings
+  C:\dix_vision_v42_2\runtime\boot_integration.py:80: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("shutdown")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_dashboard_stream_sse.py::test_endpoint_streams_recorded_market_tick
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 10.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 10.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 10.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 10.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 20.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+raydium runner: thread crashed
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\raydium_runner.py", line 108, in _thread_main
+    loop.run_until_complete(poller.run())
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 650, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\raydium_pools.py", line 247, in run
+    ok = await self._poll_once(client)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\raydium_pools.py", line 276, in _poll_once
+    resp = await client.get(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpx\_client.py", line 1768, in get
+    return await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpx\_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpx\_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpx\_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpx\_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpx\_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpx\_transports\default.py", line 394, in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpcore\_async\connection_pool.py", line 256, in handle_async_request
+    raise exc from None
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpcore\_async\connection_pool.py", line 236, in handle_async_request
+    response = await connection.handle_async_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpcore\_async\connection.py", line 101, in handle_async_request
+    raise exc
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpcore\_async\connection.py", line 78, in handle_async_request
+    stream = await self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpcore\_async\connection.py", line 124, in _connect
+    stream = await self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpcore\_backends\auto.py", line 31, in connect_tcp
+    return await self._backend.connect_tcp(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\httpcore\_backends\anyio.py", line 115, in connect_tcp
+    stream: anyio.abc.ByteStream = await anyio.connect_tcp(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\anyio\_core\_sockets.py", line 215, in connect_tcp
+    gai_res = await getaddrinfo(
+              ^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\anyio\_core\_sockets.py", line 649, in getaddrinfo
+    gai_res = await get_async_backend().getaddrinfo(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 2748, in getaddrinfo
+    return await get_running_loop().getaddrinfo(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 10.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 20.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 20.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+TimeoutError: timed out while closing connection
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+TimeoutError: timed out while closing connection
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 10.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 20.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py", line 397, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 557, in send
+    ov.WSASend(conn.fileno(), buf, flags)
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+TimeoutError: timed out while closing connection
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 10.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py", line 397, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 557, in send
+    ov.WSASend(conn.fileno(), buf, flags)
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+TimeoutError: timed out while closing connection
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+TimeoutError: timed out while closing connection
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 40.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 264, in run
+    conn = await self._connect(self._url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 168, in _default_connect
+    return await websockets.connect(url)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 544, in __await_impl__
+    self.connection = await self.create_connection()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\client.py", line 470, in create_connection
+    _, connection = await loop.create_connection(factory, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1034, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1405, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 864, in getaddrinfo
+    return await self.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py", line 397, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 557, in send
+    ov.WSASend(conn.fileno(), buf, flags)
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+coindesk_rss: fetch failure; retrying in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 333, in run
+    payload = await self._fetch(self._url)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\ui\feeds\coindesk_rss.py", line 218, in _default_fetch
+    return await asyncio.to_thread(_blocking_get)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 826, in run_in_executor
+    executor.submit(func, *args), loop=self)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 167, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py", line 301, in _loop_reading
+    self._read_fut = self._loop._proactor.recv_into(self._sock, self._data)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 477, in recv_into
+    ov.WSARecvInto(conn.fileno(), buf, flags)
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py", line 397, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 557, in send
+    ov.WSASend(conn.fileno(), buf, flags)
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py", line 397, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 557, in send
+    ov.WSASend(conn.fileno(), buf, flags)
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py", line 397, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 557, in send
+    ov.WSASend(conn.fileno(), buf, flags)
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py", line 397, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 557, in send
+    ov.WSASend(conn.fileno(), buf, flags)
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py", line 397, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 557, in send
+    ov.WSASend(conn.fileno(), buf, flags)
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py", line 397, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 557, in send
+    ov.WSASend(conn.fileno(), buf, flags)
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout
+binance_public_ws: connection failure; reconnecting in 5.0s
+Traceback (most recent call last):
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py", line 397, in _loop_writing
+    self._write_fut = self._loop._proactor.send(self._sock, data)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\prive\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 557, in send
+    ov.WSASend(conn.fileno(), buf, flags)
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\dix_vision_v42_2\ui\feeds\binance_public_ws.py", line 271, in run
+    async for raw in conn:  # type: ignore[union-attr]
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 244, in __aiter__
+    yield await self.recv()
+          ^^^^^^^^^^^^^^^^^
+  File "C:\dix_vision_v42_2\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 324, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: received 1008 (policy violation) Pong timeout; then sent 1008 (policy violation) Pong timeout

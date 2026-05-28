@@ -86,7 +86,7 @@ from learning_engine.lanes.federated import (
 )
 
 PYSYFT_VERSION = "v3.7-C12"
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("syft",)
 
 _SUPPORTED_MECHANISMS: tuple[str, ...] = ("gaussian", "laplace")
 _DIGEST_HEX_LEN = 32

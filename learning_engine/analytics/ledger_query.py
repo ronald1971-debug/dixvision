@@ -86,7 +86,7 @@ import json
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Final, Literal, Protocol, runtime_checkable
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("duckdb",)
 """A-14 introduces a single new pip dep: ``duckdb``.
 
 DuckDB is **lazy-imported inside** :func:`duckdb_backend_factory` so

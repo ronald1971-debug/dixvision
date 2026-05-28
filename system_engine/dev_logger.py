@@ -46,7 +46,7 @@ from system_engine.logging import (
 )
 
 DEV_LOGGER_VERSION: Final[str] = "v1.0-I05"
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("loguru",)
 
 # We keep the I-04 version reachable so callers that want to assert
 # "dev-logger matches my structured-logger build" have a single anchor.

@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from typing import Any, Final
 
 CODEC_VERSION: Final[str] = "v1.0-I02"
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("orjson",)
 
 _JSON_SEPARATORS: Final[tuple[str, str]] = (",", ":")
 _ALLOWED_PRIMITIVE_TYPES: Final[tuple[type, ...]] = (

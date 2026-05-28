@@ -7,6 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from system.config_schema import (
     ConfigValidationError,
@@ -61,7 +62,7 @@ def test_empty_data_path_fails_fast() -> None:
 
 def test_config_is_frozen() -> None:
     cfg = load_config()
-    with pytest.raises((TypeError, AttributeError)):
+    with pytest.raises((TypeError, AttributeError, ValidationError)):
         cfg.risk.max_drawdown_pct = 99.0  # type: ignore[misc]
 
 

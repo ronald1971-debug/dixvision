@@ -11,18 +11,37 @@ constitution:
 
   # --- System Identity ---
   identity:
-    primary: "Adaptive Cognitive Market Intelligence Operating System"
+    primary: "Dual-Cognition Autonomous Evolution System"
     version: "v42.2"
     codename: "Archon"
+    intelligences:
+      INDIRA:
+        role: "Cognitive Market Intelligence"
+        domain: market
+        responsibilities:
+          - trader cognition, market reasoning, macro interpretation
+          - anomaly understanding, strategy synthesis, behavioral modeling
+          - archetype evolution, memory formation, causal reasoning
+          - adaptive strategy evolution, simulation learning
+      DYON:
+        role: "Autonomous Engineering Intelligence"
+        domain: system
+        responsibilities:
+          - system maintenance, architectural coherence, runtime observability
+          - dependency analysis, topology integrity, autonomous diagnostics
+          - patch generation, refactor planning, code evolution
+          - runtime stabilization, build optimization, system repair orchestration
     manifestations:
-      - "Cognitive operating system"
-      - "Trader intelligence ecosystem"
-      - "Self-evolving market cognition engine"
-      - "Epistemic learning framework"
-      - "Live execution environment (future manifestation)"
+      - "INDIRA — Cognitive Market Intelligence"
+      - "DYON — Autonomous Engineering Intelligence"
+      - "Governance — four-layer constitutional protection"
+      - "Evolution — continuous observe/learn/simulate/critique/mutate/validate/evolve cycle"
+      - "Trading — one possible downstream expression (not the primary identity)"
     governance_target: >
-      Preserve cognitive integrity, operator sovereignty, system integrity,
-      and capital integrity — simultaneously, in priority order by phase.
+      Protect simultaneously: (1) Cognitive Integrity — truthful reasoning, no false learning;
+      (2) Operator Sovereignty — operator is final authority always;
+      (3) System Integrity — deterministic, auditable, replayable evolution;
+      (4) Capital Integrity — fully enforced when live, never overrides operator sovereignty.
 
   # --- Priority Stacks ---
   priority_stacks:
@@ -33,11 +52,12 @@ constitution:
       P3: system_governance        # System Integrity — determinism, contracts, replay
       P4: financial_governance     # Capital Integrity — subordinate until live capital deployed
     live:
-      # Phase 4+: real capital at risk; capital becomes co-equal
+      # Phase 4+: real capital at risk; capital enforcement fully active — rank UNCHANGED
+      # Operator Sovereignty remains P2 in all phases; it cannot be demoted below Capital
       P1: cognitive_governance     # Cognitive Integrity — always highest
-      P2: financial_governance     # Capital Integrity — co-equal once live capital deployed
-      P3: operator_governance      # Operator Sovereignty
-      P4: system_governance        # System Integrity
+      P2: operator_governance      # Operator Sovereignty — never demoted, not even in live
+      P3: system_governance        # System Integrity
+      P4: financial_governance     # Capital Integrity — fully enforced in live (was reduced in dev)
 
   # --- Four Constitutional Directives ---
   directives:
@@ -87,7 +107,7 @@ constitution:
 
     CONST-04:
       title: "Capital Integrity"
-      priority: P4_dev_P2_live
+      priority: P4  # P4 in all phases; enforcement level changes (reduced in dev, fully active in live)
       blocking: true
       enforced_by: "financial_governance.engine"
       text: >
