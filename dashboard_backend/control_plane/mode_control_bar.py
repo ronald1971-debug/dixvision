@@ -1,0 +1,145 @@
+"""Mode Control Bar — Phase 6 IMMUTABLE WIDGET 1 (DASH-02).
+
+Exposes the system mode + the legal mode-transition graph for the UI,
+and turns operator clicks into :class:`OperatorRequest` objects routed
+through GOV-CP-07.
+
+Authority constraints (Build Compiler Spec §6 + §7):
+
+* The UI may *display* the current mode and the set of legal next
+  modes. (read)
+* The UI may *request* a mode transition. (write via GOV-CP-07 only)
+* The UI may *not* change the mode directly. (INV-37)
+
+The Mode FSM is locked by Build Compiler Spec §7. This widget never
+encodes the legality rules itself — it asks the
+:class:`StateTransitionManager` what the legal next modes are. That
+keeps the dashboard's view of the FSM consistent with the actual
+governance rules even if the FSM is later refined.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from core.contracts.governance import (
+    OperatorAction,
+    OperatorRequest,
+    SystemMode,
+)
+from dashboard_backend.control_plane.router import ControlPlaneRouter, RouteOutcome
+from governance_engine.control_plane.state_transition_manager import (
+    StateTransitionManager,
+    _is_legal_edge,
+)
+
+if TYPE_CHECKING:
+    from ui.state_projection import StateProjection
+
+
+@dataclass(frozen=True, slots=True)
+class ModeControlBarState:
+    """Renderable read-projection for the Mode Control Bar."""
+
+    current_mode: str
+    legal_targets: tuple[str, ...]
+    is_locked: bool
+
+
+class ModeControlBar:
+    """DASH-02 — Mode Control Bar widget backend."""
+
+    name: str = "mode_control_bar"
+    spec_id: str = "DASH-02"
+
+    def __init__(
+        self,
+        *,
+        state_transitions: StateTransitionManager,
+        router: ControlPlaneRouter,
+        projection: StateProjection | None = None,
+    ) -> None:
+        self._state = state_transitions
+        self._router = router
+        self._projection = projection
+
+    def snapshot(self) -> ModeControlBarState:
+        if self._projection is not None and self._projection.is_booted:
+            current_name = self._projection.mode_name()
+            current = SystemMode[current_name]
+            is_locked = self._projection.is_locked()
+        else:
+            current = self._state.current_mode()
+            current_name = current.name
+            is_locked = current is SystemMode.LOCKED
+        legal = tuple(
+            target.name
+            for target in SystemMode
+            if target is not current and _is_legal_edge(current, target)[0]
+        )
+        return ModeControlBarState(
+            current_mode=current_name,
+            legal_targets=legal,
+            is_locked=is_locked,
+        )
+
+    def request_transition(
+        self,
+        *,
+        ts_ns: int,
+        requestor: str,
+        target_mode: str,
+        reason: str,
+        operator_authorized: bool = False,
+        consent_operator_id: str = "",
+        consent_policy_hash: str = "",
+        consent_nonce: str = "",
+        consent_ts_ns: int | None = None,
+    ) -> RouteOutcome:
+        if target_mode not in SystemMode.__members__:
+            raise ValueError(f"unknown target mode: {target_mode!r}")
+        payload: dict[str, str] = {
+            "target_mode": target_mode,
+            "reason": reason,
+            "operator_authorized": "true" if operator_authorized else "false",
+        }
+        # Hardening-S1 item 8 — forward typed consent envelope when the
+        # caller supplies it. Required on SAFE→PAPER and LIVE→AUTO; for
+        # any other edge these fields are ignored by the bridge.
+        if consent_operator_id:
+            payload["consent_operator_id"] = consent_operator_id
+        if consent_policy_hash:
+            payload["consent_policy_hash"] = consent_policy_hash
+        if consent_nonce:
+            payload["consent_nonce"] = consent_nonce
+        if consent_ts_ns is not None and consent_ts_ns > 0:
+            payload["consent_ts_ns"] = str(consent_ts_ns)
+        return self._router.submit(
+            OperatorRequest(
+                ts_ns=ts_ns,
+                requestor=requestor,
+                action=OperatorAction.REQUEST_MODE,
+                payload=payload,
+            )
+        )
+
+    def request_kill(self, *, ts_ns: int, requestor: str, reason: str) -> RouteOutcome:
+        return self._router.submit(
+            OperatorRequest(
+                ts_ns=ts_ns,
+                requestor=requestor,
+                action=OperatorAction.REQUEST_KILL,
+                payload={"reason": reason},
+            )
+        )
+
+    def request_unlock(self, *, ts_ns: int, requestor: str, reason: str) -> RouteOutcome:
+        return self._router.submit(
+            OperatorRequest(
+                ts_ns=ts_ns,
+                requestor=requestor,
+                action=OperatorAction.REQUEST_UNLOCK,
+                payload={"reason": reason},
+            )
+        )

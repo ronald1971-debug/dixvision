@@ -1,0 +1,7065 @@
+# Trader Archetype registry — Indira Intelligence Foundation.
+#
+# Structure: 30 real seed traders expanded into 300 archetypes via
+# dimensional parameterization (timeframe × risk × execution × regime).
+#
+# Seed traders (validated by real-world performance):
+#   Macro: Soros, Druckenmiller, PTJ, Dalio
+#   Discretionary: Livermore, Raschke
+#   Quant: Simons, Shaw, Citadel MM, Jump, Avellaneda, Lopez de Prado, Natenberg
+#   Trend: Dennis, Seykota, Minervini, O'Neil
+#   Value: Buffett, Lynch
+#   Event: Paulson, Burry, Taleb
+#   Flow: Dalton, Steidlmayer
+#   Crypto: Hayes, Counter-FTX, DeFi Sniper, Whale Tracker
+#   Meta: Swensen, Thorp
+#
+# Dimensions for expansion:
+#   timeframe: SCALP | INTRADAY | SWING | POSITION | MACRO
+#   risk_attitude: CONSERVATIVE | MODERATE | AGGRESSIVE
+#   conviction_style: REACTIVE | PREDICTIVE | CONTRARIAN | SYSTEMATIC
+#   regime_bias: TRENDING | RANGING | VOLATILE | STABLE | CRISIS
+#
+# Governance rules (INV-51):
+#   * State transitions (PROPOSED → ACTIVE → DECAYING → DEMOTED) are
+#     offline-only, flow through Governance patch pipeline.
+#   * Never mutate silently — all updates → ledger events.
+#   * Engines read this file as read-only on the hot path.
+#
+# Schema (per entry under archetypes:):
+#   archetype_id:                # TA-<CATEGORY>-<index>
+#     name: str                  # human-readable label
+#     state: PROPOSED|ACTIVE|DECAYING|DEMOTED
+#     decay_rate: float          # in [0, 1]; per-window performance decay
+#     performance_score: float   # in [-1, 1]; live-ledger weighted
+#     seed_trader: str           # source seed trader reference
+#     group: str                 # category group
+#     philosophy: str            # core trading philosophy
+#     dimensions:
+#       belief_system: {tag: strength}      # tag→[0,1]
+#       risk_attitude: CONSERVATIVE|MODERATE|AGGRESSIVE
+#       time_horizon: SCALP|INTRADAY|SWING|POSITION|MACRO
+#       conviction_style: REACTIVE|PREDICTIVE|CONTRARIAN|SYSTEMATIC
+#       regime_performance: {regime: score}  # regime→[-1,1]
+
+archetypes:
+  TA-MACRO-001:
+    name: "George Soros — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: soros_archetype
+    group: MACRO
+    philosophy: reflexivity
+    dimensions:
+      belief_system:
+        reflexivity: 0.95
+        macro_imbalance: 0.9
+        sentiment: 0.75
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-002:
+    name: "George Soros — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: soros_archetype
+    group: MACRO
+    philosophy: reflexivity
+    dimensions:
+      belief_system:
+        reflexivity: 0.95
+        macro_imbalance: 0.9
+        sentiment: 0.75
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-003:
+    name: "George Soros — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: soros_archetype
+    group: MACRO
+    philosophy: reflexivity
+    dimensions:
+      belief_system:
+        reflexivity: 0.95
+        macro_imbalance: 0.9
+        sentiment: 0.75
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-MACRO-004:
+    name: "George Soros — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: soros_archetype
+    group: MACRO
+    philosophy: reflexivity
+    dimensions:
+      belief_system:
+        reflexivity: 0.95
+        macro_imbalance: 0.9
+        sentiment: 0.75
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-MACRO-005:
+    name: "George Soros — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: soros_archetype
+    group: MACRO
+    philosophy: reflexivity
+    dimensions:
+      belief_system:
+        reflexivity: 0.95
+        macro_imbalance: 0.9
+        sentiment: 0.75
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-MACRO-006:
+    name: "George Soros — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: soros_archetype
+    group: MACRO
+    philosophy: reflexivity
+    dimensions:
+      belief_system:
+        reflexivity: 0.95
+        macro_imbalance: 0.9
+        sentiment: 0.75
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-007:
+    name: "George Soros — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: soros_archetype
+    group: MACRO
+    philosophy: reflexivity
+    dimensions:
+      belief_system:
+        reflexivity: 0.95
+        macro_imbalance: 0.9
+        sentiment: 0.75
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-008:
+    name: "George Soros — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: soros_archetype
+    group: MACRO
+    philosophy: reflexivity
+    dimensions:
+      belief_system:
+        reflexivity: 0.95
+        macro_imbalance: 0.9
+        sentiment: 0.75
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-MACRO-009:
+    name: "George Soros — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: soros_archetype
+    group: MACRO
+    philosophy: reflexivity
+    dimensions:
+      belief_system:
+        reflexivity: 0.95
+        macro_imbalance: 0.9
+        sentiment: 0.75
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-MACRO-010:
+    name: "George Soros — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: soros_archetype
+    group: MACRO
+    philosophy: reflexivity
+    dimensions:
+      belief_system:
+        reflexivity: 0.95
+        macro_imbalance: 0.9
+        sentiment: 0.75
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-MACRO-011:
+    name: "Stanley Druckenmiller — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: druckenmiller_archetype
+    group: MACRO
+    philosophy: aggressive_capital_deployment
+    dimensions:
+      belief_system:
+        conviction_scaling: 0.95
+        macro_momentum: 0.85
+        asymmetric_sizing: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-012:
+    name: "Stanley Druckenmiller — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: druckenmiller_archetype
+    group: MACRO
+    philosophy: aggressive_capital_deployment
+    dimensions:
+      belief_system:
+        conviction_scaling: 0.95
+        macro_momentum: 0.85
+        asymmetric_sizing: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-013:
+    name: "Stanley Druckenmiller — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: druckenmiller_archetype
+    group: MACRO
+    philosophy: aggressive_capital_deployment
+    dimensions:
+      belief_system:
+        conviction_scaling: 0.95
+        macro_momentum: 0.85
+        asymmetric_sizing: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-MACRO-014:
+    name: "Stanley Druckenmiller — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: druckenmiller_archetype
+    group: MACRO
+    philosophy: aggressive_capital_deployment
+    dimensions:
+      belief_system:
+        conviction_scaling: 0.95
+        macro_momentum: 0.85
+        asymmetric_sizing: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-MACRO-015:
+    name: "Stanley Druckenmiller — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: druckenmiller_archetype
+    group: MACRO
+    philosophy: aggressive_capital_deployment
+    dimensions:
+      belief_system:
+        conviction_scaling: 0.95
+        macro_momentum: 0.85
+        asymmetric_sizing: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-MACRO-016:
+    name: "Stanley Druckenmiller — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: druckenmiller_archetype
+    group: MACRO
+    philosophy: aggressive_capital_deployment
+    dimensions:
+      belief_system:
+        conviction_scaling: 0.95
+        macro_momentum: 0.85
+        asymmetric_sizing: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-017:
+    name: "Stanley Druckenmiller — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: druckenmiller_archetype
+    group: MACRO
+    philosophy: aggressive_capital_deployment
+    dimensions:
+      belief_system:
+        conviction_scaling: 0.95
+        macro_momentum: 0.85
+        asymmetric_sizing: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-018:
+    name: "Stanley Druckenmiller — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: druckenmiller_archetype
+    group: MACRO
+    philosophy: aggressive_capital_deployment
+    dimensions:
+      belief_system:
+        conviction_scaling: 0.95
+        macro_momentum: 0.85
+        asymmetric_sizing: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-MACRO-019:
+    name: "Stanley Druckenmiller — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: druckenmiller_archetype
+    group: MACRO
+    philosophy: aggressive_capital_deployment
+    dimensions:
+      belief_system:
+        conviction_scaling: 0.95
+        macro_momentum: 0.85
+        asymmetric_sizing: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-MACRO-020:
+    name: "Stanley Druckenmiller — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: druckenmiller_archetype
+    group: MACRO
+    philosophy: aggressive_capital_deployment
+    dimensions:
+      belief_system:
+        conviction_scaling: 0.95
+        macro_momentum: 0.85
+        asymmetric_sizing: 0.8
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-MACRO-021:
+    name: "Paul Tudor Jones — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: ptj_archetype
+    group: MACRO
+    philosophy: crash_anticipation
+    dimensions:
+      belief_system:
+        crash_detection: 0.9
+        volatility_breakout: 0.85
+        sentiment_reversal: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-022:
+    name: "Paul Tudor Jones — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: ptj_archetype
+    group: MACRO
+    philosophy: crash_anticipation
+    dimensions:
+      belief_system:
+        crash_detection: 0.9
+        volatility_breakout: 0.85
+        sentiment_reversal: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-023:
+    name: "Paul Tudor Jones — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: ptj_archetype
+    group: MACRO
+    philosophy: crash_anticipation
+    dimensions:
+      belief_system:
+        crash_detection: 0.9
+        volatility_breakout: 0.85
+        sentiment_reversal: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-MACRO-024:
+    name: "Paul Tudor Jones — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: ptj_archetype
+    group: MACRO
+    philosophy: crash_anticipation
+    dimensions:
+      belief_system:
+        crash_detection: 0.9
+        volatility_breakout: 0.85
+        sentiment_reversal: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-MACRO-025:
+    name: "Paul Tudor Jones — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: ptj_archetype
+    group: MACRO
+    philosophy: crash_anticipation
+    dimensions:
+      belief_system:
+        crash_detection: 0.9
+        volatility_breakout: 0.85
+        sentiment_reversal: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-MACRO-026:
+    name: "Paul Tudor Jones — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: ptj_archetype
+    group: MACRO
+    philosophy: crash_anticipation
+    dimensions:
+      belief_system:
+        crash_detection: 0.9
+        volatility_breakout: 0.85
+        sentiment_reversal: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-027:
+    name: "Paul Tudor Jones — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: ptj_archetype
+    group: MACRO
+    philosophy: crash_anticipation
+    dimensions:
+      belief_system:
+        crash_detection: 0.9
+        volatility_breakout: 0.85
+        sentiment_reversal: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-028:
+    name: "Paul Tudor Jones — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: ptj_archetype
+    group: MACRO
+    philosophy: crash_anticipation
+    dimensions:
+      belief_system:
+        crash_detection: 0.9
+        volatility_breakout: 0.85
+        sentiment_reversal: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-MACRO-029:
+    name: "Paul Tudor Jones — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: ptj_archetype
+    group: MACRO
+    philosophy: crash_anticipation
+    dimensions:
+      belief_system:
+        crash_detection: 0.9
+        volatility_breakout: 0.85
+        sentiment_reversal: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-MACRO-030:
+    name: "Paul Tudor Jones — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: ptj_archetype
+    group: MACRO
+    philosophy: crash_anticipation
+    dimensions:
+      belief_system:
+        crash_detection: 0.9
+        volatility_breakout: 0.85
+        sentiment_reversal: 0.8
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-MACRO-031:
+    name: "Ray Dalio — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: dalio_archetype
+    group: MACRO
+    philosophy: macro_systems_thinking
+    dimensions:
+      belief_system:
+        regime_classification: 0.95
+        risk_parity: 0.9
+        correlation_balancing: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-032:
+    name: "Ray Dalio — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: dalio_archetype
+    group: MACRO
+    philosophy: macro_systems_thinking
+    dimensions:
+      belief_system:
+        regime_classification: 0.95
+        risk_parity: 0.9
+        correlation_balancing: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-033:
+    name: "Ray Dalio — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: dalio_archetype
+    group: MACRO
+    philosophy: macro_systems_thinking
+    dimensions:
+      belief_system:
+        regime_classification: 0.95
+        risk_parity: 0.9
+        correlation_balancing: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-MACRO-034:
+    name: "Ray Dalio — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: dalio_archetype
+    group: MACRO
+    philosophy: macro_systems_thinking
+    dimensions:
+      belief_system:
+        regime_classification: 0.95
+        risk_parity: 0.9
+        correlation_balancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-MACRO-035:
+    name: "Ray Dalio — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: dalio_archetype
+    group: MACRO
+    philosophy: macro_systems_thinking
+    dimensions:
+      belief_system:
+        regime_classification: 0.95
+        risk_parity: 0.9
+        correlation_balancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-MACRO-036:
+    name: "Ray Dalio — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: dalio_archetype
+    group: MACRO
+    philosophy: macro_systems_thinking
+    dimensions:
+      belief_system:
+        regime_classification: 0.95
+        risk_parity: 0.9
+        correlation_balancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-037:
+    name: "Ray Dalio — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: dalio_archetype
+    group: MACRO
+    philosophy: macro_systems_thinking
+    dimensions:
+      belief_system:
+        regime_classification: 0.95
+        risk_parity: 0.9
+        correlation_balancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-MACRO-038:
+    name: "Ray Dalio — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: dalio_archetype
+    group: MACRO
+    philosophy: macro_systems_thinking
+    dimensions:
+      belief_system:
+        regime_classification: 0.95
+        risk_parity: 0.9
+        correlation_balancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-MACRO-039:
+    name: "Ray Dalio — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: dalio_archetype
+    group: MACRO
+    philosophy: macro_systems_thinking
+    dimensions:
+      belief_system:
+        regime_classification: 0.95
+        risk_parity: 0.9
+        correlation_balancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-MACRO-040:
+    name: "Ray Dalio — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: dalio_archetype
+    group: MACRO
+    philosophy: macro_systems_thinking
+    dimensions:
+      belief_system:
+        regime_classification: 0.95
+        risk_parity: 0.9
+        correlation_balancing: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-DISCRETIONARY-041:
+    name: "Jesse Livermore — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: livermore_archetype
+    group: DISCRETIONARY
+    philosophy: trend_psychology
+    dimensions:
+      belief_system:
+        trend_following: 0.9
+        psychological_timing: 0.85
+        pivot_points: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-DISCRETIONARY-042:
+    name: "Jesse Livermore — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: livermore_archetype
+    group: DISCRETIONARY
+    philosophy: trend_psychology
+    dimensions:
+      belief_system:
+        trend_following: 0.9
+        psychological_timing: 0.85
+        pivot_points: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-DISCRETIONARY-043:
+    name: "Jesse Livermore — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: livermore_archetype
+    group: DISCRETIONARY
+    philosophy: trend_psychology
+    dimensions:
+      belief_system:
+        trend_following: 0.9
+        psychological_timing: 0.85
+        pivot_points: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-DISCRETIONARY-044:
+    name: "Jesse Livermore — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: livermore_archetype
+    group: DISCRETIONARY
+    philosophy: trend_psychology
+    dimensions:
+      belief_system:
+        trend_following: 0.9
+        psychological_timing: 0.85
+        pivot_points: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-DISCRETIONARY-045:
+    name: "Jesse Livermore — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: livermore_archetype
+    group: DISCRETIONARY
+    philosophy: trend_psychology
+    dimensions:
+      belief_system:
+        trend_following: 0.9
+        psychological_timing: 0.85
+        pivot_points: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-DISCRETIONARY-046:
+    name: "Jesse Livermore — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: livermore_archetype
+    group: DISCRETIONARY
+    philosophy: trend_psychology
+    dimensions:
+      belief_system:
+        trend_following: 0.9
+        psychological_timing: 0.85
+        pivot_points: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-DISCRETIONARY-047:
+    name: "Jesse Livermore — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: livermore_archetype
+    group: DISCRETIONARY
+    philosophy: trend_psychology
+    dimensions:
+      belief_system:
+        trend_following: 0.9
+        psychological_timing: 0.85
+        pivot_points: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-DISCRETIONARY-048:
+    name: "Jesse Livermore — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: livermore_archetype
+    group: DISCRETIONARY
+    philosophy: trend_psychology
+    dimensions:
+      belief_system:
+        trend_following: 0.9
+        psychological_timing: 0.85
+        pivot_points: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-DISCRETIONARY-049:
+    name: "Jesse Livermore — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: livermore_archetype
+    group: DISCRETIONARY
+    philosophy: trend_psychology
+    dimensions:
+      belief_system:
+        trend_following: 0.9
+        psychological_timing: 0.85
+        pivot_points: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-DISCRETIONARY-050:
+    name: "Jesse Livermore — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: livermore_archetype
+    group: DISCRETIONARY
+    philosophy: trend_psychology
+    dimensions:
+      belief_system:
+        trend_following: 0.9
+        psychological_timing: 0.85
+        pivot_points: 0.8
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-DISCRETIONARY-051:
+    name: "Linda Raschke — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: raschke_archetype
+    group: DISCRETIONARY
+    philosophy: pattern_swing
+    dimensions:
+      belief_system:
+        pattern_setups: 0.9
+        swing_trading: 0.85
+        momentum_continuation: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-DISCRETIONARY-052:
+    name: "Linda Raschke — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: raschke_archetype
+    group: DISCRETIONARY
+    philosophy: pattern_swing
+    dimensions:
+      belief_system:
+        pattern_setups: 0.9
+        swing_trading: 0.85
+        momentum_continuation: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-DISCRETIONARY-053:
+    name: "Linda Raschke — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: raschke_archetype
+    group: DISCRETIONARY
+    philosophy: pattern_swing
+    dimensions:
+      belief_system:
+        pattern_setups: 0.9
+        swing_trading: 0.85
+        momentum_continuation: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-DISCRETIONARY-054:
+    name: "Linda Raschke — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: raschke_archetype
+    group: DISCRETIONARY
+    philosophy: pattern_swing
+    dimensions:
+      belief_system:
+        pattern_setups: 0.9
+        swing_trading: 0.85
+        momentum_continuation: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-DISCRETIONARY-055:
+    name: "Linda Raschke — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: raschke_archetype
+    group: DISCRETIONARY
+    philosophy: pattern_swing
+    dimensions:
+      belief_system:
+        pattern_setups: 0.9
+        swing_trading: 0.85
+        momentum_continuation: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-DISCRETIONARY-056:
+    name: "Linda Raschke — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: raschke_archetype
+    group: DISCRETIONARY
+    philosophy: pattern_swing
+    dimensions:
+      belief_system:
+        pattern_setups: 0.9
+        swing_trading: 0.85
+        momentum_continuation: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-DISCRETIONARY-057:
+    name: "Linda Raschke — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: raschke_archetype
+    group: DISCRETIONARY
+    philosophy: pattern_swing
+    dimensions:
+      belief_system:
+        pattern_setups: 0.9
+        swing_trading: 0.85
+        momentum_continuation: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-DISCRETIONARY-058:
+    name: "Linda Raschke — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: raschke_archetype
+    group: DISCRETIONARY
+    philosophy: pattern_swing
+    dimensions:
+      belief_system:
+        pattern_setups: 0.9
+        swing_trading: 0.85
+        momentum_continuation: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-DISCRETIONARY-059:
+    name: "Linda Raschke — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: raschke_archetype
+    group: DISCRETIONARY
+    philosophy: pattern_swing
+    dimensions:
+      belief_system:
+        pattern_setups: 0.9
+        swing_trading: 0.85
+        momentum_continuation: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-DISCRETIONARY-060:
+    name: "Linda Raschke — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: raschke_archetype
+    group: DISCRETIONARY
+    philosophy: pattern_swing
+    dimensions:
+      belief_system:
+        pattern_setups: 0.9
+        swing_trading: 0.85
+        momentum_continuation: 0.8
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-061:
+    name: "Jim Simons — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: simons_archetype
+    group: QUANT
+    philosophy: pattern_extraction
+    dimensions:
+      belief_system:
+        statistical_arbitrage: 0.95
+        pattern_correlation: 0.9
+        hidden_signal: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-062:
+    name: "Jim Simons — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: simons_archetype
+    group: QUANT
+    philosophy: pattern_extraction
+    dimensions:
+      belief_system:
+        statistical_arbitrage: 0.95
+        pattern_correlation: 0.9
+        hidden_signal: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-063:
+    name: "Jim Simons — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: simons_archetype
+    group: QUANT
+    philosophy: pattern_extraction
+    dimensions:
+      belief_system:
+        statistical_arbitrage: 0.95
+        pattern_correlation: 0.9
+        hidden_signal: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-064:
+    name: "Jim Simons — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: simons_archetype
+    group: QUANT
+    philosophy: pattern_extraction
+    dimensions:
+      belief_system:
+        statistical_arbitrage: 0.95
+        pattern_correlation: 0.9
+        hidden_signal: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-065:
+    name: "Jim Simons — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: simons_archetype
+    group: QUANT
+    philosophy: pattern_extraction
+    dimensions:
+      belief_system:
+        statistical_arbitrage: 0.95
+        pattern_correlation: 0.9
+        hidden_signal: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-066:
+    name: "Jim Simons — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: simons_archetype
+    group: QUANT
+    philosophy: pattern_extraction
+    dimensions:
+      belief_system:
+        statistical_arbitrage: 0.95
+        pattern_correlation: 0.9
+        hidden_signal: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-067:
+    name: "Jim Simons — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: simons_archetype
+    group: QUANT
+    philosophy: pattern_extraction
+    dimensions:
+      belief_system:
+        statistical_arbitrage: 0.95
+        pattern_correlation: 0.9
+        hidden_signal: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-068:
+    name: "Jim Simons — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: simons_archetype
+    group: QUANT
+    philosophy: pattern_extraction
+    dimensions:
+      belief_system:
+        statistical_arbitrage: 0.95
+        pattern_correlation: 0.9
+        hidden_signal: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-069:
+    name: "Jim Simons — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: simons_archetype
+    group: QUANT
+    philosophy: pattern_extraction
+    dimensions:
+      belief_system:
+        statistical_arbitrage: 0.95
+        pattern_correlation: 0.9
+        hidden_signal: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-070:
+    name: "Jim Simons — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: simons_archetype
+    group: QUANT
+    philosophy: pattern_extraction
+    dimensions:
+      belief_system:
+        statistical_arbitrage: 0.95
+        pattern_correlation: 0.9
+        hidden_signal: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-071:
+    name: "David Shaw — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: shaw_archetype
+    group: QUANT
+    philosophy: computational_trading
+    dimensions:
+      belief_system:
+        computational_alpha: 0.9
+        mean_reversion: 0.85
+        market_microstructure: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-072:
+    name: "David Shaw — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: shaw_archetype
+    group: QUANT
+    philosophy: computational_trading
+    dimensions:
+      belief_system:
+        computational_alpha: 0.9
+        mean_reversion: 0.85
+        market_microstructure: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-073:
+    name: "David Shaw — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: shaw_archetype
+    group: QUANT
+    philosophy: computational_trading
+    dimensions:
+      belief_system:
+        computational_alpha: 0.9
+        mean_reversion: 0.85
+        market_microstructure: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-074:
+    name: "David Shaw — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: shaw_archetype
+    group: QUANT
+    philosophy: computational_trading
+    dimensions:
+      belief_system:
+        computational_alpha: 0.9
+        mean_reversion: 0.85
+        market_microstructure: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-075:
+    name: "David Shaw — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: shaw_archetype
+    group: QUANT
+    philosophy: computational_trading
+    dimensions:
+      belief_system:
+        computational_alpha: 0.9
+        mean_reversion: 0.85
+        market_microstructure: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-076:
+    name: "David Shaw — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: shaw_archetype
+    group: QUANT
+    philosophy: computational_trading
+    dimensions:
+      belief_system:
+        computational_alpha: 0.9
+        mean_reversion: 0.85
+        market_microstructure: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-077:
+    name: "David Shaw — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: shaw_archetype
+    group: QUANT
+    philosophy: computational_trading
+    dimensions:
+      belief_system:
+        computational_alpha: 0.9
+        mean_reversion: 0.85
+        market_microstructure: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-078:
+    name: "David Shaw — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: shaw_archetype
+    group: QUANT
+    philosophy: computational_trading
+    dimensions:
+      belief_system:
+        computational_alpha: 0.9
+        mean_reversion: 0.85
+        market_microstructure: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-079:
+    name: "David Shaw — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: shaw_archetype
+    group: QUANT
+    philosophy: computational_trading
+    dimensions:
+      belief_system:
+        computational_alpha: 0.9
+        mean_reversion: 0.85
+        market_microstructure: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-080:
+    name: "David Shaw — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: shaw_archetype
+    group: QUANT
+    philosophy: computational_trading
+    dimensions:
+      belief_system:
+        computational_alpha: 0.9
+        mean_reversion: 0.85
+        market_microstructure: 0.8
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-TREND-081:
+    name: "Richard Dennis — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: dennis_archetype
+    group: TREND
+    philosophy: turtle_system
+    dimensions:
+      belief_system:
+        breakout: 0.95
+        pyramiding: 0.85
+        systematic: 0.9
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-082:
+    name: "Richard Dennis — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: dennis_archetype
+    group: TREND
+    philosophy: turtle_system
+    dimensions:
+      belief_system:
+        breakout: 0.95
+        pyramiding: 0.85
+        systematic: 0.9
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-083:
+    name: "Richard Dennis — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: dennis_archetype
+    group: TREND
+    philosophy: turtle_system
+    dimensions:
+      belief_system:
+        breakout: 0.95
+        pyramiding: 0.85
+        systematic: 0.9
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-TREND-084:
+    name: "Richard Dennis — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: dennis_archetype
+    group: TREND
+    philosophy: turtle_system
+    dimensions:
+      belief_system:
+        breakout: 0.95
+        pyramiding: 0.85
+        systematic: 0.9
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-TREND-085:
+    name: "Richard Dennis — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: dennis_archetype
+    group: TREND
+    philosophy: turtle_system
+    dimensions:
+      belief_system:
+        breakout: 0.95
+        pyramiding: 0.85
+        systematic: 0.9
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-TREND-086:
+    name: "Richard Dennis — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: dennis_archetype
+    group: TREND
+    philosophy: turtle_system
+    dimensions:
+      belief_system:
+        breakout: 0.95
+        pyramiding: 0.85
+        systematic: 0.9
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-087:
+    name: "Richard Dennis — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: dennis_archetype
+    group: TREND
+    philosophy: turtle_system
+    dimensions:
+      belief_system:
+        breakout: 0.95
+        pyramiding: 0.85
+        systematic: 0.9
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-088:
+    name: "Richard Dennis — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: dennis_archetype
+    group: TREND
+    philosophy: turtle_system
+    dimensions:
+      belief_system:
+        breakout: 0.95
+        pyramiding: 0.85
+        systematic: 0.9
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-TREND-089:
+    name: "Richard Dennis — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: dennis_archetype
+    group: TREND
+    philosophy: turtle_system
+    dimensions:
+      belief_system:
+        breakout: 0.95
+        pyramiding: 0.85
+        systematic: 0.9
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-TREND-090:
+    name: "Richard Dennis — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: dennis_archetype
+    group: TREND
+    philosophy: turtle_system
+    dimensions:
+      belief_system:
+        breakout: 0.95
+        pyramiding: 0.85
+        systematic: 0.9
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-TREND-091:
+    name: "Ed Seykota — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: seykota_archetype
+    group: TREND
+    philosophy: pure_trend
+    dimensions:
+      belief_system:
+        trend_following: 0.95
+        emotional_detachment: 0.9
+        adaptive_filters: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-092:
+    name: "Ed Seykota — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: seykota_archetype
+    group: TREND
+    philosophy: pure_trend
+    dimensions:
+      belief_system:
+        trend_following: 0.95
+        emotional_detachment: 0.9
+        adaptive_filters: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-093:
+    name: "Ed Seykota — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: seykota_archetype
+    group: TREND
+    philosophy: pure_trend
+    dimensions:
+      belief_system:
+        trend_following: 0.95
+        emotional_detachment: 0.9
+        adaptive_filters: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-TREND-094:
+    name: "Ed Seykota — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: seykota_archetype
+    group: TREND
+    philosophy: pure_trend
+    dimensions:
+      belief_system:
+        trend_following: 0.95
+        emotional_detachment: 0.9
+        adaptive_filters: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-TREND-095:
+    name: "Ed Seykota — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: seykota_archetype
+    group: TREND
+    philosophy: pure_trend
+    dimensions:
+      belief_system:
+        trend_following: 0.95
+        emotional_detachment: 0.9
+        adaptive_filters: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-TREND-096:
+    name: "Ed Seykota — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: seykota_archetype
+    group: TREND
+    philosophy: pure_trend
+    dimensions:
+      belief_system:
+        trend_following: 0.95
+        emotional_detachment: 0.9
+        adaptive_filters: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-097:
+    name: "Ed Seykota — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: seykota_archetype
+    group: TREND
+    philosophy: pure_trend
+    dimensions:
+      belief_system:
+        trend_following: 0.95
+        emotional_detachment: 0.9
+        adaptive_filters: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-098:
+    name: "Ed Seykota — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: seykota_archetype
+    group: TREND
+    philosophy: pure_trend
+    dimensions:
+      belief_system:
+        trend_following: 0.95
+        emotional_detachment: 0.9
+        adaptive_filters: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-TREND-099:
+    name: "Ed Seykota — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: seykota_archetype
+    group: TREND
+    philosophy: pure_trend
+    dimensions:
+      belief_system:
+        trend_following: 0.95
+        emotional_detachment: 0.9
+        adaptive_filters: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-TREND-100:
+    name: "Ed Seykota — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: seykota_archetype
+    group: TREND
+    philosophy: pure_trend
+    dimensions:
+      belief_system:
+        trend_following: 0.95
+        emotional_detachment: 0.9
+        adaptive_filters: 0.8
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-VALUE-101:
+    name: "Warren Buffett — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: buffett_archetype
+    group: VALUE
+    philosophy: intrinsic_value
+    dimensions:
+      belief_system:
+        value_investing: 0.95
+        margin_of_safety: 0.9
+        compounding: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-VALUE-102:
+    name: "Warren Buffett — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: buffett_archetype
+    group: VALUE
+    philosophy: intrinsic_value
+    dimensions:
+      belief_system:
+        value_investing: 0.95
+        margin_of_safety: 0.9
+        compounding: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-VALUE-103:
+    name: "Warren Buffett — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: buffett_archetype
+    group: VALUE
+    philosophy: intrinsic_value
+    dimensions:
+      belief_system:
+        value_investing: 0.95
+        margin_of_safety: 0.9
+        compounding: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-VALUE-104:
+    name: "Warren Buffett — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: buffett_archetype
+    group: VALUE
+    philosophy: intrinsic_value
+    dimensions:
+      belief_system:
+        value_investing: 0.95
+        margin_of_safety: 0.9
+        compounding: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-VALUE-105:
+    name: "Warren Buffett — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: buffett_archetype
+    group: VALUE
+    philosophy: intrinsic_value
+    dimensions:
+      belief_system:
+        value_investing: 0.95
+        margin_of_safety: 0.9
+        compounding: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-VALUE-106:
+    name: "Warren Buffett — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: buffett_archetype
+    group: VALUE
+    philosophy: intrinsic_value
+    dimensions:
+      belief_system:
+        value_investing: 0.95
+        margin_of_safety: 0.9
+        compounding: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-VALUE-107:
+    name: "Warren Buffett — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: buffett_archetype
+    group: VALUE
+    philosophy: intrinsic_value
+    dimensions:
+      belief_system:
+        value_investing: 0.95
+        margin_of_safety: 0.9
+        compounding: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-VALUE-108:
+    name: "Warren Buffett — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: buffett_archetype
+    group: VALUE
+    philosophy: intrinsic_value
+    dimensions:
+      belief_system:
+        value_investing: 0.95
+        margin_of_safety: 0.9
+        compounding: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-VALUE-109:
+    name: "Warren Buffett — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: buffett_archetype
+    group: VALUE
+    philosophy: intrinsic_value
+    dimensions:
+      belief_system:
+        value_investing: 0.95
+        margin_of_safety: 0.9
+        compounding: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-VALUE-110:
+    name: "Warren Buffett — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: buffett_archetype
+    group: VALUE
+    philosophy: intrinsic_value
+    dimensions:
+      belief_system:
+        value_investing: 0.95
+        margin_of_safety: 0.9
+        compounding: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-VALUE-111:
+    name: "Peter Lynch — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: lynch_archetype
+    group: VALUE
+    philosophy: growth_value_hybrid
+    dimensions:
+      belief_system:
+        growth_investing: 0.9
+        sector_knowledge: 0.85
+        peg_ratio: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-VALUE-112:
+    name: "Peter Lynch — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: lynch_archetype
+    group: VALUE
+    philosophy: growth_value_hybrid
+    dimensions:
+      belief_system:
+        growth_investing: 0.9
+        sector_knowledge: 0.85
+        peg_ratio: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-VALUE-113:
+    name: "Peter Lynch — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: lynch_archetype
+    group: VALUE
+    philosophy: growth_value_hybrid
+    dimensions:
+      belief_system:
+        growth_investing: 0.9
+        sector_knowledge: 0.85
+        peg_ratio: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-VALUE-114:
+    name: "Peter Lynch — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: lynch_archetype
+    group: VALUE
+    philosophy: growth_value_hybrid
+    dimensions:
+      belief_system:
+        growth_investing: 0.9
+        sector_knowledge: 0.85
+        peg_ratio: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-VALUE-115:
+    name: "Peter Lynch — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: lynch_archetype
+    group: VALUE
+    philosophy: growth_value_hybrid
+    dimensions:
+      belief_system:
+        growth_investing: 0.9
+        sector_knowledge: 0.85
+        peg_ratio: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-VALUE-116:
+    name: "Peter Lynch — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: lynch_archetype
+    group: VALUE
+    philosophy: growth_value_hybrid
+    dimensions:
+      belief_system:
+        growth_investing: 0.9
+        sector_knowledge: 0.85
+        peg_ratio: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-VALUE-117:
+    name: "Peter Lynch — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: lynch_archetype
+    group: VALUE
+    philosophy: growth_value_hybrid
+    dimensions:
+      belief_system:
+        growth_investing: 0.9
+        sector_knowledge: 0.85
+        peg_ratio: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-VALUE-118:
+    name: "Peter Lynch — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: lynch_archetype
+    group: VALUE
+    philosophy: growth_value_hybrid
+    dimensions:
+      belief_system:
+        growth_investing: 0.9
+        sector_knowledge: 0.85
+        peg_ratio: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-VALUE-119:
+    name: "Peter Lynch — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: lynch_archetype
+    group: VALUE
+    philosophy: growth_value_hybrid
+    dimensions:
+      belief_system:
+        growth_investing: 0.9
+        sector_knowledge: 0.85
+        peg_ratio: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-VALUE-120:
+    name: "Peter Lynch — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: lynch_archetype
+    group: VALUE
+    philosophy: growth_value_hybrid
+    dimensions:
+      belief_system:
+        growth_investing: 0.9
+        sector_knowledge: 0.85
+        peg_ratio: 0.8
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-EVENT-121:
+    name: "John Paulson — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: paulson_archetype
+    group: EVENT
+    philosophy: crisis_asymmetric
+    dimensions:
+      belief_system:
+        asymmetric_bets: 0.95
+        credit_analysis: 0.9
+        crisis_detection: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-122:
+    name: "John Paulson — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: paulson_archetype
+    group: EVENT
+    philosophy: crisis_asymmetric
+    dimensions:
+      belief_system:
+        asymmetric_bets: 0.95
+        credit_analysis: 0.9
+        crisis_detection: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-123:
+    name: "John Paulson — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: paulson_archetype
+    group: EVENT
+    philosophy: crisis_asymmetric
+    dimensions:
+      belief_system:
+        asymmetric_bets: 0.95
+        credit_analysis: 0.9
+        crisis_detection: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-EVENT-124:
+    name: "John Paulson — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: paulson_archetype
+    group: EVENT
+    philosophy: crisis_asymmetric
+    dimensions:
+      belief_system:
+        asymmetric_bets: 0.95
+        credit_analysis: 0.9
+        crisis_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-EVENT-125:
+    name: "John Paulson — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: paulson_archetype
+    group: EVENT
+    philosophy: crisis_asymmetric
+    dimensions:
+      belief_system:
+        asymmetric_bets: 0.95
+        credit_analysis: 0.9
+        crisis_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-EVENT-126:
+    name: "John Paulson — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: paulson_archetype
+    group: EVENT
+    philosophy: crisis_asymmetric
+    dimensions:
+      belief_system:
+        asymmetric_bets: 0.95
+        credit_analysis: 0.9
+        crisis_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-127:
+    name: "John Paulson — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: paulson_archetype
+    group: EVENT
+    philosophy: crisis_asymmetric
+    dimensions:
+      belief_system:
+        asymmetric_bets: 0.95
+        credit_analysis: 0.9
+        crisis_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-128:
+    name: "John Paulson — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: paulson_archetype
+    group: EVENT
+    philosophy: crisis_asymmetric
+    dimensions:
+      belief_system:
+        asymmetric_bets: 0.95
+        credit_analysis: 0.9
+        crisis_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-EVENT-129:
+    name: "John Paulson — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: paulson_archetype
+    group: EVENT
+    philosophy: crisis_asymmetric
+    dimensions:
+      belief_system:
+        asymmetric_bets: 0.95
+        credit_analysis: 0.9
+        crisis_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-EVENT-130:
+    name: "John Paulson — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: paulson_archetype
+    group: EVENT
+    philosophy: crisis_asymmetric
+    dimensions:
+      belief_system:
+        asymmetric_bets: 0.95
+        credit_analysis: 0.9
+        crisis_detection: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-EVENT-131:
+    name: "Michael Burry — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: burry_archetype
+    group: EVENT
+    philosophy: deep_value_contrarian
+    dimensions:
+      belief_system:
+        contrarian: 0.95
+        deep_value: 0.9
+        catalyst_hunting: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-132:
+    name: "Michael Burry — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: burry_archetype
+    group: EVENT
+    philosophy: deep_value_contrarian
+    dimensions:
+      belief_system:
+        contrarian: 0.95
+        deep_value: 0.9
+        catalyst_hunting: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-133:
+    name: "Michael Burry — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: burry_archetype
+    group: EVENT
+    philosophy: deep_value_contrarian
+    dimensions:
+      belief_system:
+        contrarian: 0.95
+        deep_value: 0.9
+        catalyst_hunting: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-EVENT-134:
+    name: "Michael Burry — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: burry_archetype
+    group: EVENT
+    philosophy: deep_value_contrarian
+    dimensions:
+      belief_system:
+        contrarian: 0.95
+        deep_value: 0.9
+        catalyst_hunting: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-EVENT-135:
+    name: "Michael Burry — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: burry_archetype
+    group: EVENT
+    philosophy: deep_value_contrarian
+    dimensions:
+      belief_system:
+        contrarian: 0.95
+        deep_value: 0.9
+        catalyst_hunting: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-EVENT-136:
+    name: "Michael Burry — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: burry_archetype
+    group: EVENT
+    philosophy: deep_value_contrarian
+    dimensions:
+      belief_system:
+        contrarian: 0.95
+        deep_value: 0.9
+        catalyst_hunting: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-137:
+    name: "Michael Burry — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: burry_archetype
+    group: EVENT
+    philosophy: deep_value_contrarian
+    dimensions:
+      belief_system:
+        contrarian: 0.95
+        deep_value: 0.9
+        catalyst_hunting: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-138:
+    name: "Michael Burry — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: burry_archetype
+    group: EVENT
+    philosophy: deep_value_contrarian
+    dimensions:
+      belief_system:
+        contrarian: 0.95
+        deep_value: 0.9
+        catalyst_hunting: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-EVENT-139:
+    name: "Michael Burry — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: burry_archetype
+    group: EVENT
+    philosophy: deep_value_contrarian
+    dimensions:
+      belief_system:
+        contrarian: 0.95
+        deep_value: 0.9
+        catalyst_hunting: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-EVENT-140:
+    name: "Michael Burry — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: burry_archetype
+    group: EVENT
+    philosophy: deep_value_contrarian
+    dimensions:
+      belief_system:
+        contrarian: 0.95
+        deep_value: 0.9
+        catalyst_hunting: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-141:
+    name: "Citadel Securities Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: citadel_mm_archetype
+    group: QUANT
+    philosophy: market_making
+    dimensions:
+      belief_system:
+        spread_capture: 0.95
+        inventory_management: 0.9
+        latency_edge: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-142:
+    name: "Citadel Securities Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: citadel_mm_archetype
+    group: QUANT
+    philosophy: market_making
+    dimensions:
+      belief_system:
+        spread_capture: 0.95
+        inventory_management: 0.9
+        latency_edge: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-143:
+    name: "Citadel Securities Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: citadel_mm_archetype
+    group: QUANT
+    philosophy: market_making
+    dimensions:
+      belief_system:
+        spread_capture: 0.95
+        inventory_management: 0.9
+        latency_edge: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-144:
+    name: "Citadel Securities Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: citadel_mm_archetype
+    group: QUANT
+    philosophy: market_making
+    dimensions:
+      belief_system:
+        spread_capture: 0.95
+        inventory_management: 0.9
+        latency_edge: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-145:
+    name: "Citadel Securities Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: citadel_mm_archetype
+    group: QUANT
+    philosophy: market_making
+    dimensions:
+      belief_system:
+        spread_capture: 0.95
+        inventory_management: 0.9
+        latency_edge: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-146:
+    name: "Citadel Securities Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: citadel_mm_archetype
+    group: QUANT
+    philosophy: market_making
+    dimensions:
+      belief_system:
+        spread_capture: 0.95
+        inventory_management: 0.9
+        latency_edge: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-147:
+    name: "Citadel Securities Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: citadel_mm_archetype
+    group: QUANT
+    philosophy: market_making
+    dimensions:
+      belief_system:
+        spread_capture: 0.95
+        inventory_management: 0.9
+        latency_edge: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-148:
+    name: "Citadel Securities Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: citadel_mm_archetype
+    group: QUANT
+    philosophy: market_making
+    dimensions:
+      belief_system:
+        spread_capture: 0.95
+        inventory_management: 0.9
+        latency_edge: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-149:
+    name: "Citadel Securities Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: citadel_mm_archetype
+    group: QUANT
+    philosophy: market_making
+    dimensions:
+      belief_system:
+        spread_capture: 0.95
+        inventory_management: 0.9
+        latency_edge: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-150:
+    name: "Citadel Securities Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: citadel_mm_archetype
+    group: QUANT
+    philosophy: market_making
+    dimensions:
+      belief_system:
+        spread_capture: 0.95
+        inventory_management: 0.9
+        latency_edge: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-151:
+    name: "Jump Trading Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: jump_archetype
+    group: QUANT
+    philosophy: latency_arbitrage
+    dimensions:
+      belief_system:
+        latency_arb: 0.95
+        co_location: 0.9
+        signal_processing: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-152:
+    name: "Jump Trading Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: jump_archetype
+    group: QUANT
+    philosophy: latency_arbitrage
+    dimensions:
+      belief_system:
+        latency_arb: 0.95
+        co_location: 0.9
+        signal_processing: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-153:
+    name: "Jump Trading Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: jump_archetype
+    group: QUANT
+    philosophy: latency_arbitrage
+    dimensions:
+      belief_system:
+        latency_arb: 0.95
+        co_location: 0.9
+        signal_processing: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-154:
+    name: "Jump Trading Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: jump_archetype
+    group: QUANT
+    philosophy: latency_arbitrage
+    dimensions:
+      belief_system:
+        latency_arb: 0.95
+        co_location: 0.9
+        signal_processing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-155:
+    name: "Jump Trading Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: jump_archetype
+    group: QUANT
+    philosophy: latency_arbitrage
+    dimensions:
+      belief_system:
+        latency_arb: 0.95
+        co_location: 0.9
+        signal_processing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-156:
+    name: "Jump Trading Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: jump_archetype
+    group: QUANT
+    philosophy: latency_arbitrage
+    dimensions:
+      belief_system:
+        latency_arb: 0.95
+        co_location: 0.9
+        signal_processing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-157:
+    name: "Jump Trading Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: jump_archetype
+    group: QUANT
+    philosophy: latency_arbitrage
+    dimensions:
+      belief_system:
+        latency_arb: 0.95
+        co_location: 0.9
+        signal_processing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-158:
+    name: "Jump Trading Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: jump_archetype
+    group: QUANT
+    philosophy: latency_arbitrage
+    dimensions:
+      belief_system:
+        latency_arb: 0.95
+        co_location: 0.9
+        signal_processing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-159:
+    name: "Jump Trading Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: jump_archetype
+    group: QUANT
+    philosophy: latency_arbitrage
+    dimensions:
+      belief_system:
+        latency_arb: 0.95
+        co_location: 0.9
+        signal_processing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-160:
+    name: "Jump Trading Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: jump_archetype
+    group: QUANT
+    philosophy: latency_arbitrage
+    dimensions:
+      belief_system:
+        latency_arb: 0.95
+        co_location: 0.9
+        signal_processing: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-CRYPTO-161:
+    name: "Arthur Hayes Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: hayes_archetype
+    group: CRYPTO
+    philosophy: crypto_macro
+    dimensions:
+      belief_system:
+        funding_rate: 0.9
+        narrative_momentum: 0.85
+        leverage_cycle: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-162:
+    name: "Arthur Hayes Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: hayes_archetype
+    group: CRYPTO
+    philosophy: crypto_macro
+    dimensions:
+      belief_system:
+        funding_rate: 0.9
+        narrative_momentum: 0.85
+        leverage_cycle: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-163:
+    name: "Arthur Hayes Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: hayes_archetype
+    group: CRYPTO
+    philosophy: crypto_macro
+    dimensions:
+      belief_system:
+        funding_rate: 0.9
+        narrative_momentum: 0.85
+        leverage_cycle: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-CRYPTO-164:
+    name: "Arthur Hayes Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: hayes_archetype
+    group: CRYPTO
+    philosophy: crypto_macro
+    dimensions:
+      belief_system:
+        funding_rate: 0.9
+        narrative_momentum: 0.85
+        leverage_cycle: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-CRYPTO-165:
+    name: "Arthur Hayes Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: hayes_archetype
+    group: CRYPTO
+    philosophy: crypto_macro
+    dimensions:
+      belief_system:
+        funding_rate: 0.9
+        narrative_momentum: 0.85
+        leverage_cycle: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-CRYPTO-166:
+    name: "Arthur Hayes Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: hayes_archetype
+    group: CRYPTO
+    philosophy: crypto_macro
+    dimensions:
+      belief_system:
+        funding_rate: 0.9
+        narrative_momentum: 0.85
+        leverage_cycle: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-167:
+    name: "Arthur Hayes Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: hayes_archetype
+    group: CRYPTO
+    philosophy: crypto_macro
+    dimensions:
+      belief_system:
+        funding_rate: 0.9
+        narrative_momentum: 0.85
+        leverage_cycle: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-168:
+    name: "Arthur Hayes Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: hayes_archetype
+    group: CRYPTO
+    philosophy: crypto_macro
+    dimensions:
+      belief_system:
+        funding_rate: 0.9
+        narrative_momentum: 0.85
+        leverage_cycle: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-CRYPTO-169:
+    name: "Arthur Hayes Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: hayes_archetype
+    group: CRYPTO
+    philosophy: crypto_macro
+    dimensions:
+      belief_system:
+        funding_rate: 0.9
+        narrative_momentum: 0.85
+        leverage_cycle: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-CRYPTO-170:
+    name: "Arthur Hayes Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: hayes_archetype
+    group: CRYPTO
+    philosophy: crypto_macro
+    dimensions:
+      belief_system:
+        funding_rate: 0.9
+        narrative_momentum: 0.85
+        leverage_cycle: 0.8
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-CRYPTO-171:
+    name: "Counter-FTX Risk Model — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: sbf_inverse_archetype
+    group: CRYPTO
+    philosophy: risk_first_crypto
+    dimensions:
+      belief_system:
+        counterparty_risk: 0.95
+        proof_of_reserves: 0.9
+        conservative_leverage: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-172:
+    name: "Counter-FTX Risk Model — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: sbf_inverse_archetype
+    group: CRYPTO
+    philosophy: risk_first_crypto
+    dimensions:
+      belief_system:
+        counterparty_risk: 0.95
+        proof_of_reserves: 0.9
+        conservative_leverage: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-173:
+    name: "Counter-FTX Risk Model — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: sbf_inverse_archetype
+    group: CRYPTO
+    philosophy: risk_first_crypto
+    dimensions:
+      belief_system:
+        counterparty_risk: 0.95
+        proof_of_reserves: 0.9
+        conservative_leverage: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-CRYPTO-174:
+    name: "Counter-FTX Risk Model — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: sbf_inverse_archetype
+    group: CRYPTO
+    philosophy: risk_first_crypto
+    dimensions:
+      belief_system:
+        counterparty_risk: 0.95
+        proof_of_reserves: 0.9
+        conservative_leverage: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-CRYPTO-175:
+    name: "Counter-FTX Risk Model — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: sbf_inverse_archetype
+    group: CRYPTO
+    philosophy: risk_first_crypto
+    dimensions:
+      belief_system:
+        counterparty_risk: 0.95
+        proof_of_reserves: 0.9
+        conservative_leverage: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-CRYPTO-176:
+    name: "Counter-FTX Risk Model — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: sbf_inverse_archetype
+    group: CRYPTO
+    philosophy: risk_first_crypto
+    dimensions:
+      belief_system:
+        counterparty_risk: 0.95
+        proof_of_reserves: 0.9
+        conservative_leverage: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-177:
+    name: "Counter-FTX Risk Model — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: sbf_inverse_archetype
+    group: CRYPTO
+    philosophy: risk_first_crypto
+    dimensions:
+      belief_system:
+        counterparty_risk: 0.95
+        proof_of_reserves: 0.9
+        conservative_leverage: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-178:
+    name: "Counter-FTX Risk Model — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: sbf_inverse_archetype
+    group: CRYPTO
+    philosophy: risk_first_crypto
+    dimensions:
+      belief_system:
+        counterparty_risk: 0.95
+        proof_of_reserves: 0.9
+        conservative_leverage: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-CRYPTO-179:
+    name: "Counter-FTX Risk Model — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: sbf_inverse_archetype
+    group: CRYPTO
+    philosophy: risk_first_crypto
+    dimensions:
+      belief_system:
+        counterparty_risk: 0.95
+        proof_of_reserves: 0.9
+        conservative_leverage: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-CRYPTO-180:
+    name: "Counter-FTX Risk Model — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: sbf_inverse_archetype
+    group: CRYPTO
+    philosophy: risk_first_crypto
+    dimensions:
+      belief_system:
+        counterparty_risk: 0.95
+        proof_of_reserves: 0.9
+        conservative_leverage: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-181:
+    name: "Marco Avellaneda Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: avellaneda_archetype
+    group: QUANT
+    philosophy: pairs_trading
+    dimensions:
+      belief_system:
+        pairs_trading: 0.95
+        cointegration: 0.9
+        mean_reversion: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-182:
+    name: "Marco Avellaneda Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: avellaneda_archetype
+    group: QUANT
+    philosophy: pairs_trading
+    dimensions:
+      belief_system:
+        pairs_trading: 0.95
+        cointegration: 0.9
+        mean_reversion: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-183:
+    name: "Marco Avellaneda Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: avellaneda_archetype
+    group: QUANT
+    philosophy: pairs_trading
+    dimensions:
+      belief_system:
+        pairs_trading: 0.95
+        cointegration: 0.9
+        mean_reversion: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-184:
+    name: "Marco Avellaneda Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: avellaneda_archetype
+    group: QUANT
+    philosophy: pairs_trading
+    dimensions:
+      belief_system:
+        pairs_trading: 0.95
+        cointegration: 0.9
+        mean_reversion: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-185:
+    name: "Marco Avellaneda Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: avellaneda_archetype
+    group: QUANT
+    philosophy: pairs_trading
+    dimensions:
+      belief_system:
+        pairs_trading: 0.95
+        cointegration: 0.9
+        mean_reversion: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-186:
+    name: "Marco Avellaneda Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: avellaneda_archetype
+    group: QUANT
+    philosophy: pairs_trading
+    dimensions:
+      belief_system:
+        pairs_trading: 0.95
+        cointegration: 0.9
+        mean_reversion: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-187:
+    name: "Marco Avellaneda Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: avellaneda_archetype
+    group: QUANT
+    philosophy: pairs_trading
+    dimensions:
+      belief_system:
+        pairs_trading: 0.95
+        cointegration: 0.9
+        mean_reversion: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-188:
+    name: "Marco Avellaneda Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: avellaneda_archetype
+    group: QUANT
+    philosophy: pairs_trading
+    dimensions:
+      belief_system:
+        pairs_trading: 0.95
+        cointegration: 0.9
+        mean_reversion: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-189:
+    name: "Marco Avellaneda Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: avellaneda_archetype
+    group: QUANT
+    philosophy: pairs_trading
+    dimensions:
+      belief_system:
+        pairs_trading: 0.95
+        cointegration: 0.9
+        mean_reversion: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-190:
+    name: "Marco Avellaneda Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: avellaneda_archetype
+    group: QUANT
+    philosophy: pairs_trading
+    dimensions:
+      belief_system:
+        pairs_trading: 0.95
+        cointegration: 0.9
+        mean_reversion: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-191:
+    name: "Marcos Lopez de Prado Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: lopez_de_prado_archetype
+    group: QUANT
+    philosophy: ml_finance
+    dimensions:
+      belief_system:
+        meta_labeling: 0.95
+        triple_barrier: 0.9
+        feature_importance: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-192:
+    name: "Marcos Lopez de Prado Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: lopez_de_prado_archetype
+    group: QUANT
+    philosophy: ml_finance
+    dimensions:
+      belief_system:
+        meta_labeling: 0.95
+        triple_barrier: 0.9
+        feature_importance: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-193:
+    name: "Marcos Lopez de Prado Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: lopez_de_prado_archetype
+    group: QUANT
+    philosophy: ml_finance
+    dimensions:
+      belief_system:
+        meta_labeling: 0.95
+        triple_barrier: 0.9
+        feature_importance: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-194:
+    name: "Marcos Lopez de Prado Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: lopez_de_prado_archetype
+    group: QUANT
+    philosophy: ml_finance
+    dimensions:
+      belief_system:
+        meta_labeling: 0.95
+        triple_barrier: 0.9
+        feature_importance: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-195:
+    name: "Marcos Lopez de Prado Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: lopez_de_prado_archetype
+    group: QUANT
+    philosophy: ml_finance
+    dimensions:
+      belief_system:
+        meta_labeling: 0.95
+        triple_barrier: 0.9
+        feature_importance: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-196:
+    name: "Marcos Lopez de Prado Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: lopez_de_prado_archetype
+    group: QUANT
+    philosophy: ml_finance
+    dimensions:
+      belief_system:
+        meta_labeling: 0.95
+        triple_barrier: 0.9
+        feature_importance: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-197:
+    name: "Marcos Lopez de Prado Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: lopez_de_prado_archetype
+    group: QUANT
+    philosophy: ml_finance
+    dimensions:
+      belief_system:
+        meta_labeling: 0.95
+        triple_barrier: 0.9
+        feature_importance: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-198:
+    name: "Marcos Lopez de Prado Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: lopez_de_prado_archetype
+    group: QUANT
+    philosophy: ml_finance
+    dimensions:
+      belief_system:
+        meta_labeling: 0.95
+        triple_barrier: 0.9
+        feature_importance: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-199:
+    name: "Marcos Lopez de Prado Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: lopez_de_prado_archetype
+    group: QUANT
+    philosophy: ml_finance
+    dimensions:
+      belief_system:
+        meta_labeling: 0.95
+        triple_barrier: 0.9
+        feature_importance: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-200:
+    name: "Marcos Lopez de Prado Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: lopez_de_prado_archetype
+    group: QUANT
+    philosophy: ml_finance
+    dimensions:
+      belief_system:
+        meta_labeling: 0.95
+        triple_barrier: 0.9
+        feature_importance: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-FLOW-201:
+    name: "James Dalton Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: dalton_archetype
+    group: FLOW
+    philosophy: market_profile
+    dimensions:
+      belief_system:
+        volume_profile: 0.95
+        value_area: 0.9
+        TPO: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-FLOW-202:
+    name: "James Dalton Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: dalton_archetype
+    group: FLOW
+    philosophy: market_profile
+    dimensions:
+      belief_system:
+        volume_profile: 0.95
+        value_area: 0.9
+        TPO: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-FLOW-203:
+    name: "James Dalton Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: dalton_archetype
+    group: FLOW
+    philosophy: market_profile
+    dimensions:
+      belief_system:
+        volume_profile: 0.95
+        value_area: 0.9
+        TPO: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-FLOW-204:
+    name: "James Dalton Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: dalton_archetype
+    group: FLOW
+    philosophy: market_profile
+    dimensions:
+      belief_system:
+        volume_profile: 0.95
+        value_area: 0.9
+        TPO: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-FLOW-205:
+    name: "James Dalton Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: dalton_archetype
+    group: FLOW
+    philosophy: market_profile
+    dimensions:
+      belief_system:
+        volume_profile: 0.95
+        value_area: 0.9
+        TPO: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-FLOW-206:
+    name: "James Dalton Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: dalton_archetype
+    group: FLOW
+    philosophy: market_profile
+    dimensions:
+      belief_system:
+        volume_profile: 0.95
+        value_area: 0.9
+        TPO: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-FLOW-207:
+    name: "James Dalton Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: dalton_archetype
+    group: FLOW
+    philosophy: market_profile
+    dimensions:
+      belief_system:
+        volume_profile: 0.95
+        value_area: 0.9
+        TPO: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-FLOW-208:
+    name: "James Dalton Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: dalton_archetype
+    group: FLOW
+    philosophy: market_profile
+    dimensions:
+      belief_system:
+        volume_profile: 0.95
+        value_area: 0.9
+        TPO: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-FLOW-209:
+    name: "James Dalton Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: dalton_archetype
+    group: FLOW
+    philosophy: market_profile
+    dimensions:
+      belief_system:
+        volume_profile: 0.95
+        value_area: 0.9
+        TPO: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-FLOW-210:
+    name: "James Dalton Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: dalton_archetype
+    group: FLOW
+    philosophy: market_profile
+    dimensions:
+      belief_system:
+        volume_profile: 0.95
+        value_area: 0.9
+        TPO: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-FLOW-211:
+    name: "Peter Steidlmayer Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: steidlmayer_archetype
+    group: FLOW
+    philosophy: market_delta
+    dimensions:
+      belief_system:
+        market_delta: 0.9
+        order_flow: 0.85
+        absorption: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-FLOW-212:
+    name: "Peter Steidlmayer Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: steidlmayer_archetype
+    group: FLOW
+    philosophy: market_delta
+    dimensions:
+      belief_system:
+        market_delta: 0.9
+        order_flow: 0.85
+        absorption: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-FLOW-213:
+    name: "Peter Steidlmayer Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: steidlmayer_archetype
+    group: FLOW
+    philosophy: market_delta
+    dimensions:
+      belief_system:
+        market_delta: 0.9
+        order_flow: 0.85
+        absorption: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-FLOW-214:
+    name: "Peter Steidlmayer Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: steidlmayer_archetype
+    group: FLOW
+    philosophy: market_delta
+    dimensions:
+      belief_system:
+        market_delta: 0.9
+        order_flow: 0.85
+        absorption: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-FLOW-215:
+    name: "Peter Steidlmayer Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: steidlmayer_archetype
+    group: FLOW
+    philosophy: market_delta
+    dimensions:
+      belief_system:
+        market_delta: 0.9
+        order_flow: 0.85
+        absorption: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-FLOW-216:
+    name: "Peter Steidlmayer Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: steidlmayer_archetype
+    group: FLOW
+    philosophy: market_delta
+    dimensions:
+      belief_system:
+        market_delta: 0.9
+        order_flow: 0.85
+        absorption: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-FLOW-217:
+    name: "Peter Steidlmayer Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: steidlmayer_archetype
+    group: FLOW
+    philosophy: market_delta
+    dimensions:
+      belief_system:
+        market_delta: 0.9
+        order_flow: 0.85
+        absorption: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-FLOW-218:
+    name: "Peter Steidlmayer Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: steidlmayer_archetype
+    group: FLOW
+    philosophy: market_delta
+    dimensions:
+      belief_system:
+        market_delta: 0.9
+        order_flow: 0.85
+        absorption: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-FLOW-219:
+    name: "Peter Steidlmayer Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: steidlmayer_archetype
+    group: FLOW
+    philosophy: market_delta
+    dimensions:
+      belief_system:
+        market_delta: 0.9
+        order_flow: 0.85
+        absorption: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-FLOW-220:
+    name: "Peter Steidlmayer Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: steidlmayer_archetype
+    group: FLOW
+    philosophy: market_delta
+    dimensions:
+      belief_system:
+        market_delta: 0.9
+        order_flow: 0.85
+        absorption: 0.8
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-TREND-221:
+    name: "Mark Minervini — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: minervini_archetype
+    group: TREND
+    philosophy: growth_momentum
+    dimensions:
+      belief_system:
+        relative_strength: 0.95
+        tight_stop: 0.9
+        volume_confirmation: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-222:
+    name: "Mark Minervini — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: minervini_archetype
+    group: TREND
+    philosophy: growth_momentum
+    dimensions:
+      belief_system:
+        relative_strength: 0.95
+        tight_stop: 0.9
+        volume_confirmation: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-223:
+    name: "Mark Minervini — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: minervini_archetype
+    group: TREND
+    philosophy: growth_momentum
+    dimensions:
+      belief_system:
+        relative_strength: 0.95
+        tight_stop: 0.9
+        volume_confirmation: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-TREND-224:
+    name: "Mark Minervini — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: minervini_archetype
+    group: TREND
+    philosophy: growth_momentum
+    dimensions:
+      belief_system:
+        relative_strength: 0.95
+        tight_stop: 0.9
+        volume_confirmation: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-TREND-225:
+    name: "Mark Minervini — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: minervini_archetype
+    group: TREND
+    philosophy: growth_momentum
+    dimensions:
+      belief_system:
+        relative_strength: 0.95
+        tight_stop: 0.9
+        volume_confirmation: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-TREND-226:
+    name: "Mark Minervini — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: minervini_archetype
+    group: TREND
+    philosophy: growth_momentum
+    dimensions:
+      belief_system:
+        relative_strength: 0.95
+        tight_stop: 0.9
+        volume_confirmation: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-227:
+    name: "Mark Minervini — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: minervini_archetype
+    group: TREND
+    philosophy: growth_momentum
+    dimensions:
+      belief_system:
+        relative_strength: 0.95
+        tight_stop: 0.9
+        volume_confirmation: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-228:
+    name: "Mark Minervini — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: minervini_archetype
+    group: TREND
+    philosophy: growth_momentum
+    dimensions:
+      belief_system:
+        relative_strength: 0.95
+        tight_stop: 0.9
+        volume_confirmation: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-TREND-229:
+    name: "Mark Minervini — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: minervini_archetype
+    group: TREND
+    philosophy: growth_momentum
+    dimensions:
+      belief_system:
+        relative_strength: 0.95
+        tight_stop: 0.9
+        volume_confirmation: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-TREND-230:
+    name: "Mark Minervini — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: minervini_archetype
+    group: TREND
+    philosophy: growth_momentum
+    dimensions:
+      belief_system:
+        relative_strength: 0.95
+        tight_stop: 0.9
+        volume_confirmation: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-TREND-231:
+    name: "William O'Neil — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: oneil_archetype
+    group: TREND
+    philosophy: canslim
+    dimensions:
+      belief_system:
+        earnings_acceleration: 0.9
+        cup_with_handle: 0.85
+        institutional_sponsorship: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-232:
+    name: "William O'Neil — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: oneil_archetype
+    group: TREND
+    philosophy: canslim
+    dimensions:
+      belief_system:
+        earnings_acceleration: 0.9
+        cup_with_handle: 0.85
+        institutional_sponsorship: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-233:
+    name: "William O'Neil — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: oneil_archetype
+    group: TREND
+    philosophy: canslim
+    dimensions:
+      belief_system:
+        earnings_acceleration: 0.9
+        cup_with_handle: 0.85
+        institutional_sponsorship: 0.8
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-TREND-234:
+    name: "William O'Neil — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: oneil_archetype
+    group: TREND
+    philosophy: canslim
+    dimensions:
+      belief_system:
+        earnings_acceleration: 0.9
+        cup_with_handle: 0.85
+        institutional_sponsorship: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-TREND-235:
+    name: "William O'Neil — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: oneil_archetype
+    group: TREND
+    philosophy: canslim
+    dimensions:
+      belief_system:
+        earnings_acceleration: 0.9
+        cup_with_handle: 0.85
+        institutional_sponsorship: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-TREND-236:
+    name: "William O'Neil — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: oneil_archetype
+    group: TREND
+    philosophy: canslim
+    dimensions:
+      belief_system:
+        earnings_acceleration: 0.9
+        cup_with_handle: 0.85
+        institutional_sponsorship: 0.8
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-237:
+    name: "William O'Neil — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: oneil_archetype
+    group: TREND
+    philosophy: canslim
+    dimensions:
+      belief_system:
+        earnings_acceleration: 0.9
+        cup_with_handle: 0.85
+        institutional_sponsorship: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-TREND-238:
+    name: "William O'Neil — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: oneil_archetype
+    group: TREND
+    philosophy: canslim
+    dimensions:
+      belief_system:
+        earnings_acceleration: 0.9
+        cup_with_handle: 0.85
+        institutional_sponsorship: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-TREND-239:
+    name: "William O'Neil — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: oneil_archetype
+    group: TREND
+    philosophy: canslim
+    dimensions:
+      belief_system:
+        earnings_acceleration: 0.9
+        cup_with_handle: 0.85
+        institutional_sponsorship: 0.8
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-TREND-240:
+    name: "William O'Neil — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: oneil_archetype
+    group: TREND
+    philosophy: canslim
+    dimensions:
+      belief_system:
+        earnings_acceleration: 0.9
+        cup_with_handle: 0.85
+        institutional_sponsorship: 0.8
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-EVENT-241:
+    name: "Nassim Taleb Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: taleb_archetype
+    group: EVENT
+    philosophy: antifragility
+    dimensions:
+      belief_system:
+        tail_risk: 0.95
+        optionality: 0.9
+        barbell_strategy: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-242:
+    name: "Nassim Taleb Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: taleb_archetype
+    group: EVENT
+    philosophy: antifragility
+    dimensions:
+      belief_system:
+        tail_risk: 0.95
+        optionality: 0.9
+        barbell_strategy: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-243:
+    name: "Nassim Taleb Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: taleb_archetype
+    group: EVENT
+    philosophy: antifragility
+    dimensions:
+      belief_system:
+        tail_risk: 0.95
+        optionality: 0.9
+        barbell_strategy: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-EVENT-244:
+    name: "Nassim Taleb Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: taleb_archetype
+    group: EVENT
+    philosophy: antifragility
+    dimensions:
+      belief_system:
+        tail_risk: 0.95
+        optionality: 0.9
+        barbell_strategy: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-EVENT-245:
+    name: "Nassim Taleb Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: taleb_archetype
+    group: EVENT
+    philosophy: antifragility
+    dimensions:
+      belief_system:
+        tail_risk: 0.95
+        optionality: 0.9
+        barbell_strategy: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-EVENT-246:
+    name: "Nassim Taleb Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: taleb_archetype
+    group: EVENT
+    philosophy: antifragility
+    dimensions:
+      belief_system:
+        tail_risk: 0.95
+        optionality: 0.9
+        barbell_strategy: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-247:
+    name: "Nassim Taleb Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: taleb_archetype
+    group: EVENT
+    philosophy: antifragility
+    dimensions:
+      belief_system:
+        tail_risk: 0.95
+        optionality: 0.9
+        barbell_strategy: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-EVENT-248:
+    name: "Nassim Taleb Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: taleb_archetype
+    group: EVENT
+    philosophy: antifragility
+    dimensions:
+      belief_system:
+        tail_risk: 0.95
+        optionality: 0.9
+        barbell_strategy: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-EVENT-249:
+    name: "Nassim Taleb Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: taleb_archetype
+    group: EVENT
+    philosophy: antifragility
+    dimensions:
+      belief_system:
+        tail_risk: 0.95
+        optionality: 0.9
+        barbell_strategy: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-EVENT-250:
+    name: "Nassim Taleb Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: taleb_archetype
+    group: EVENT
+    philosophy: antifragility
+    dimensions:
+      belief_system:
+        tail_risk: 0.95
+        optionality: 0.9
+        barbell_strategy: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-251:
+    name: "Sheldon Natenberg Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: natenberg_archetype
+    group: QUANT
+    philosophy: options_volatility
+    dimensions:
+      belief_system:
+        implied_vol: 0.95
+        vol_surface: 0.9
+        greeks_management: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-252:
+    name: "Sheldon Natenberg Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: natenberg_archetype
+    group: QUANT
+    philosophy: options_volatility
+    dimensions:
+      belief_system:
+        implied_vol: 0.95
+        vol_surface: 0.9
+        greeks_management: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-253:
+    name: "Sheldon Natenberg Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: natenberg_archetype
+    group: QUANT
+    philosophy: options_volatility
+    dimensions:
+      belief_system:
+        implied_vol: 0.95
+        vol_surface: 0.9
+        greeks_management: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-254:
+    name: "Sheldon Natenberg Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: natenberg_archetype
+    group: QUANT
+    philosophy: options_volatility
+    dimensions:
+      belief_system:
+        implied_vol: 0.95
+        vol_surface: 0.9
+        greeks_management: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-255:
+    name: "Sheldon Natenberg Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: natenberg_archetype
+    group: QUANT
+    philosophy: options_volatility
+    dimensions:
+      belief_system:
+        implied_vol: 0.95
+        vol_surface: 0.9
+        greeks_management: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-QUANT-256:
+    name: "Sheldon Natenberg Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: natenberg_archetype
+    group: QUANT
+    philosophy: options_volatility
+    dimensions:
+      belief_system:
+        implied_vol: 0.95
+        vol_surface: 0.9
+        greeks_management: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-257:
+    name: "Sheldon Natenberg Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: natenberg_archetype
+    group: QUANT
+    philosophy: options_volatility
+    dimensions:
+      belief_system:
+        implied_vol: 0.95
+        vol_surface: 0.9
+        greeks_management: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-QUANT-258:
+    name: "Sheldon Natenberg Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: natenberg_archetype
+    group: QUANT
+    philosophy: options_volatility
+    dimensions:
+      belief_system:
+        implied_vol: 0.95
+        vol_surface: 0.9
+        greeks_management: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-QUANT-259:
+    name: "Sheldon Natenberg Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: natenberg_archetype
+    group: QUANT
+    philosophy: options_volatility
+    dimensions:
+      belief_system:
+        implied_vol: 0.95
+        vol_surface: 0.9
+        greeks_management: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-QUANT-260:
+    name: "Sheldon Natenberg Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: natenberg_archetype
+    group: QUANT
+    philosophy: options_volatility
+    dimensions:
+      belief_system:
+        implied_vol: 0.95
+        vol_surface: 0.9
+        greeks_management: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-CRYPTO-261:
+    name: "DeFi Sniper Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: degen_sniper_archetype
+    group: CRYPTO
+    philosophy: launch_sniping
+    dimensions:
+      belief_system:
+        launch_detection: 0.95
+        liquidity_pool_entry: 0.9
+        rug_detection: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-262:
+    name: "DeFi Sniper Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: degen_sniper_archetype
+    group: CRYPTO
+    philosophy: launch_sniping
+    dimensions:
+      belief_system:
+        launch_detection: 0.95
+        liquidity_pool_entry: 0.9
+        rug_detection: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-263:
+    name: "DeFi Sniper Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: degen_sniper_archetype
+    group: CRYPTO
+    philosophy: launch_sniping
+    dimensions:
+      belief_system:
+        launch_detection: 0.95
+        liquidity_pool_entry: 0.9
+        rug_detection: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-CRYPTO-264:
+    name: "DeFi Sniper Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: degen_sniper_archetype
+    group: CRYPTO
+    philosophy: launch_sniping
+    dimensions:
+      belief_system:
+        launch_detection: 0.95
+        liquidity_pool_entry: 0.9
+        rug_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-CRYPTO-265:
+    name: "DeFi Sniper Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: degen_sniper_archetype
+    group: CRYPTO
+    philosophy: launch_sniping
+    dimensions:
+      belief_system:
+        launch_detection: 0.95
+        liquidity_pool_entry: 0.9
+        rug_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-CRYPTO-266:
+    name: "DeFi Sniper Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: degen_sniper_archetype
+    group: CRYPTO
+    philosophy: launch_sniping
+    dimensions:
+      belief_system:
+        launch_detection: 0.95
+        liquidity_pool_entry: 0.9
+        rug_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-267:
+    name: "DeFi Sniper Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: degen_sniper_archetype
+    group: CRYPTO
+    philosophy: launch_sniping
+    dimensions:
+      belief_system:
+        launch_detection: 0.95
+        liquidity_pool_entry: 0.9
+        rug_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-268:
+    name: "DeFi Sniper Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: degen_sniper_archetype
+    group: CRYPTO
+    philosophy: launch_sniping
+    dimensions:
+      belief_system:
+        launch_detection: 0.95
+        liquidity_pool_entry: 0.9
+        rug_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-CRYPTO-269:
+    name: "DeFi Sniper Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: degen_sniper_archetype
+    group: CRYPTO
+    philosophy: launch_sniping
+    dimensions:
+      belief_system:
+        launch_detection: 0.95
+        liquidity_pool_entry: 0.9
+        rug_detection: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-CRYPTO-270:
+    name: "DeFi Sniper Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: degen_sniper_archetype
+    group: CRYPTO
+    philosophy: launch_sniping
+    dimensions:
+      belief_system:
+        launch_detection: 0.95
+        liquidity_pool_entry: 0.9
+        rug_detection: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-CRYPTO-271:
+    name: "Whale Tracking Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: whale_tracker_archetype
+    group: CRYPTO
+    philosophy: whale_following
+    dimensions:
+      belief_system:
+        whale_tracking: 0.95
+        on_chain_signals: 0.9
+        smart_money_flow: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-272:
+    name: "Whale Tracking Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: whale_tracker_archetype
+    group: CRYPTO
+    philosophy: whale_following
+    dimensions:
+      belief_system:
+        whale_tracking: 0.95
+        on_chain_signals: 0.9
+        smart_money_flow: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-273:
+    name: "Whale Tracking Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: whale_tracker_archetype
+    group: CRYPTO
+    philosophy: whale_following
+    dimensions:
+      belief_system:
+        whale_tracking: 0.95
+        on_chain_signals: 0.9
+        smart_money_flow: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-CRYPTO-274:
+    name: "Whale Tracking Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: whale_tracker_archetype
+    group: CRYPTO
+    philosophy: whale_following
+    dimensions:
+      belief_system:
+        whale_tracking: 0.95
+        on_chain_signals: 0.9
+        smart_money_flow: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-CRYPTO-275:
+    name: "Whale Tracking Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: whale_tracker_archetype
+    group: CRYPTO
+    philosophy: whale_following
+    dimensions:
+      belief_system:
+        whale_tracking: 0.95
+        on_chain_signals: 0.9
+        smart_money_flow: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-CRYPTO-276:
+    name: "Whale Tracking Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: whale_tracker_archetype
+    group: CRYPTO
+    philosophy: whale_following
+    dimensions:
+      belief_system:
+        whale_tracking: 0.95
+        on_chain_signals: 0.9
+        smart_money_flow: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-277:
+    name: "Whale Tracking Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: whale_tracker_archetype
+    group: CRYPTO
+    philosophy: whale_following
+    dimensions:
+      belief_system:
+        whale_tracking: 0.95
+        on_chain_signals: 0.9
+        smart_money_flow: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-CRYPTO-278:
+    name: "Whale Tracking Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: whale_tracker_archetype
+    group: CRYPTO
+    philosophy: whale_following
+    dimensions:
+      belief_system:
+        whale_tracking: 0.95
+        on_chain_signals: 0.9
+        smart_money_flow: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-CRYPTO-279:
+    name: "Whale Tracking Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: whale_tracker_archetype
+    group: CRYPTO
+    philosophy: whale_following
+    dimensions:
+      belief_system:
+        whale_tracking: 0.95
+        on_chain_signals: 0.9
+        smart_money_flow: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-CRYPTO-280:
+    name: "Whale Tracking Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: whale_tracker_archetype
+    group: CRYPTO
+    philosophy: whale_following
+    dimensions:
+      belief_system:
+        whale_tracking: 0.95
+        on_chain_signals: 0.9
+        smart_money_flow: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-META-281:
+    name: "David Swensen Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: swensen_archetype
+    group: META
+    philosophy: endowment_model
+    dimensions:
+      belief_system:
+        diversification: 0.95
+        illiquidity_premium: 0.9
+        rebalancing: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-META-282:
+    name: "David Swensen Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: swensen_archetype
+    group: META
+    philosophy: endowment_model
+    dimensions:
+      belief_system:
+        diversification: 0.95
+        illiquidity_premium: 0.9
+        rebalancing: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-META-283:
+    name: "David Swensen Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: swensen_archetype
+    group: META
+    philosophy: endowment_model
+    dimensions:
+      belief_system:
+        diversification: 0.95
+        illiquidity_premium: 0.9
+        rebalancing: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-META-284:
+    name: "David Swensen Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: swensen_archetype
+    group: META
+    philosophy: endowment_model
+    dimensions:
+      belief_system:
+        diversification: 0.95
+        illiquidity_premium: 0.9
+        rebalancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-META-285:
+    name: "David Swensen Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: swensen_archetype
+    group: META
+    philosophy: endowment_model
+    dimensions:
+      belief_system:
+        diversification: 0.95
+        illiquidity_premium: 0.9
+        rebalancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-META-286:
+    name: "David Swensen Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: swensen_archetype
+    group: META
+    philosophy: endowment_model
+    dimensions:
+      belief_system:
+        diversification: 0.95
+        illiquidity_premium: 0.9
+        rebalancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-META-287:
+    name: "David Swensen Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: swensen_archetype
+    group: META
+    philosophy: endowment_model
+    dimensions:
+      belief_system:
+        diversification: 0.95
+        illiquidity_premium: 0.9
+        rebalancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-META-288:
+    name: "David Swensen Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: swensen_archetype
+    group: META
+    philosophy: endowment_model
+    dimensions:
+      belief_system:
+        diversification: 0.95
+        illiquidity_premium: 0.9
+        rebalancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-META-289:
+    name: "David Swensen Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: swensen_archetype
+    group: META
+    philosophy: endowment_model
+    dimensions:
+      belief_system:
+        diversification: 0.95
+        illiquidity_premium: 0.9
+        rebalancing: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-META-290:
+    name: "David Swensen Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: swensen_archetype
+    group: META
+    philosophy: endowment_model
+    dimensions:
+      belief_system:
+        diversification: 0.95
+        illiquidity_premium: 0.9
+        rebalancing: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-META-291:
+    name: "Ed Thorp Archetype — scalp/conservative/trending"
+    state: ACTIVE
+    decay_rate: 0.005
+    performance_score: 0.0
+    seed_trader: thorp_archetype
+    group: META
+    philosophy: kelly_criterion
+    dimensions:
+      belief_system:
+        kelly_sizing: 0.95
+        edge_quantification: 0.9
+        risk_adjusted_return: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-META-292:
+    name: "Ed Thorp Archetype — scalp/conservative/ranging"
+    state: ACTIVE
+    decay_rate: 0.007
+    performance_score: 0.0
+    seed_trader: thorp_archetype
+    group: META
+    philosophy: kelly_criterion
+    dimensions:
+      belief_system:
+        kelly_sizing: 0.95
+        edge_quantification: 0.9
+        risk_adjusted_return: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-META-293:
+    name: "Ed Thorp Archetype — scalp/conservative/volatile"
+    state: ACTIVE
+    decay_rate: 0.009
+    performance_score: 0.0
+    seed_trader: thorp_archetype
+    group: META
+    philosophy: kelly_criterion
+    dimensions:
+      belief_system:
+        kelly_sizing: 0.95
+        edge_quantification: 0.9
+        risk_adjusted_return: 0.85
+      risk_attitude: CONSERVATIVE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-META-294:
+    name: "Ed Thorp Archetype — scalp/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.011
+    performance_score: 0.0
+    seed_trader: thorp_archetype
+    group: META
+    philosophy: kelly_criterion
+    dimensions:
+      belief_system:
+        kelly_sizing: 0.95
+        edge_quantification: 0.9
+        risk_adjusted_return: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-META-295:
+    name: "Ed Thorp Archetype — scalp/moderate/crisis"
+    state: ACTIVE
+    decay_rate: 0.013
+    performance_score: 0.0
+    seed_trader: thorp_archetype
+    group: META
+    philosophy: kelly_criterion
+    dimensions:
+      belief_system:
+        kelly_sizing: 0.95
+        edge_quantification: 0.9
+        risk_adjusted_return: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+
+  TA-META-296:
+    name: "Ed Thorp Archetype — scalp/moderate/trending"
+    state: ACTIVE
+    decay_rate: 0.015
+    performance_score: 0.0
+    seed_trader: thorp_archetype
+    group: META
+    philosophy: kelly_criterion
+    dimensions:
+      belief_system:
+        kelly_sizing: 0.95
+        edge_quantification: 0.9
+        risk_adjusted_return: 0.85
+      risk_attitude: MODERATE
+      time_horizon: SCALP
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.85
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-META-297:
+    name: "Ed Thorp Archetype — intraday/moderate/ranging"
+    state: ACTIVE
+    decay_rate: 0.017
+    performance_score: 0.0
+    seed_trader: thorp_archetype
+    group: META
+    philosophy: kelly_criterion
+    dimensions:
+      belief_system:
+        kelly_sizing: 0.95
+        edge_quantification: 0.9
+        risk_adjusted_return: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.85
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+
+  TA-META-298:
+    name: "Ed Thorp Archetype — intraday/moderate/volatile"
+    state: ACTIVE
+    decay_rate: 0.019
+    performance_score: 0.0
+    seed_trader: thorp_archetype
+    group: META
+    philosophy: kelly_criterion
+    dimensions:
+      belief_system:
+        kelly_sizing: 0.95
+        edge_quantification: 0.9
+        risk_adjusted_return: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: PREDICTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        volatile: 0.85
+
+  TA-META-299:
+    name: "Ed Thorp Archetype — intraday/moderate/stable"
+    state: ACTIVE
+    decay_rate: 0.021
+    performance_score: 0.0
+    seed_trader: thorp_archetype
+    group: META
+    philosophy: kelly_criterion
+    dimensions:
+      belief_system:
+        kelly_sizing: 0.95
+        edge_quantification: 0.9
+        risk_adjusted_return: 0.85
+      risk_attitude: MODERATE
+      time_horizon: INTRADAY
+      conviction_style: CONTRARIAN
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.3
+        stable: 0.85
+
+  TA-META-300:
+    name: "Ed Thorp Archetype — intraday/aggressive/crisis"
+    state: ACTIVE
+    decay_rate: 0.023
+    performance_score: 0.0
+    seed_trader: thorp_archetype
+    group: META
+    philosophy: kelly_criterion
+    dimensions:
+      belief_system:
+        kelly_sizing: 0.95
+        edge_quantification: 0.9
+        risk_adjusted_return: 0.85
+      risk_attitude: AGGRESSIVE
+      time_horizon: INTRADAY
+      conviction_style: REACTIVE
+      regime_performance:
+        trending: 0.5
+        ranging: 0.5
+        high_vol: 0.5
+        low_vol: 0.5
+        crisis: 0.85
+

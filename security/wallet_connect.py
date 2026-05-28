@@ -1,0 +1,370 @@
+"""
+security.wallet_connect \u2014 safe crypto wallet onboarding.
+
+Design goals:
+    - private-key material NEVER hits ledger, log, chat, screenshot, or stdout
+    - default backend is watch-only (public address, zero signing)
+    - signing backends are opt-in, gated by governance + dead-man + kill-switch
+    - chain-agnostic: EVM, Solana, Bitcoin (watch-only), WalletConnect v2
+    - phase clock (security.wallet_policy):
+        days  0–60  SUPERVISED  live ok after governance approval,
+                                HARD $100 USD / 24h / wallet AND system cap
+        days 60+    OPERATOR    cap configurable (still governance-gated)
+        NOTE: WARMUP phase permanently removed; live signing available from day 0.
+
+This module is *infrastructure* \u2014 it stores addresses + backend kind +
+policy flags. Actual signing is a pluggable adapter that lives in a
+backend-specific module (e.g. ``security.backends.ledger``). The key
+exchange is always short-lived and never persisted here.
+"""
+
+from __future__ import annotations
+
+import sqlite3
+import threading
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from enum import StrEnum
+from pathlib import Path
+
+from core.secrets import store_secret
+from state.ledger.writer import get_writer
+from system.time_source import utc_now
+
+
+def utc_now_iso() -> str:
+    return utc_now().isoformat()
+
+
+_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "wallets.sqlite"
+_lock = threading.RLock()
+
+# Cached sqlite connection. Opened lazily once under ``_lock``; every
+# subsequent call reuses the same handle so we do NOT re-run the
+# CREATE TABLE + CREATE INDEX schema on every wallet read/write.
+# Mirrors the pattern in ``security.wallet_policy`` and
+# ``cockpit.pairing``. Serialised by ``_lock``; WAL journaling keeps
+# external readers (other processes) non-blocking.
+_conn_cached: sqlite3.Connection | None = None
+_conn_path: Path | None = None
+
+
+class Backend(StrEnum):
+    WATCH_ONLY = "watch_only"
+    LOCAL_SIGNER = "local_signer"  # key in OS keyring
+    HARDWARE = "hardware"  # ledger / trezor
+    WALLETCONNECT = "walletconnect"
+
+
+class Chain(StrEnum):
+    ETHEREUM = "ethereum"
+    BASE = "base"
+    ARBITRUM = "arbitrum"
+    OPTIMISM = "optimism"
+    POLYGON = "polygon"
+    BSC = "bsc"
+    SOLANA = "solana"
+    BITCOIN = "bitcoin"
+
+
+@dataclass
+class WalletRecord:
+    id: int
+    label: str
+    chain: Chain
+    backend: Backend
+    address: str
+    added_utc: str
+    live_signing_allowed: bool = False
+    last_approved_by: str = ""  # governance event id
+    approval_expires_utc: str = ""
+    last_used_utc: str = ""
+    notes: str = ""
+
+    def mask(self) -> str:
+        if len(self.address) < 12:
+            return self.address
+        return self.address[:6] + "\u2026" + self.address[-4:]
+
+
+_SCHEMA = """
+CREATE TABLE IF NOT EXISTS wallets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    label TEXT NOT NULL,
+    chain TEXT NOT NULL,
+    backend TEXT NOT NULL,
+    address TEXT NOT NULL,
+    added_utc TEXT NOT NULL,
+    live_signing_allowed INTEGER NOT NULL DEFAULT 0,
+    last_approved_by TEXT NOT NULL DEFAULT '',
+    approval_expires_utc TEXT NOT NULL DEFAULT '',
+    last_used_utc TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
+    UNIQUE(chain, address)
+);
+CREATE INDEX IF NOT EXISTS wallets_chain_idx ON wallets(chain);
+"""
+
+
+def _connect() -> sqlite3.Connection:
+    """Return the cached sqlite connection, opening it on first use.
+
+    Callers MUST already hold ``_lock``. ``check_same_thread=False``
+    is safe because every caller serialises access through ``_lock``.
+    WAL journaling is enabled so concurrent reader processes never
+    block writers.
+
+    If ``_DB_PATH`` changes between calls (tests do this by monkey-
+    patching the module), we re-open against the new path rather
+    than silently reading the previous database.
+    """
+    global _conn_cached, _conn_path
+    if _conn_cached is not None and _conn_path == _DB_PATH:
+        return _conn_cached
+    if _conn_cached is not None:
+        try:
+            _conn_cached.close()
+        except Exception:
+            pass
+        _conn_cached = None
+    _DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    c = sqlite3.connect(str(_DB_PATH), check_same_thread=False)
+    c.row_factory = sqlite3.Row
+    c.executescript(_SCHEMA)
+    c.execute("PRAGMA journal_mode=WAL;")
+    _conn_cached = c
+    _conn_path = _DB_PATH
+    return c
+
+
+def _row(r: sqlite3.Row) -> WalletRecord:
+    return WalletRecord(
+        id=int(r["id"]),
+        label=r["label"],
+        chain=Chain(r["chain"]),
+        backend=Backend(r["backend"]),
+        address=r["address"],
+        added_utc=r["added_utc"],
+        live_signing_allowed=bool(r["live_signing_allowed"]),
+        last_approved_by=r["last_approved_by"],
+        approval_expires_utc=r["approval_expires_utc"],
+        last_used_utc=r["last_used_utc"],
+        notes=r["notes"],
+    )
+
+
+def list_wallets(chain: Chain | None = None) -> list[WalletRecord]:
+    with _lock, _connect() as c:
+        if chain is None:
+            rs = c.execute("SELECT * FROM wallets ORDER BY id").fetchall()
+        else:
+            rs = c.execute(
+                "SELECT * FROM wallets WHERE chain = ? ORDER BY id", (chain.value,)
+            ).fetchall()
+        return [_row(r) for r in rs]
+
+
+def get_wallet(chain: Chain, address: str) -> WalletRecord | None:
+    with _lock, _connect() as c:
+        r = c.execute(
+            "SELECT * FROM wallets WHERE chain=? AND address=?", (chain.value, address)
+        ).fetchone()
+        return _row(r) if r else None
+
+
+def connect_wallet(
+    *, label: str, chain: Chain, backend: Backend, address: str, notes: str = ""
+) -> WalletRecord:
+    """Register a wallet. Default is watch-only. Signing remains disabled.
+
+    If a wallet with ``(chain, address)`` already exists, only mutable
+    descriptive fields (label, backend, notes) are updated and the
+    existing signing-authorization columns (live_signing_allowed,
+    last_approved_by, approval_expires_utc) are preserved. Authorization
+    state must never change without an explicit governance event.
+    """
+    if backend is Backend.LOCAL_SIGNER and len(address) < 10:
+        raise ValueError("address too short")
+    with _lock, _connect() as c:
+        now = utc_now_iso()
+        existing = c.execute(
+            "SELECT id FROM wallets WHERE chain=? AND address=?",
+            (chain.value, address),
+        ).fetchone()
+        if existing is None:
+            c.execute(
+                "INSERT INTO wallets "
+                "(label, chain, backend, address, added_utc, "
+                "live_signing_allowed, last_approved_by, "
+                "approval_expires_utc, last_used_utc, notes) "
+                "VALUES (?, ?, ?, ?, ?, 0, '', '', '', ?)",
+                (label, chain.value, backend.value, address, now, notes),
+            )
+        else:
+            c.execute(
+                "UPDATE wallets SET label=?, backend=?, notes=? WHERE chain=? AND address=?",
+                (label, backend.value, notes, chain.value, address),
+            )
+        c.commit()
+        row = c.execute(
+            "SELECT * FROM wallets WHERE chain=? AND address=?", (chain.value, address)
+        ).fetchone()
+    get_writer().write(
+        "SECURITY",
+        "WALLET_CONNECTED",
+        "DYON",
+        {
+            "chain": chain.value,
+            "backend": backend.value,
+            "address_masked": address[:6] + "\u2026" + address[-4:]
+            if len(address) > 12
+            else address,
+            "live_signing_allowed": bool(row["live_signing_allowed"]),
+            "updated_existing": existing is not None,
+        },
+    )
+    return _row(row)
+
+
+def disconnect_wallet(chain: Chain, address: str) -> bool:
+    with _lock, _connect() as c:
+        cur = c.execute("DELETE FROM wallets WHERE chain=? AND address=?", (chain.value, address))
+        c.commit()
+        ok = cur.rowcount > 0
+    if ok:
+        get_writer().write(
+            "SECURITY",
+            "WALLET_DISCONNECTED",
+            "DYON",
+            {
+                "chain": chain.value,
+                "address_masked": address[:6] + "\u2026" + address[-4:]
+                if len(address) > 12
+                else address,
+            },
+        )
+    return ok
+
+
+def approve_live_signing(
+    chain: Chain, address: str, *, approved_by: str, expires_utc: str
+) -> WalletRecord | None:
+    """Governance-gated: enable live signing for this wallet until expiry.
+
+    Requires governance approval. WARMUP phase has been permanently removed;
+    live signing is available from day 0 subject to daily USD caps.
+    """
+    w = get_wallet(chain, address)
+    if w is None:
+        return None
+    if w.backend is Backend.WATCH_ONLY:
+        raise PermissionError("watch_only wallets cannot be promoted to live signing")
+    with _lock, _connect() as c:
+        c.execute(
+            "UPDATE wallets SET live_signing_allowed=1, "
+            "last_approved_by=?, approval_expires_utc=? "
+            "WHERE chain=? AND address=?",
+            (approved_by, expires_utc, chain.value, address),
+        )
+        c.commit()
+    get_writer().write(
+        "GOVERNANCE",
+        "WALLET_SIGN_APPROVED",
+        "GOVERNANCE",
+        {
+            "chain": chain.value,
+            "address_masked": w.mask(),
+            "approved_by": approved_by,
+            "expires_utc": expires_utc,
+        },
+    )
+    return get_wallet(chain, address)
+
+
+def revoke_live_signing(chain: Chain, address: str) -> WalletRecord | None:
+    with _lock, _connect() as c:
+        c.execute(
+            "UPDATE wallets SET live_signing_allowed=0, "
+            "last_approved_by='', approval_expires_utc='' "
+            "WHERE chain=? AND address=?",
+            (chain.value, address),
+        )
+        c.commit()
+    get_writer().write(
+        "GOVERNANCE",
+        "WALLET_SIGN_REVOKED",
+        "GOVERNANCE",
+        {"chain": chain.value, "address": address[:6] + "..."},
+    )
+    return get_wallet(chain, address)
+
+
+def _expiry_reached(expires_utc: str) -> bool:
+    """Compare an ISO-formatted expiry to ``utc_now()`` safely.
+
+    String comparison of ISO timestamps is incorrect when the two
+    strings use different timezone suffix formats (``Z`` vs
+    ``+00:00`` vs bare).  Parse both into timezone-aware
+    ``datetime`` objects before comparing, and treat any
+    unparseable value as NOT expired so a malformed record cannot
+    silently keep an unexpired approval from signing.
+    """
+    if not expires_utc:
+        return False
+    try:
+        s = expires_utc
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        exp = datetime.fromisoformat(s)
+        if exp.tzinfo is None:
+            exp = exp.replace(tzinfo=UTC)
+        now = utc_now()
+        if now.tzinfo is None:
+            now = now.replace(tzinfo=UTC)
+        return exp <= now
+    except Exception:
+        return False
+
+
+def can_sign(chain: Chain, address: str, *, usd_notional: float = 0.0) -> bool:
+    """Runtime gate. INDIRA must call this before any sign attempt.
+
+    Combines wallet-registry flags with the phase/budget policy in
+    security.wallet_policy. Rejects if any layer says no."""
+    w = get_wallet(chain, address)
+    if w is None:
+        return False
+    if w.backend is Backend.WATCH_ONLY:
+        return False
+    if not w.live_signing_allowed:
+        return False
+    if _expiry_reached(w.approval_expires_utc):
+        return False
+    from security import wallet_policy as _wp
+
+    ok, _ = _wp.can_sign(chain.value, address, usd_notional=float(usd_notional))
+    return bool(ok)
+
+
+def store_encrypted_key(key_env_name: str, key_value: str) -> None:
+    """Convenience wrapper around core.secrets for storing a signing key.
+    The raw key leaves this function via OS keyring only; never returned."""
+    if not key_value:
+        raise ValueError("empty key")
+    store_secret(key_env_name, key_value)
+    get_writer().write("SECURITY", "SECRET_STORED", "DYON", {"key_env": key_env_name})
+
+
+__all__ = [
+    "Backend",
+    "Chain",
+    "WalletRecord",
+    "connect_wallet",
+    "disconnect_wallet",
+    "list_wallets",
+    "get_wallet",
+    "approve_live_signing",
+    "revoke_live_signing",
+    "can_sign",
+    "store_encrypted_key",
+]

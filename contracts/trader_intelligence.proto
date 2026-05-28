@@ -1,0 +1,158 @@
+syntax = "proto3";
+
+// trader_intelligence.proto — Canonical trader-intelligence contract.
+//
+// Mirror of:
+//   core/contracts/trader_intelligence.py  (PhilosophyProfile, TraderModel,
+//                                           TraderObservation — Wave-04 PR-1)
+//   core/contracts/events.py               (TRADER_OBSERVED sub-kind)
+//
+// THE LAW — external traders are modelled as structured data, not imitated.
+// A trader is never a prompt. A trader is a frozen, content-addressed record
+// that the offline learning engine can decompose, recombine, and reason over\n// without ever imitating them at runtime.
+//
+// Authority invariants:
+//   INV-08  — TraderObservation crosses boundaries only as the payload
+//              of a SystemEvent(sub_kind=TRADER_OBSERVED). No fifth event
+//              type. The 4-event Triad Lock surface area is preserved.
+//   INV-11  — No direct cross-engine calls. Only typed records flow.
+//   INV-15  — All fields are deterministic primitives. Replay-safe.
+//   B29     — Only intelligence_engine.trader_modeling.* may construct
+//              TraderObservation (lint rule). Symmetric to B27/B28.
+//   SCVS-06 — Trader feed sources are critical. STALE → HAZ-13 hazard.
+//   HARDEN-03 — All events carry produced_by_engine provenance.
+//   T0-04   — ts_ns from TimeAuthority only. Never wall clock.
+//   INV-71  — Producer-set symmetry: LearningUpdate (B27), PatchProposal
+//              (B28), TraderObservation (B29). All three are gated.
+//
+// Do NOT edit without mirroring changes in:
+//   core/contracts/trader_intelligence.py
+//   core/contracts/events.py  (TRADER_OBSERVED = 20)
+
+package dixvision.v42_2;
+
+option java_package = "ai.dixvision.v42_2";
+
+// ── Philosophy enumerations ───────────────────────────────────────────────
+// Mirror of RiskAttitude / TimeHorizon / ConvictionStyle StrEnums.
+// Wire numbers stable — never renumber.
+
+enum RiskAttitude {
+  option allow_alias = true;
+  RISK_ATTITUDE_UNSPECIFIED = 0;
+  CONSERVATIVE              = 1;
+  BALANCED                  = 2;
+  AGGRESSIVE                = 3;
+  LEVERAGED                 = 4;
+  RISK_ATTITUDE_UNKNOWN     = 5;
+  UNKNOWN                   = 5;  // Python StrEnum alias: RiskAttitude.UNKNOWN
+}
+
+enum TimeHorizon {
+  option allow_alias = true;
+  TIME_HORIZON_UNSPECIFIED = 0;
+  SCALP                    = 1;   // seconds → minutes
+  INTRADAY                 = 2;   // minutes → hours
+  SWING                    = 3;   // days → weeks
+  POSITION                 = 4;   // weeks → months
+  MACRO                    = 5;   // months → years
+  TIME_HORIZON_UNKNOWN     = 6;
+  UNKNOWN                  = 6;   // Python StrEnum alias: TimeHorizon.UNKNOWN
+}
+
+enum ConvictionStyle {
+  option allow_alias = true;
+  CONVICTION_STYLE_UNSPECIFIED = 0;
+  REACTIVE                     = 1;  // reacts to confirmed moves
+  PREDICTIVE                   = 2;  // forecasts before confirmation
+  CONTRARIAN                   = 3;  // fades consensus
+  SYSTEMATIC                   = 4;  // rule-following, no discretion
+  CONVICTION_STYLE_UNKNOWN     = 5;
+  UNKNOWN                      = 5;  // Python StrEnum alias: ConvictionStyle.UNKNOWN
+}
+
+// ── Observation kind discriminator ────────────────────────────────────────
+
+enum ObservationKind {
+  OBSERVATION_KIND_UNSPECIFIED = 0;
+  PROFILE_UPDATE               = 1;  // full model recomputed from history
+  SIGNAL_OBSERVED              = 2;  // single trade/signal just observed
+}
+
+// ── Messages ──────────────────────────────────────────────────────────────
+
+// PhilosophyProfile — how the trader *thinks* about markets.
+// Extracted offline by sensory/web_autolearn/trader_intelligence/ pipeline.
+// Never constructed at runtime (INV-20 extension: offline-only).
+message PhilosophyProfile {
+  string         trader_id        = 1;   // opaque stable handle; no PII
+  map<string,float> belief_system = 2;   // tag → strength [0,1]
+                                         // e.g. "trend_following", "mean_reversion"
+  RiskAttitude   risk_attitude    = 3;
+  TimeHorizon    time_horizon     = 4;
+  ConvictionStyle conviction_style = 5;
+  map<string,string> market_view  = 6;   // e.g. "regime_persists" → "true"
+  map<string,float> decision_biases = 7; // e.g. "loss_aversion" → 0.72
+}
+
+// TraderModel — what the trader *does*, how well, and where.
+// Pairs with PhilosophyProfile to form the composition engine input (PR-4).
+// strategy_signatures are minted by Wave-04 PR-3.
+message TraderModel {
+  string          trader_id            = 1;
+  string          source_feed          = 2;   // data_source_registry SRC id
+  repeated string strategy_signatures  = 3;   // decomposition hashes (PR-3)
+  map<string,float> performance_metrics = 4;  // "win_rate", "sharpe", etc.
+  map<string,float> risk_profile        = 5;  // "avg_position_size_pct", etc.
+  map<string,float> regime_performance  = 6;  // "trending", "ranging", etc.
+  map<string,float> behavioral_bias     = 7;  // measured behaviour gaps vs philosophy
+  PhilosophyProfile philosophy          = 8;  // optional; null until PR-5 runs
+  map<string,string> meta               = 9;
+}
+
+// TraderObservation — bus-transport record.
+// Rides SystemEvent(sub_kind=TRADER_OBSERVED) on the 4-event typed bus.
+// Producer authority: intelligence_engine.trader_modeling.* only (B29).
+// Receiver provenance check via HARDEN-03 / event_provenance.assert_*.
+message TraderObservation {
+  int64           ts_ns              = 1;   // TimeAuthority (T0-04)
+  string          trader_id          = 2;   // top-level for fast dispatch
+  ObservationKind observation_kind   = 3;
+  TraderModel     model              = 4;
+  string          produced_by_engine = 5;   // HARDEN-03
+  map<string,string> meta            = 6;
+  // For SIGNAL_OBSERVED: meta conventionally carries
+  // "symbol", "side", "entry_price", "observed_ts_ns"
+}
+
+// ArchetypeRecord — aggregated archetype derived from N trader profiles.
+// Minted by intelligence_engine/trader_modeling/aggregator.py offline.
+// Stored in state/memory_tensor/trader_patterns/archetype_store.py.
+// Feeds into intelligence_engine/strategy_runtime/archetype_lifecycle.py
+// for the INV-51 archetype lifecycle (state, decay_rate, performance_score).
+message ArchetypeRecord {
+  string          archetype_id         = 1;  // stable content-hashed id
+  repeated string source_trader_ids    = 2;  // traders that contributed
+  int32           trader_count         = 3;
+  TraderModel     representative_model = 4;  // centroid model
+  map<string,float> dimension_weights  = 5;  // 5-dimension profile weights
+  string          archetype_state      = 6;  // "ACTIVE"|"DEGRADED"|"RETIRED" (INV-51)
+  double          decay_rate           = 7;  // INV-51
+  double          performance_score    = 8;  // INV-51
+  int64           minted_at_ns         = 9;
+  int64           last_updated_ns      = 10;
+  map<string,string> meta              = 11;
+}
+
+// TraderIntelligenceSummary — top-level pipeline health.
+// Emitted by sensory/web_autolearn/trader_intelligence/archetype_publisher.py
+// as SystemEvent(HEALTH_REPORT) payload.
+message TraderIntelligenceSummary {
+  int64  ts_ns              = 1;
+  int32  total_traders      = 2;
+  int32  active_archetypes  = 3;
+  int32  profiles_pending   = 4;   // in pending_buffer, not yet modelled
+  int64  last_crawl_ns      = 5;
+  int32  stale_profiles     = 6;
+  map<string,string> meta   = 7;
+}

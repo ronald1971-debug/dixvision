@@ -1,0 +1,311 @@
+<<<<<<< HEAD
+syntax = "proto3";
+
+// MARKET-domain messages. Produced by Indira's market graph.
+//
+// See docs/DIX_VISION_v42_2_COMPILED.md. Indira owns the MARKET
+// domain; no other domain emits these messages.
+
+package dixvision.v42_2.market;
+
+// Venue enumerates every execution venue Indira currently understands.
+// UNKNOWN_VENUE = 0 is mandatory for forward compatibility: a newer
+// producer can emit a venue this reader does not know about, and the
+// reader MUST reject the tick rather than silently mis-route it.
+enum Venue {
+  UNKNOWN_VENUE = 0;
+  BINANCE       = 1;
+  COINBASE      = 2;
+  KRAKEN        = 3;
+  HYPERLIQUID   = 4;
+  DYDX          = 5;
+  JUPITER       = 6;
+  RAYDIUM       = 7;
+  PUMP_FUN      = 8;
+  UNISWAP_V4    = 9;
+  BINGX         = 10;
+}
+
+// Side of a quote or fill. NONE is reserved for synthetic ticks
+// (e.g. index updates) that have no natural side.
+enum Side {
+  NONE = 0;
+  BUY  = 1;
+  SELL = 2;
+}
+
+// Tick is a single price observation. Indira's load_shedding_node
+// may coalesce or drop ticks under backpressure (Tier-0 Step 2);
+// each Tick therefore carries its own authoritative sequence + wall_ns
+// so replay does not depend on the transport's ordering guarantees.
+message Tick {
+  uint64 sequence       = 1;
+  int64  wall_ns        = 2;
+  Venue  venue          = 3;
+  string symbol         = 4;
+  double price          = 5;
+  double size           = 6;
+  Side   side           = 7;
+  // Optional fixed-precision alternatives. Populated when the venue's
+  // native representation is a decimal and we must preserve exact
+  // arithmetic across the Go ledger boundary. Price_e8 = price * 1e8.
+  int64  price_e8       = 8;
+  int64  size_e8        = 9;
+}
+
+// Quote is a top-of-book snapshot. Populated on every L1 update.
+message Quote {
+  uint64 sequence       = 1;
+  int64  wall_ns        = 2;
+  Venue  venue          = 3;
+  string symbol         = 4;
+  double bid_price      = 5;
+  double ask_price      = 6;
+  double bid_size       = 7;
+  double ask_size       = 8;
+  int64  bid_price_e8   = 9;
+  int64  ask_price_e8   = 10;
+}
+
+// MarketFrame is the aggregated tick bundle Indira's fusion_engine
+// operates on. Every frame is deterministically assembled from the
+// ticks + quotes whose wall_ns ≤ frame.wall_ns; replay of the
+// underlying stream MUST reproduce the same frames.
+message MarketFrame {
+  uint64 sequence              = 1;
+  int64  wall_ns               = 2;
+  string symbol                = 3;
+  repeated Tick  ticks         = 4;
+  repeated Quote quotes        = 5;
+  // Fusion-engine inputs normalised to [-1, 1]. Key = plugin name.
+  map<string, double> signals  = 6;
+}
+||||||| 889ca71
+=======
+syntax = "proto3";
+
+// Canonical market contract. Mirror of core/contracts/market.py
+// (Phase 2, EXEC-MD-01..05, INV-15 determinism, market data normalisation).
+//
+// Refs:
+//  - manifest.md §0.2 (market data normalisation)
+//  - execution_engine/market_data/ (Python implementation)
+//  - docs/total_recall_index.md §EXEC-01..14 (execution + market)
+//  - build_plan.md Phase 2 (execution core) + Phase 2-D (market normaliser)
+//
+// Market data comes from many venues (Binance, OANDA, IBKR, etc.) in
+// different formats. The market normaliser converts all to this canonical
+// format before it reaches intelligence/execution engines.
+//
+// INV-15 determinism: all timestamps are ns, all prices are doubles,
+// and the schema is the same across all venues. Replay reads the same
+// normalised ticks as live trading did.
+
+package dixvision.v42_2;
+
+option java_package = "ai.dixvision.v42_2";
+
+enum AssetClass {
+  ASSET_CLASS_UNSPECIFIED = 0;
+  SPOT = 1;             // cryptocurrency, stocks (cash)
+  FUTURES = 2;          // crypto or commodity futures
+  FOREX = 3;            // FX pairs
+  CFD = 4;              // contracts for difference
+}
+
+enum TickKind {
+  KIND_UNSPECIFIED = 0;
+  TRADE = 1;            // individual trade execution
+  MIDPOINT = 2;         // bid/ask average
+  SYNTHETIC = 3;        // interpolated tick (for replay fidelity)
+}
+
+// Canonical market tick. One row per bar / second / minute (cadence-dependent).
+// All venues normalize to this.
+message MarketTick {
+  // Timestamp of this tick (ns, from time_authority CORE-08).
+  int64 ts_ns = 1;
+
+  // Trading instrument identifier.
+  string symbol = 2;
+
+  // Asset class (SPOT, FUTURES, FOREX, CFD).
+  AssetClass asset_class = 3;
+
+  // Which venue provided this data (e.g., "binance", "oanda").
+  string venue = 4;
+
+  // Open, High, Low, Close prices (base currency).
+  double open = 5;
+  double high = 6;
+  double low = 7;
+  double close = 8;
+
+  // Volume (in base asset, e.g., BTC or USD).
+  double volume = 9;
+
+  // Number of trades in this tick.
+  int64 trade_count = 10;
+
+  // Bid/ask snapshot at tick time.
+  double bid = 11;       // best bid price
+  double ask = 12;       // best ask price
+  double bid_size = 13;  // BTC/USD at bid
+  double ask_size = 14;  // BTC/USD at ask
+
+  // Tick type (trade, synthetic, midpoint, etc.).
+  TickKind kind = 15;
+
+  // Tick quality/confidence (0.0..1.0).
+  // 1.0 = authoritative exchange data
+  // 0.5 = interpolated or delayed
+  // Set by venue adapter during normalization.
+  double confidence = 16;
+
+  // Schema version of this tick.
+  string tick_schema_version = 17;
+
+  // HARDEN-03: provenance — which venue adapter produced this tick?
+  string produced_by_venue_adapter = 18;
+}
+
+// Order book snapshot. Full market depth at a point in time.
+// Ledgered periodically (e.g., every 100ms) for replay accuracy.
+message OrderBook {
+  int64 ts_ns = 1;       // snapshot timestamp
+  string symbol = 2;     // instrument
+  string venue = 3;      // exchange
+
+  // Bid levels [price, size, count] (sorted, best bid first).
+  repeated Level bids = 4;
+
+  // Ask levels [price, size, count] (sorted, best ask first).
+  repeated Level asks = 5;
+
+  // Checksum from venue (if provided) for integrity verification.
+  string venue_checksum = 6;
+
+  // Book depth (number of levels on each side).
+  int32 depth = 7;
+
+  // HARDEN-03: provenance
+  string produced_by_venue_adapter = 8;
+
+  message Level {
+    double price = 1;
+    double size = 2;       // quantity at this price
+    int64 order_count = 3; // how many orders make up this level
+  }
+}
+
+// Real-time market data stream record.
+// Written to ledger for every new tick (high-volume, so often batched).
+message MarketDataRecord {
+  int64 ledger_index = 1;      // position in ledger
+  int64 event_ts_ns = 2;       // when this record was created
+
+  // Which ticks / books are in this batch?
+  repeated MarketTick ticks = 3;
+  repeated OrderBook books = 4;
+
+  // Data quality flags.
+  bool has_gap = 5;            // timestamp gap detected
+  bool has_stale_book = 6;     // book older than expected
+  bool has_duplicate = 7;      // same tick seen twice
+
+  // HARDEN-03: provenance
+  string produced_by_engine = 8;  // execution_engine.market_data normalizer
+}
+
+// Market data adapter contract (like ExecutionAdapterContract in execution.proto).
+// Each data venue (Binance WS, OANDA REST, IBKR API, etc.) implements this.
+message MarketDataAdapterContract {
+  // Venue identifier.
+  string venue_id = 1;
+
+  // Display name.
+  string display_name = 2;
+
+  // Supported symbols (e.g., ["BTC/USD", "ETH/USD"]).
+  // If empty, adapter supports any symbol.
+  repeated string supported_symbols = 3;
+
+  // Supported asset classes (SPOT, FUTURES, etc.).
+  repeated string supported_asset_classes = 4;
+
+  // Minimum latency guarantee (ms).
+  double min_latency_ms = 5;
+
+  // Maximum latency tolerance before marking data stale (ms).
+  double max_latency_ms = 6;
+
+  // Tick frequency (Hz, e.g., 10 = 10 ticks/sec).
+  double tick_frequency_hz = 7;
+
+  // Can provide order book depth?
+  bool supports_order_book = 8;
+
+  // If yes, what depth?
+  int32 order_book_depth = 9;
+
+  // Is this a premium (paid) data source?
+  bool is_premium = 10;
+
+  // Redundancy level (1 = single source, 2+ = multiple feeds).
+  int32 redundancy_level = 11;
+
+  // HARDEN-03: this contract is immutable
+  string produced_by_engine = 12;
+}
+
+// Market state (the entire normalised market as of a point in time).
+// Includes all active ticks, books, and bid/ask snapshots.
+message NormalisedMarketState {
+  int64 ts_ns = 1;  // when this state was current
+
+  // All active ticks (one per symbol, latest only).
+  repeated MarketTick latest_ticks = 2;
+
+  // All active order books (one per symbol).
+  repeated OrderBook latest_books = 3;
+
+  // Aggregate statistics.
+  double global_bid = 4;   // aggregate bid (volume-weighted)
+  double global_ask = 5;   // aggregate ask
+
+  // Data quality summary.
+  int32 num_stale_ticks = 6;    // count of ticks older than max_latency
+  int32 num_missing_books = 7;  // count of symbols without book data
+  bool all_critical_sources_live = 8;  // are all critical data sources connected?
+
+  // HARDEN-03: provenance
+  string produced_by_engine = 9;  // execution_engine.market_data
+}
+
+// Market anomaly detection record (used by system_engine hazard sensors).
+message MarketAnomalyRecord {
+  int64 ts_ns = 1;
+  string symbol = 2;
+
+  enum AnomalyKind {
+    KIND_UNSPECIFIED = 0;
+    FLASH_CRASH = 1;   // price drop > 10% in < 1 sec
+    LIQUIDITY_DRAIN = 2;  // order book thinning rapidly
+    CIRCUIT_BREAKER = 3;  // exchange halted trading
+    DISCONNECT = 4;    // data feed lost
+  }
+  AnomalyKind kind = 3;
+
+  // Severity (0..1, where 1 = system shutdown).
+  double severity = 4;
+
+  // Description.
+  string detail = 5;
+
+  // Venue where anomaly occurred.
+  string venue = 6;
+
+  // HARDEN-03: provenance (system_engine hazard sensors)
+  string produced_by_engine = 7;
+}
+>>>>>>> origin/main

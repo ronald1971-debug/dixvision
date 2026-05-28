@@ -1,0 +1,2900 @@
+"""DIX VISION v42.2 — FastAPI Backend Server.
+
+Run::
+
+    uvicorn ui.server:app --reload --port 8080
+
+Root URL ``/`` redirects to the operator dashboard at ``/dash2/``.
+Memecoin dashboard available at ``/meme/``.
+
+Endpoints:
+
+* ``GET  /``                       — redirect to /dash2/ operator dashboard.
+* ``GET  /api/health``             — ``check_self()`` of all six engines.
+* ``GET  /api/registry/engines``   — ``registry/engines.yaml`` parsed.
+* ``GET  /api/registry/plugins``   — ``registry/plugins.yaml`` parsed.
+* ``POST /api/tick``               — feed a ``MarketTick`` into the
+                                     ExecutionEngine's mark cache.
+* ``POST /api/signal``             — flow a SignalEvent through
+                                     Intelligence -> Execution; returns
+                                     the resulting ExecutionEvent(s).
+* ``GET  /api/events?limit=N``     — recent events emitted by either engine
+                                     (in-memory ring buffer; not durable).
+* ``POST /api/feeds/binance/start`` — start the read-only Binance public
+                                     WebSocket pump (SRC-MARKET-BINANCE-001).
+* ``POST /api/feeds/binance/stop``  — stop the pump.
+* ``GET  /api/feeds/binance/status``— pump telemetry snapshot.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import threading
+from collections import deque
+from collections.abc import AsyncIterator, Mapping, Sequence
+from dataclasses import asdict, is_dataclass
+from pathlib import Path
+from typing import Any
+
+import yaml
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
+
+from core.cognitive_router import (
+    TaskClass,
+    enabled_ai_providers,
+    select_providers,
+)
+from core.coherence.performance_pressure import load_pressure_config
+from core.contracts.api.credentials import (
+    CredentialItem,
+    CredentialsStatusResponse,
+    CredentialsSummary,
+    PresenceStateApi,
+)
+from core.contracts.development_mode import (
+    DevelopmentModePolicy,
+)
+from core.contracts.events import (
+    Event,
+    EventKind,
+    HazardEvent,
+    Side,
+    SignalEvent,
+    SystemEvent,
+    SystemEventKind,
+)
+from core.contracts.external_signal_trust import (
+    ExternalSignalTrustRegistry,
+    load_external_signal_trust,
+)
+from core.contracts.learning import PatchProposal, StrategyStats
+from core.contracts.learning_evolution_freeze import (
+    LearningEvolutionFreezePolicy,
+)
+from core.contracts.market import MarketTick
+from core.contracts.risk import RiskSnapshot
+from core.contracts.source_trust_promotions import (
+    SourceTrustPromotionStore,
+)
+from core.kernel import EngineServiceAdapter, SystemKernel
+from dashboard_backend.control_plane.decision_trace import DecisionTracePanel
+from dashboard_backend.control_plane.engine_status_grid import EngineStatusGrid
+from dashboard_backend.control_plane.memecoin_control_panel import MemecoinControlPanel
+from dashboard_backend.control_plane.mode_control_bar import ModeControlBar
+from dashboard_backend.control_plane.router import ControlPlaneRouter
+from dashboard_backend.control_plane.strategy_lifecycle_panel import (
+    StrategyLifecyclePanel,
+)
+from evolution_engine.engine import EvolutionEngine
+from evolution_engine.intelligence_loops.mutation_proposer import (
+    MutationProposer,
+)
+from evolution_engine.loops.structural_loop import (
+    StructuralEvolutionLoop,
+    StructuralLoopTickResult,
+)
+from evolution_engine.patch_pipeline.backtest import BacktestSummary
+from evolution_engine.patch_pipeline.orchestrator import (
+    PatchPipelineOrchestrator,
+    StageEvidence,
+)
+from evolution_engine.patch_pipeline.pipeline import PatchPipeline
+from execution_engine.engine import ExecutionEngine
+from execution_engine.execution_gate import AuthorityGuard
+from execution_engine.protections.feedback import FeedbackCollector
+from governance_engine.control_plane.decision_signer import (
+    DecisionSigner,
+    make_decision_signer,
+)
+from governance_engine.control_plane.exposure_store import ExposureStore
+from governance_engine.control_plane.ledger_authority_writer import (
+    LedgerAuthorityWriter,
+)
+from governance_engine.control_plane.policy_hash_anchor import (
+    PolicyHashAnchor,
+)
+from governance_engine.engine import GovernanceEngine
+from governance_engine.harness_approver import (
+    HARNESS_APPROVER_ENV_VAR,
+    approve_signal_for_execution,
+)
+from governance_engine.services.patch_pipeline_bridge import (
+    PatchApprovalBridge,
+)
+from governance_engine.strategy_registry import StrategyRegistry
+from ui.state_projection import StateProjection, init_state_projection
+
+# Hardening-S1 item 1 — explicit opt-in for the harness approval shim.
+# ``ui.server`` is the harness, by definition. Setting the env var at
+# import time means *every* call to ``approve_signal_for_execution``
+# from within this process passes the gate without each call site
+# needing ``enabled=True``. Engines, adapters, and dashboard surfaces
+# do NOT set this env var; if any of them imports the shim the
+# authority lint B33 rule fires at CI time and at runtime the call
+# raises :class:`HarnessApproverDisabledError`.
+os.environ.setdefault(HARNESS_APPROVER_ENV_VAR, "1")
+from execution_engine.adapters.registry import (
+    default_registry as default_adapter_registry,
+)
+from intelligence_engine.cognitive.approval_edge import (
+    ApprovalEdge,
+)
+from intelligence_engine.cognitive.chat import (
+    FEATURE_FLAG_ENV_VAR as COGNITIVE_CHAT_FEATURE_FLAG_ENV_VAR,
+)
+from intelligence_engine.cognitive.chat import (
+    CognitiveChatFeatureFlag,
+)
+from intelligence_engine.cognitive.chat.http_chat_transport import (
+    build_default_dispatch_transport,
+)
+from intelligence_engine.engine import IntelligenceEngine
+from intelligence_engine.knowledge import NewsKnowledgeIndex
+from intelligence_engine.learning.slow_loop import (
+    FeedbackSample,
+    ParameterBounds,
+    SlowLoopLearner,
+)
+from intelligence_engine.learning_gate import LearningGate
+from intelligence_engine.learning_interface import LearningInterface
+from intelligence_engine.mcp import OpenNewsServer
+from intelligence_engine.meta_controller import (
+    MetaControllerHotPath,
+    load_meta_controller_config,
+)
+from intelligence_engine.plugins import MicrostructureV1
+from intelligence_engine.plugins.footprint_delta.v1 import FootprintDeltaV1
+from intelligence_engine.plugins.liquidity_physics.v1 import LiquidityPhysicsV1
+from intelligence_engine.plugins.news_reaction.v1 import NewsReactionV1
+from intelligence_engine.plugins.on_chain_pulse.v1 import OnChainPulseV1
+from intelligence_engine.plugins.order_book_pressure.v1 import OrderBookPressureV1
+from intelligence_engine.plugins.orderflow_imbalance.v1 import OrderflowImbalanceV1
+from intelligence_engine.plugins.regime_classifier.v1 import RegimeClassifierV1
+from intelligence_engine.plugins.sentiment_aggregator.v1 import SentimentAggregatorV1
+from intelligence_engine.plugins.trader_imitation.v1 import TraderImitationV1
+from intelligence_engine.plugins.vpin_imbalance.v1 import VpinImbalanceV1
+from intelligence_engine.runtime_context import RuntimeContext
+from intelligence_engine.runtime_context_builder import (
+    DEFAULT_LATENCY_BUDGET_NS,
+    RuntimeMonitorView,
+    build_runtime_context,
+)
+from intelligence_engine.strategy_runtime.state_machine import (
+    StrategyStateMachine,
+)
+from intelligence_engine.trader_modeling import (
+    make_trader_observation,
+    observation_as_system_event,
+)
+from learning_engine.engine import LearningEngine
+from learning_engine.lanes.patch_outcome_feedback import PatchOutcomeFeedback
+from learning_engine.loops.builders import (
+    make_diff_update_builder,
+    make_pnl_sample_builder,
+)
+from learning_engine.loops.closed_loop import (
+    ClosedLearningLoop,
+    LoopTickResult,
+)
+from learning_engine.update_emitter import UpdateEmitter
+from state.ledger.reader import LedgerReader
+from system.time_source import wall_ns
+from system_engine.backtest_ingest.internal import (
+    BacktestRequest,
+    run_deterministic_backtest,
+)
+from system_engine.coupling import HazardThrottleAdapter
+from system_engine.credentials import (
+    DEFAULT_TIMEOUT_S as CREDENTIAL_VERIFY_TIMEOUT_S,
+)
+from system_engine.credentials import (
+    StorageNotWritable,
+    is_devin_session,
+    presence_status,
+    requirements_for_registry,
+    resolve_env,
+    verify_provider,
+    write_credential,
+)
+from system_engine.engine import SystemEngine
+from system_engine.hazard_sensors import (
+    ClockDriftSensor,
+    ExchangeUnreachableSensor,
+    HeartbeatMissedSensor,
+    LatencySpikeSensor,
+    MarketAnomalySensor,
+    MemoryOverflowSensor,
+    OrderFloodSensor,
+    RiskSnapshotStaleSensor,
+    RuntimeBreakerOpenSensor,
+    SensorArray,
+    StaleDataSensor,
+    SystemAnomalySensor,
+    WSTimeoutSensor,
+)
+from system_engine.scvs.source_registry import (
+    SourceRegistry,
+    load_source_registry,
+)
+from ui._ledger_boot import resolve_ledger_path
+from ui.cognitive_chat_runtime import (
+    CognitiveChatRuntime,
+)
+from ui.cognitive_chat_runtime import (
+    build_runtime as build_cognitive_chat_runtime,
+)
+from ui.cognitive_routes import build_cognitive_router
+from ui.dashboard_projection_routes import build_projection_router
+from ui.dashboard_routes import build_dashboard_router
+from ui.execution_routes import build_execution_router
+from ui.feeds.news_runner import CoinDeskRSSFeedRunner
+from ui.feeds.pumpfun_runner import PumpFunFeedRunner
+from ui.feeds.raydium_runner import RaydiumPoolFeedRunner
+from ui.feeds.runner import FeedRunner
+from ui.feeds.tradingview_alert import (
+    TRADINGVIEW_ALERT_SOURCE_FEED,
+    parse_tradingview_alert_payload,
+)
+from ui.feeds.tradingview_ideas import (
+    TRADINGVIEW_SOURCE_FEED,
+    parse_tradingview_idea_payload,
+)
+from ui.feeds_routes import build_feeds_router
+from ui.governance_routes import build_governance_router
+from ui.operator_routes import build_operator_router
+from ui.plugin_routes import (
+    PluginRegistry,
+    PluginToggleState,
+    build_plugin_router,
+)
+from ui.cockpit_routes import build_cockpit_router
+from ui.runtime_routes import build_runtime_router
+
+_logger = logging.getLogger(__name__)
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+REGISTRY_DIR = REPO_ROOT / "registry"
+SOURCE_REGISTRY_PATH = REGISTRY_DIR / "data_source_registry.yaml"
+
+
+# P1.2 — the Paper-S6 source-trust promotion replay was extracted to
+# :mod:`ui.harness.source_trust_replay` as part of the harness
+# god-object refactor. The legacy private alias is kept here so
+# existing tests that import ``_replay_source_trust_promotions``
+# directly from ``ui.server`` continue to resolve to the same
+# canonical implementation.
+from ui.harness.background_task_manager import (  # noqa: E402
+    SSE_CHANNEL_ALIASES,
+    HarnessBackgroundTaskManager,
+    sse_channel_for,
+    sse_format,
+    sse_ts_iso_for,
+)
+from ui.harness.boot_manager import HarnessBootManager  # noqa: E402
+from ui.harness.route_registrar import HarnessRouteRegistrar  # noqa: E402
+from ui.harness.source_trust_replay import (  # noqa: E402  (post-import shim)
+    replay_source_trust_promotions as _replay_source_trust_promotions,
+)
+
+# ---------------------------------------------------------------------------
+# State (in-process; harness only)
+# ---------------------------------------------------------------------------
+
+
+class _State:
+    """Single-process holder for engines + ring buffer."""
+
+    def __init__(self) -> None:
+        # P1.2 — the historic ~480-line constructor was split into
+        # named ``_build_*`` sections on this class so a reader can
+        # navigate one concern at a time. Construction order is
+        # preserved bit-for-bit by :class:`HarnessBootManager.populate`
+        # (intelligence / execution / system / governance / event
+        # buffers / dashboard / cognitive chat / plugin registry /
+        # approval edge / live feeds / learning-evolution loops).
+        HarnessBootManager().populate(self)
+
+    def _build_intelligence_tier(self) -> None:
+        """P1.2 — ``_State.__init__`` section: intelligence_tier."""
+
+        self.lock = threading.Lock()
+        # SCVS source registry — single source of truth for AI
+        # providers, market feeds, and every other external source.
+        # Loaded once at process start; the cognitive router reads this
+        # frozen projection (no hot-reload yet — wave-02).
+        self.source_registry: SourceRegistry = load_source_registry(SOURCE_REGISTRY_PATH)
+        # P1.1 — close the meta-controller hot-path wiring. PR #48 shipped
+        # :class:`MetaControllerHotPath` and PR #49 added the optional
+        # ``meta_controller_hot_path=`` slot on :class:`IntelligenceEngine`,
+        # but the harness never constructed one. Result:
+        # :meth:`IntelligenceEngine.run_meta_tick` raised at runtime, and
+        # the BeliefState / PressureVector / META_AUDIT / META_DIVERGENCE
+        # ledger (INV-50 / INV-53 / J3) was dead code outside the unit
+        # tests. Building the hot-path here (configs loaded from the
+        # registry YAMLs that already back ``load_meta_controller_config``
+        # + ``load_pressure_config``) makes ``run_meta_tick`` reachable
+        # from ``/api/tick`` and lets META_* SystemEvents flow on the bus.
+        self.meta_controller_config = load_meta_controller_config(
+            regime_path=REGISTRY_DIR / "regime.yaml",
+            confidence_path=REGISTRY_DIR / "confidence.yaml",
+            sizer_path=REGISTRY_DIR / "position_sizer.yaml",
+            latency_budget_ns=DEFAULT_LATENCY_BUDGET_NS,
+        )
+        self.pressure_config = load_pressure_config(REGISTRY_DIR / "pressure.yaml")
+        self.meta_controller_hot_path = MetaControllerHotPath(
+            meta_config=self.meta_controller_config,
+            pressure_config=self.pressure_config,
+        )
+        self.intelligence = IntelligenceEngine(
+            microstructure_plugins=(
+                MicrostructureV1(),
+                OrderflowImbalanceV1(),
+                VpinImbalanceV1(),
+                RegimeClassifierV1(),
+                SentimentAggregatorV1(),
+                OrderBookPressureV1(),
+                NewsReactionV1(),
+                OnChainPulseV1(),
+                FootprintDeltaV1(),
+                LiquidityPhysicsV1(),
+                TraderImitationV1(),
+            ),
+            meta_controller_hot_path=self.meta_controller_hot_path,
+        )
+        # SystemKernel — canonical runtime state authority.
+        # All services register here; UI reads via StateProjection.
+        self.system_kernel = SystemKernel()
+        self.state_projection: StateProjection = init_state_projection(
+            self.system_kernel,
+        )
+
+    def _build_execution_tier(self) -> None:
+        """P1.2 — ``_State.__init__`` section: execution_tier."""
+
+        # AUDIT-WIRE.1 / P0-2 — close the BEHAVIOR-P3 hazard throttle
+        # chain. Until this wiring landed the harness constructed a
+        # bare ``ExecutionEngine()`` with ``throttle_adapter=None``,
+        # so observed :class:`HazardEvent` rows never tightened the
+        # hot-path :class:`RiskSnapshot` and the ``apply_throttle``
+        # primitive built in PR #139 was inert in production. Hazards
+        # delivered to ``self.execution.on_hazard`` now feed the
+        # adapter's observer ring, and every subsequent
+        # :meth:`ExecutionEngine.execute` projects the active throttle
+        # decision onto the configured baseline.
+        self.hazard_throttle = HazardThrottleAdapter()
+        # AUDIT-P1.1 / Hardening-S1 item 2 -- bind the per-process
+        # :class:`DecisionSigner` to the Execution Gate so every
+        # harness-approved intent is HMAC-signed at approval time and
+        # verified at the gate. Pre-wiring the harness constructed a
+        # bare ``ExecutionEngine()`` whose lazy
+        # :attr:`ExecutionEngine.guard` materialised an
+        # ``AuthorityGuard()`` with ``signature_verifier=None``, so
+        # the "no signature -> no execution" guarantee documented in
+        # ``decision_signer.py`` was inoperative in production. Holding
+        # the signer + guard on ``_State`` closes the gap and gives
+        # downstream callers a single discoverable entry point
+        # (``self.decision_signer``, ``self.authority_guard``).
+        self.decision_signer: DecisionSigner = make_decision_signer()
+        # Paper-S5 -- per-source confidence cap registry. Loaded once
+        # at boot from ``registry/external_signal_trust.yaml`` so the
+        # harness approver can clamp every external SignalEvent's
+        # ``confidence`` before it becomes an ExecutionIntent. The
+        # loader is pure I/O on the registry file (no clock, no PRNG);
+        # if the file is unreadable boot fails loudly and the harness
+        # falls back to the conservative built-in defaults from
+        # ``core.contracts.signal_trust``.
+        try:
+            self.signal_trust_registry: ExternalSignalTrustRegistry | None = (
+                load_external_signal_trust(REGISTRY_DIR / "external_signal_trust.yaml")
+            )
+        except FileNotFoundError:
+            # Tests / minimal deployments may run without the registry
+            # file present; the approver will fall back to
+            # ``default_cap_for`` for every external signal in that
+            # case (still fail-closed).
+            self.signal_trust_registry = None
+        # Paper-S6 -- in-memory operator overlay for source-trust
+        # promotions. The store is rebuilt at boot via
+        # :func:`_replay_source_trust_promotions` so promotions
+        # recorded on the authority ledger survive restarts. The
+        # harness approver consults it at cap-application time to
+        # decide whether an ``EXTERNAL_LOW`` source's effective trust
+        # class should be widened to ``EXTERNAL_MED``.
+        self.signal_trust_promotions = SourceTrustPromotionStore()
+        self.authority_guard = AuthorityGuard(
+            signature_verifier=lambda content_hash, decision_id, signature: (
+                self.decision_signer.verify(
+                    content_hash=content_hash,
+                    governance_decision_id=decision_id,
+                    signature=signature,
+                )
+            ),
+        )
+        # The baseline RiskSnapshot is the un-throttled FastRiskCache
+        # view; the harness has no live cache yet (Phase 7 wave) so
+        # the seed below is a deterministic, permissive baseline that
+        # the throttle adapter narrows in place. ``halted`` flips to
+        # True the moment a CRITICAL hazard is observed inside the
+        # active window, which short-circuits dispatch to a single
+        # REJECTED ExecutionEvent with reason ``hazard_throttled``.
+        self.risk_baseline = RiskSnapshot(version=0, ts_ns=wall_ns())
+        # AUDIT-WIRE.3 / P0-3 — close the closed learning loop. The
+        # ``FeedbackCollector`` and ``LearningInterface`` are the two
+        # terminal-event sinks ``ExecutionEngine`` records every
+        # ``ExecutionEvent`` into; without them the engine short-
+        # circuits to a no-op so the per-strategy weight adjuster
+        # observes zero trade outcomes.
+        self.feedback_collector = FeedbackCollector()
+        self.learning_interface = LearningInterface()
+        # PR-DEV-A — Operator Master Development Mode flags. Two
+        # independent boot-time toggles:
+        #
+        # * ``DIXVISION_DEVELOPMENT_MODE`` (default ``"true"``) — the
+        #   learning + research surface is unblocked at boot so Indira
+        #   (full trader discovery + 5,000+ profile modeling) and Dyon
+        #   (heavy learning + structural evolution + slow-loop
+        #   critique + patch pipeline) run at full potential before
+        #   any trading.
+        # * ``DIXVISION_TRADING_ALLOWED`` (default ``"false"``) — the
+        #   Execution Gate refuses to dispatch to any broker until
+        #   the operator explicitly flips the flag. This is the
+        #   *only* switch that opens trading; the AuthorityGuard,
+        #   hazard throttle, kill-switch, mode-effect table, FSM
+        #   consent envelopes, HARDEN-04 freeze policy, INV-15
+        #   replay anchor, and HARDEN-03 receiver assertions all
+        #   remain in force as defense-in-depth.
+        #
+        # Both flags are mutated atomically under ``STATE.lock`` by
+        # the operator routes ``POST /api/operator/development-mode``
+        # and ``POST /api/operator/trading-allowed``. Every flip is
+        # audited as an ``OPERATOR_<flag>_CHANGED`` row paired with a
+        # canonical ``POLICY_STATE`` row whose payload shape is owned
+        # by :meth:`DevelopmentModePolicy.to_system_event`. The
+        # engine receives a fresh snapshot here and on every operator
+        # flip via ``set_development_mode_policy`` so the next
+        # ``execute`` call observes the new gate atomically.
+        #
+        # The :class:`SystemMode` carried on the policy here is the
+        # boot-default ``SystemMode.SAFE`` (the FSM is constructed in
+        # ``_build_governance_tier`` which runs *after* this section,
+        # but no production caller has flipped it yet, so the boot
+        # value is invariant). Subsequent operator flips re-read the
+        # mode under ``STATE.lock`` from the live
+        # ``state_transitions``.
+        self.development_mode_enabled: bool = os.environ.get(
+            "DIXVISION_DEVELOPMENT_MODE", "true"
+        ).strip().lower() in {"1", "true", "yes", "on"}
+        self.trading_allowed: bool = os.environ.get(
+            "DIXVISION_TRADING_ALLOWED", "false"
+        ).strip().lower() in {"1", "true", "yes", "on"}
+        # ``mode=None`` here is intentional: the FSM is constructed in
+        # ``_build_governance_tier`` which runs *after* this section,
+        # so naming the mode literally would violate B31 (mode-effect
+        # table is the single mode-conditional oracle). The mode is
+        # carried on the policy strictly for audit shape — neither
+        # ``is_learning_unblocked`` nor ``is_trading_unblocked``
+        # inspects it. The policy is rebuilt with the live mode in
+        # ``_build_governance_tier`` before any tick can run.
+        self.development_mode_policy = DevelopmentModePolicy(
+            development_enabled=self.development_mode_enabled,
+            trading_allowed=self.trading_allowed,
+            mode=None,
+        )
+        self.execution = ExecutionEngine(
+            guard=self.authority_guard,
+            throttle_adapter=self.hazard_throttle,
+            risk_baseline=self.risk_baseline,
+            feedback_collector=self.feedback_collector,
+            intelligence_feedback=self.learning_interface,
+            development_mode_policy=self.development_mode_policy,
+        )
+
+    def _build_system_tier(self) -> None:
+        """P1.2 — ``_State.__init__`` section: system_tier."""
+
+        # AUDIT-WIRE.4 / P1-3 — bind the 12 frozen HAZ-XX sensors
+        # into a single SensorArray and hand it to ``SystemEngine``.
+        # Without this wiring the sensor primitives existed but the
+        # engine carried no registry of them; the harness + dashboard
+        # had no way to invoke a sensor through the engine surface.
+        self.sensor_array = SensorArray()
+        self.sensor_array.register(ClockDriftSensor())
+        self.sensor_array.register(WSTimeoutSensor())
+        self.sensor_array.register(ExchangeUnreachableSensor())
+        self.sensor_array.register(StaleDataSensor())
+        self.sensor_array.register(MemoryOverflowSensor())
+        self.sensor_array.register(LatencySpikeSensor())
+        self.sensor_array.register(HeartbeatMissedSensor())
+        self.sensor_array.register(RiskSnapshotStaleSensor())
+        self.sensor_array.register(OrderFloodSensor())
+        self.sensor_array.register(RuntimeBreakerOpenSensor())
+        self.sensor_array.register(MarketAnomalySensor())
+        self.sensor_array.register(SystemAnomalySensor())
+        self.system = SystemEngine(sensor_array=self.sensor_array)
+        # AUDIT-WIRE.5 / P0-4 — bind the per-tick :class:`RuntimeContext`
+        # builder. ``IntelligenceEngine.run_meta_tick`` requires a
+        # caller-supplied :class:`RuntimeContext` per tick, but no
+        # production caller produced one, so the meta-controller
+        # never observed non-trivial perf / risk / drift / latency
+        # pressure scalars and INV-48 fallback could not fire on
+        # real elapsed wall-time. Holding the builder on ``_State``
+        # closes the "primitive built but never bound" gap and gives
+        # downstream callers a single discoverable entry point
+        # (``self.build_runtime_context_now``).
+        self.runtime_context_builder = build_runtime_context
+        self.runtime_latency_budget_ns: int = DEFAULT_LATENCY_BUDGET_NS
+        # Sprint-1 / Class-B "Trust the Ledger" — if the operator sets
+        # ``DIXVISION_LEDGER_PATH`` the harness opens a SQLite-backed
+        # authority ledger; every governance decision (mode
+        # transition, strategy lifecycle, operator approval) is then
+        # persisted before the in-memory chain is mutated, so a
+        # crash / Ctrl+C / kill -9 between rows is survivable. The
+        # writer replays existing rows on construction and runs a
+        # boot-time hash-chain verification gate so a tampered file
+        # aborts startup loudly.
+        #
+        # AUDIT-P0.3 — the silent fallback to an in-memory writer when
+        # the env var was unset meant default operator deployments
+        # could run for hours believing every decision was persisted
+        # while losing the entire chain on restart. ``resolve_ledger_path``
+        # now refuses to boot without persistence unless the operator
+        # has explicitly set ``DIXVISION_PERMIT_EPHEMERAL_LEDGER=1``
+        # (the test suite sets this at session start in
+        # ``tests/conftest.py``).
+
+    def _build_governance_tier(self) -> None:
+        """P1.2 — ``_State.__init__`` section: governance_tier."""
+
+        # P1.2 — promoted from a local to an attribute so the
+        # dashboard-widgets section (which constructs ``LedgerReader``
+        # over the same SQLite file in read-only mode) can read it
+        # after the governance section runs.
+        self._ledger_path = resolve_ledger_path()
+        ledger_path = self._ledger_path
+        ledger = (
+            LedgerAuthorityWriter(db_path=ledger_path) if ledger_path else LedgerAuthorityWriter()
+        )
+        self.ledger_writer = ledger
+        # AUDIT-P0.3 launcher polish -- print a one-line boot banner so
+        # the operator (and the launcher.log paste-back) confirms which
+        # ledger file the harness opened. Prefixed ``[ledger]`` so log
+        # scrapers can grep it; goes to stdout so uvicorn's stdout pipe
+        # captures it alongside ``Application startup complete``.
+        if ledger_path:
+            print(
+                f"[ledger] authority ledger mounted: {ledger_path} (SQLite, crash-recoverable)",
+                flush=True,
+            )
+        else:
+            print(
+                "[ledger] authority ledger mounted: <in-memory> "
+                "(DIXVISION_PERMIT_EPHEMERAL_LEDGER=1 -- audit chain "
+                "will be lost on restart)",
+                flush=True,
+            )
+        # AUDIT-WIRE.2 / P0-3 — close the closed learning loop.
+        # ``GovernanceEngine`` falls through to a ``UPDATE_PROPOSED_AUDIT``
+        # ledger row whenever ``strategy_registry`` is ``None``, which is
+        # how the harness silently dropped every learning-loop update
+        # request: the learning engine's ``UPDATE_PROPOSED`` events were
+        # acknowledged but never applied to the registry FSM, so no
+        # strategy ever advanced from PROPOSED -> CANARY -> LIVE.
+        self.strategy_registry = StrategyRegistry(ledger=ledger)
+        # AUDIT-P0.4 -- the per-symbol exposure book and per-domain
+        # daily caps need the same durability profile as the
+        # authority ledger. We co-locate the SQLite file next to the
+        # ledger ("governance.db" -> "exposure.db") so a single
+        # ``DIXVISION_LEDGER_PATH`` setting enables both. When the
+        # operator has explicitly opted into an ephemeral ledger
+        # (``DIXVISION_PERMIT_EPHEMERAL_LEDGER=1``) the exposure
+        # store also stays in-memory.
+        if ledger_path:
+            from pathlib import Path as _Path
+
+            exposure_db_path: _Path | None = _Path(ledger_path).with_name("exposure.db")
+        else:
+            exposure_db_path = None
+        self.exposure_store = ExposureStore(db_path=exposure_db_path)
+        # Paper-S6 -- rebuild the in-memory operator promotion overlay
+        # from the authority ledger so promotions recorded before a
+        # restart still cap at the widened class. Replay walks every
+        # OPERATOR_SOURCE_TRUST_PROMOTED / DEMOTED row in chronological
+        # order; the per-row payload is parsed defensively so a
+        # malformed historical row drops the offending source without
+        # tearing down the whole replay.
+        _replay_source_trust_promotions(
+            ledger_writer=self.ledger_writer,
+            store=self.signal_trust_promotions,
+        )
+        self.governance = GovernanceEngine(
+            ledger=ledger,
+            strategy_registry=self.strategy_registry,
+            exposure_store=self.exposure_store,
+            signal_trust_registry=self.signal_trust_registry,
+        )
+        # Hardening-S1 item 4-ext -- bind the SHA-256 of every
+        # canonical policy YAML to the authority ledger at boot. The
+        # anchor turns the policy set into "the document of record":
+        # any mid-session edit is detected by ``verify_no_drift`` and
+        # surfaced as a CRITICAL ``HAZ-POLICY-DRIFT`` hazard, which
+        # ``GovernanceEngine.process`` routes through the single FSM
+        # mutator so the system downgrades to SAFE through the same
+        # audited chain every other hazard takes (B32 / GOV-CP-03).
+        self.policy_hash_anchor = PolicyHashAnchor(ledger=ledger)
+        self.policy_hash_anchor.bind_session(ts_ns=wall_ns(), requestor="ui_harness_boot")
+        # Phase-6 P1-3 — the engine shells default to DEGRADED unless
+        # an ``is_active_fn`` reports the wired loop is currently
+        # unfrozen. The two suppliers below close over
+        # ``_live_freeze_policy`` so ``/api/health`` reflects the same
+        # gate as ``/api/operator/runtime/dormant`` (no two-sources-of-
+        # truth health reporting).
+        self.learning = LearningEngine(is_active_fn=self._learning_loop_is_active)
+        self.evolution = EvolutionEngine(is_active_fn=self._evolution_loop_is_active)
+        # AUDIT-P1.7 — operator override for the
+        # :class:`LearningEvolutionFreezePolicy` (HARDEN-04 / INV-70).
+        # The flag is server-side mutable state (a single atomic bool)
+        # toggled by the typed ``POST /api/operator/learning-override``
+        # route, audited as an ``OPERATOR_LEARNING_OVERRIDE_CHANGED``
+        # ledger row on every flip. The seed honours
+        # ``DIXVISION_LEARNING_OVERRIDE`` so deterministic restarts
+        # that already had the override set do not silently re-freeze
+        # the loop.
+        #
+        # PR-Z1 / P0 — HARDEN-04 CONDITIONAL RELAXATION: the seed
+        # default is now ``"true"`` (was ``""`` → False) so a fresh
+        # harness boots pre-armed.
+        #
+        # ``v42.2-P0-RELAX`` (direct operator directive): the freeze
+        # gate is now a single predicate — ``operator_override is
+        # True`` — applied uniformly across every :class:`SystemMode`.
+        # The previous ``mode is LIVE AND operator_override`` dual
+        # gate has been relaxed; adaptive mutations unfreeze on the
+        # very first ``/api/tick`` after boot under the override
+        # seed above. Operators retain the documented re-freeze
+        # paths: explicit ``DIXVISION_LEARNING_OVERRIDE=false`` at
+        # startup, or ``POST /api/operator/learning-override
+        # {enabled: false}`` at runtime (audited as
+        # ``OPERATOR_LEARNING_OVERRIDE_CHANGED`` + ``POLICY_STATE``).
+        # The kill switch, ``RiskSnapshot.halted``, the hazard
+        # throttle chain, and the FSM consent envelopes remain in
+        # force — this relaxation governs adaptive mutation only,
+        # not order dispatch.
+        self.learning_override_enabled: bool = os.environ.get(
+            "DIXVISION_LEARNING_OVERRIDE", "true"
+        ).strip().lower() in {"1", "true", "yes", "on"}
+
+        # PR-DEV-A — rebuild the DevelopmentModePolicy with the live
+        # FSM mode now that ``state_transitions`` exists. The policy
+        # constructed in ``_build_execution_tier`` carried ``mode=None``
+        # to avoid naming a SystemMode literal in this module (B31).
+        # Predicates are mode-independent so the swap is purely audit
+        # cosmetic; the engine reference is replaced via
+        # ``set_development_mode_policy`` so every subsequent
+        # ``execute`` call observes the mode-anchored snapshot.
+        self.development_mode_policy = DevelopmentModePolicy(
+            development_enabled=self.development_mode_enabled,
+            trading_allowed=self.trading_allowed,
+            mode=self.governance.state_transitions.current_mode(),
+        )
+        self.execution.set_development_mode_policy(self.development_mode_policy)
+        # PR-DEV-B — wire a live :class:`LearningGate` into the
+        # IntelligenceEngine constructed in ``_build_intelligence_tier``.
+        # The supplier closes over ``self`` so every consultation
+        # re-reads the current :attr:`development_mode_policy`. An
+        # operator flip via ``POST /api/operator/development-mode``
+        # mutates the policy under ``STATE.lock``; the next
+        # ``on_market`` consults the supplier and short-circuits when
+        # ``development_enabled=False``. The migration sentinel
+        # (``None`` policy) resolves fail-open per the contract on
+        # :func:`core.contracts.development_mode.is_learning_unblocked`,
+        # which keeps offline tests that build a bare IntelligenceEngine
+        # working unchanged.
+        self.intelligence.set_learning_gate(
+            LearningGate(policy_supplier=lambda: self.development_mode_policy)
+        )
+
+    def _build_event_buffers(self) -> None:
+        """P1.2 — ``_State.__init__`` section: event_buffers."""
+
+        self.events: deque[dict[str, Any]] = deque(maxlen=500)
+        self.event_seq: int = 0
+        # P1.3 — the SSE bridge (the only asyncio background coroutine
+        # in the harness) lives on a dedicated manager. The supplier is
+        # a closure returning ``self`` so every per-connection generator
+        # picks up the *current* lock / events deque rather than a
+        # snapshot taken at construction time. INV-15 byte-identical
+        # replay is preserved by construction: the manager has no
+        # per-instance state of its own.
+        self.background_tasks = HarnessBackgroundTaskManager(state_supplier=lambda: self)
+
+    def _build_dashboard_widgets(self) -> None:
+        """P1.2 — ``_State.__init__`` section: dashboard_widgets."""
+
+        # Phase 6 dashboard widgets (DASH-1).
+        self.strategy_fsm = StrategyStateMachine()
+        # AUDIT-P0.2 — when the harness has a SQLite-backed authority
+        # ledger (the production default; ephemeral only under the
+        # explicit test-mode opt-in), the offline ``LedgerReader``
+        # opens the same file in read-only mode so dashboard widgets
+        # and offline engines can replay governance rows by ``seq``.
+        # Without ``ledger_path`` (ephemeral mode) the reader keeps
+        # its in-memory event buffer and ``authority_entries()``
+        # degrades to an empty tuple.
+        self.ledger_reader = LedgerReader(db_path=self._ledger_path)
+        self.dashboard_router = ControlPlaneRouter(
+            bridge=self.governance.operator,
+        )
+        self.mode_widget = ModeControlBar(
+            state_transitions=self.governance.state_transitions,
+            router=self.dashboard_router,
+            projection=self.state_projection,
+        )
+        self.engines_widget = EngineStatusGrid(
+            engines=self.all_engines(),
+            projection=self.state_projection,
+        )
+        self.strategies_widget = StrategyLifecyclePanel(fsm=self.strategy_fsm)
+        self.decisions_widget = DecisionTracePanel(ledger=self.ledger_reader)
+        self.memecoin_widget = MemecoinControlPanel(
+            router=self.dashboard_router,
+        )
+
+    def _build_cognitive_chat(self) -> None:
+        """P1.2 — ``_State.__init__`` section: cognitive_chat."""
+
+        # Wave-03 PR-4 — cognitive chat runtime.
+        # Wave-03 PR-6 — the production process now wires the
+        # registry-driven HTTP dispatch transport (OpenAI / xAI /
+        # DeepSeek via the OpenAI-compat shape, Google Gemini via
+        # generateContent, and Cognition / Devin via the session
+        # API). Each backend reads its API key from ``os.environ``
+        # on every turn, so adding a key via ``/credentials`` after
+        # the runtime starts takes effect without a restart. A row
+        # whose key is missing fails with
+        # :class:`TransientProviderError`, which the chat model
+        # translates into a clean fall-through to the next eligible
+        # provider — matching the previous ``NotConfiguredTransport``
+        # contract for un-credentialed deployments. Tests inject
+        # fake transports via :func:`set_chat_runtime`.
+        # Plugin-manager toggle state — holds in-process overrides
+        # for env-gated plugins (cognitive chat today; future:
+        # learning-engine, evolution-engine). Constructed before
+        # the chat runtime so we can hand its custom getter into
+        # ``CognitiveChatFeatureFlag``: the override wins when set,
+        # otherwise the env var is consulted (which itself defaults
+        # ON after the cognitive_chat_graph default-on flip).
+        # All plugins auto-enabled on boot (single operator, no gates).
+        self.plugin_toggle_state = PluginToggleState(cognitive_chat=True)
+
+        def _cognitive_chat_flag_getter(name: str, default: str) -> str:
+            if name != COGNITIVE_CHAT_FEATURE_FLAG_ENV_VAR:
+                return os.getenv(name, default)
+            override = self.plugin_toggle_state.cognitive_chat
+            if override is True:
+                return "1"
+            if override is False:
+                return "0"
+            return os.getenv(name, default)
+
+        self.chat_runtime: CognitiveChatRuntime = build_cognitive_chat_runtime(
+            registry=self.source_registry,
+            ledger_writer=self.governance.ledger,
+            transport=build_default_dispatch_transport(),
+            feature_flag=CognitiveChatFeatureFlag(getter=_cognitive_chat_flag_getter),
+        )
+
+    def _build_plugin_registry(self) -> None:
+        """P1.2 — ``_State.__init__`` section: plugin_registry."""
+
+        # Plugin manager registry — references the live plugin
+        # objects so a lifecycle mutation through the dashboard is
+        # observed immediately by the engines on the next tick.
+        self.plugin_registry = PluginRegistry(
+            microstructure_plugins=tuple(self.intelligence.microstructure_plugins),
+            toggle_state=self.plugin_toggle_state,
+            cognitive_chat_env_enabled=lambda: CognitiveChatFeatureFlag().enabled,
+            sensor_array=self.sensor_array,
+            adapter_registry=default_adapter_registry(),
+            # ``feed_runners`` is bound after the runners are
+            # constructed below — left empty here and patched in
+            # at the end of __init__ so the registry surfaces all
+            # four feed entries on the Plugins page.
+        )
+
+    def _build_approval_edge(self) -> None:
+        """P1.2 — ``_State.__init__`` section: approval_edge."""
+
+        # Wave-03 PR-5 — operator-approval edge. Binds the chat
+        # runtime's queue to the live intelligence → execution chain
+        # and the audit ledger. Held here (not on the chat runtime
+        # itself) so the cognitive package stays B1-clean: it never
+        # touches IntelligenceEngine / ExecutionEngine / the ledger
+        # writer directly. Constructed eagerly so the routes can
+        # delegate without lazy-init guards.
+        self.approval_edge = ApprovalEdge(
+            queue=self.chat_runtime.approval_queue,
+            signal_emitter=self._emit_cognitive_signal_locked,
+            ledger_append=self._approval_ledger_append,
+            ts_ns=self.next_ts,
+        )
+
+    def _build_live_feeds(self) -> None:
+        """P1.2 — ``_State.__init__`` section: live_feeds."""
+
+        # Live data feeds (SCVS-registered sources). All feeds auto-start
+        # on boot so plugins are active once connected. The operator can
+        # still DISABLE individual feeds from the dashboard Plugins page.
+        # Sprint-1 / Class-B — ``wall_ns`` is the canonical TimeAuthority
+        # hot-path API (``system/time_source.py``); replaces the
+        # legacy ``_TS_COUNTER`` integer counter so ledger rows carry
+        # real wall-clock nanoseconds across process restarts
+        # (architectural-review P0-3 / INV-15).
+        self.binance_feed = FeedRunner(
+            sink=self._ingest_market_tick_locked,
+            clock_ns=wall_ns,
+        )
+
+        # P0-5 — close the news loop. Wave-news-fusion shipped the
+        # NewsItem -> SignalEvent projection (PR #118), the
+        # NewsShockSensor (PR #119) and the NewsFanout composer
+        # (PR #120), but no caller ran them in the live process. The
+        # runner here wraps a CoinDeskRSSPump with a NewsFanout whose
+        # signal/hazard sinks hand each emitted event back into the
+        # in-process intelligence -> execution and governance fan-outs
+        # used by the Binance pump and POST /api/signal. Auto-started
+        # on boot (all plugins active once connected).
+        # D4 — deterministic in-memory news similarity index. Every
+        # NewsItem flowing through ``NewsFanout`` is appended here so
+        # downstream learners (slow-loop) and the OpenNews MCP server
+        # share one source of truth. Bounded; no clocks; no PRNG.
+        self.news_index = NewsKnowledgeIndex()
+        self.opennews_server = OpenNewsServer(self.news_index)
+        self.coindesk_feed = CoinDeskRSSFeedRunner(
+            signal_sink=self._ingest_news_signal_locked,
+            hazard_sink=self._ingest_news_hazard_locked,
+            index_sink=self.news_index.add,
+            clock_ns=wall_ns,
+        )
+
+        # D2 — Pump.fun launches + Raydium pool snapshots. Auto-started
+        # on boot (all plugins active once connected). The sinks
+        # publish into bounded ring buffers exposed by
+        # ``GET /api/feeds/{pumpfun,raydium}/recent``; downstream
+        # memecoin-tier consumers (LaunchFirehose, BundleDetector,
+        # PoolSnapshotPanel, etc.) read from the same buffers.
+        self.recent_launches: deque[dict[str, Any]] = deque(maxlen=200)
+        self.recent_pool_snapshots: deque[dict[str, Any]] = deque(maxlen=500)
+        self.pumpfun_feed = PumpFunFeedRunner(
+            sink=self._ingest_pumpfun_launch_locked,
+            clock_ns=wall_ns,
+        )
+        self.raydium_feed = RaydiumPoolFeedRunner(
+            sink=self._ingest_raydium_snapshot_locked,
+            clock_ns=wall_ns,
+        )
+
+        # Bind the live feed runners onto the plugin registry so the
+        # dashboard Plugins page surfaces all four feeds and the
+        # operator can ACTIVE/DISABLED them from one place. Mutates
+        # the dataclass field directly because the registry was
+        # constructed before the runners existed.
+        self.plugin_registry.feed_runners = {
+            "binance_public_ws": self.binance_feed,
+            "coindesk_rss": self.coindesk_feed,
+            "pumpfun_ws": self.pumpfun_feed,
+            "raydium_pools": self.raydium_feed,
+        }
+
+        # AUTO-START: all plugins are active by default once connected.
+        # The operator can still DISABLE individual feeds from the
+        # dashboard Plugins page; but on boot every feed starts
+        # automatically so no manual POST /api/feeds/*/start is needed.
+        for runner in self.plugin_registry.feed_runners.values():
+            try:
+                runner.start()
+            except Exception:
+                pass  # best-effort — feed may fail if network is unavailable
+
+    def _build_learning_evolution_loops(self) -> None:
+        """P1.2 — ``_State.__init__`` section: learning_evolution_loops."""
+
+        # P0-A — activate learning/evolution loops under live HARDEN-04
+        # freeze policy. The loop pair is the single freeze-enforcement
+        # point for the closed learning chain (FeedbackCollector →
+        # SlowLoopLearner → UpdateEmitter) and the structural chain
+        # (MutationProposer → PatchPipelineOrchestrator). The live
+        # :class:`LearningEvolutionFreezePolicy` is constructed from
+        # the current ``SystemMode`` + ``learning_override_enabled``
+        # on every tick by ``_live_freeze_policy``; HARDEN-04 stays
+        # frozen by default and unfreezes *only* when both inputs are
+        # in their "go" state (``LIVE`` + override flag set). The
+        # inner ``SlowLoopLearner`` / ``UpdateEmitter`` / ``MutationProposer``
+        # are constructed with ``freeze=None`` because the loop is
+        # the single gate (pinned by both loops' constructor invariants
+        # and the AST tests under ``tests/test_*_loop.py``).
+        self.slow_loop_learner = SlowLoopLearner(
+            bounds={
+                "learning_rate": ParameterBounds(lo=0.0001, hi=1.0, step=0.01, initial=0.05),
+            },
+            freeze_policy=None,
+        )
+        self.update_emitter = UpdateEmitter(freeze=None)
+        # PR-Z2 — wire concrete builders. ``make_pnl_sample_builder``
+        # maps drained :class:`TradeOutcome` rows into
+        # :class:`FeedbackSample` rows (one per tracked parameter,
+        # reward = trade pnl). ``make_diff_update_builder`` diffs the
+        # previous + current :class:`ParameterSnapshot` and emits one
+        # :class:`LearningUpdate` per changed parameter value. Both
+        # live under ``learning_engine.loops.builders`` so B27 /
+        # HARDEN-06 / INV-71 authority symmetry is preserved (only
+        # ``learning_engine.*`` may construct ``LearningUpdate``).
+        # The parameter tuple is sourced from the bounded
+        # :class:`SlowLoopLearner` so the builders auto-sync with any
+        # future bounds-set extension.
+        self._closed_loop_sample_builder = make_pnl_sample_builder(
+            tuple(self.slow_loop_learner.parameters),
+            FeedbackSample,
+        )
+        self._closed_loop_update_builder = make_diff_update_builder()
+        self.closed_learning_loop = ClosedLearningLoop(
+            feedback_collector=self.feedback_collector,
+            learner=self.slow_loop_learner,
+            emitter=self.update_emitter,
+            policy_supplier=self._live_freeze_policy,
+            sample_builder=self._closed_loop_sample_builder,
+            update_builder=self._closed_loop_update_builder,
+        )
+        # PR-Z2 — rolling per-strategy outcome aggregator. Observed
+        # from drained outcomes between the closed + structural tick
+        # calls (see :func:`admin_learning_tick` and the
+        # ``/api/tick`` production hot path). ``all_snapshots`` is
+        # the live source backing :meth:`_structural_stats_supplier`
+        # so the structural-evolution loop emits proposals when
+        # rolling stats breach the bounded thresholds.
+        self.patch_outcome_feedback = PatchOutcomeFeedback()
+        self.mutation_proposer = MutationProposer(freeze=None)
+        self.patch_pipeline = PatchPipeline()
+        self.patch_approval_bridge = PatchApprovalBridge(pipeline=self.patch_pipeline)
+        self.patch_pipeline_orchestrator = PatchPipelineOrchestrator(
+            bridge=self.patch_approval_bridge,
+        )
+        self.structural_evolution_loop = StructuralEvolutionLoop(
+            proposer=self.mutation_proposer,
+            orchestrator=self.patch_pipeline_orchestrator,
+            policy_supplier=self._live_freeze_policy,
+            stats_supplier=self._structural_stats_supplier,
+            evidence_builder=self._structural_evidence_builder,
+        )
+
+    def _live_freeze_policy(self) -> LearningEvolutionFreezePolicy:
+        """Snapshot the live HARDEN-04 freeze policy.
+
+        Constructed from the current :class:`SystemMode`, the
+        operator ``learning_override_enabled`` flag, and the
+        ``development_enabled`` flag on every call. Held under
+        ``STATE.lock`` so the snapshot is consistent with any
+        concurrent ``POST /api/operator/learning-override``,
+        ``POST /api/operator/development-mode``, or mode transition.
+        The policy is the **only** source of truth for whether the
+        closed learning loop and the structural evolution loop may
+        invoke their inner components (INV-70 / HARDEN-04).
+
+        PR-DEV-C unifies the Dyon-side freeze with the Operator
+        Master Development Mode (PR-DEV-A). The effective override
+        is ``learning_override_enabled AND development_enabled`` so a
+        single operator flip via
+        ``POST /api/operator/development-mode {enabled: false}``
+        pauses **both** the Indira signal-emission surface (via
+        :class:`~intelligence_engine.learning_gate.LearningGate`,
+        PR-DEV-B) **and** the Dyon adaptive-mutation surface (via
+        :class:`LearningEvolutionFreezePolicy`). The existing
+        ``POST /api/operator/learning-override`` route remains the
+        Dyon-only switch (operator may pause Dyon while leaving
+        Indira running). The migration sentinel
+        (``development_mode_policy is None``) resolves fail-open so
+        offline tests that build a bare ``_State`` retain their
+        previous unconditional-unfreeze behaviour when
+        ``learning_override_enabled=True``.
+        """
+
+        with self.lock:
+            learning_enabled = self.learning_override_enabled
+            development_enabled = (
+                self.development_mode_policy.development_enabled
+                if self.development_mode_policy is not None
+                else True
+            )
+            mode = self.governance.state_transitions.current_mode()
+        effective_override = learning_enabled and development_enabled
+        return LearningEvolutionFreezePolicy(mode=mode, operator_override=effective_override)
+
+    def _learning_loop_is_active(self) -> bool:
+        """Phase-6 P1-3 — ``True`` iff the live freeze policy is unfrozen.
+
+        Closure handed to :class:`LearningEngine` so its
+        ``check_self()`` returns :data:`HealthState.OK` only when the
+        wired :class:`ClosedLearningLoop` would actually tick under
+        the current HARDEN-04 freeze state, and
+        :data:`HealthState.DEGRADED` otherwise. Routed through the
+        same :meth:`_live_freeze_policy` snapshot as the loop tick so
+        ``/api/health`` cannot disagree with the loop's own gate.
+        """
+
+        return self._live_freeze_policy().is_unfrozen()
+
+    def _evolution_loop_is_active(self) -> bool:
+        """Phase-6 P1-3 — ``True`` iff the live freeze policy is unfrozen.
+
+        Closure handed to :class:`EvolutionEngine` so its
+        ``check_self()`` returns :data:`HealthState.OK` only when the
+        wired :class:`StructuralEvolutionLoop` would actually tick
+        under the current HARDEN-04 freeze state, and
+        :data:`HealthState.DEGRADED` otherwise.
+        """
+
+        return self._live_freeze_policy().is_unfrozen()
+
+    def _structural_stats_supplier(self) -> tuple[StrategyStats, ...]:
+        """Drain the live structural-evolution stats source.
+
+        PR-Z2 wires this to :class:`PatchOutcomeFeedback`, the
+        rolling per-strategy aggregator fed from drained
+        :class:`TradeOutcome` rows on every closed-loop tick. The
+        snapshot is keyed by ``ts_ns = wall_ns()`` so the structural
+        loop sees the most-recent stats for every strategy that
+        has produced an outcome since boot. Empty when no outcomes
+        have been observed yet (preserves the original no-op
+        behavior on a cold runtime).
+        """
+
+        ts_ns = wall_ns()
+        snapshots = self.patch_outcome_feedback.all_snapshots(ts_ns=ts_ns)
+        return tuple(snapshots.values())
+
+    def _structural_evidence_builder(self, proposal: PatchProposal) -> StageEvidence:
+        """Build :class:`StageEvidence` for one proposal-driven run.
+
+        Used only when the structural stats supplier yields proposals
+        (currently never — see :meth:`_structural_stats_supplier`).
+        Returns a conservative clean-gate evidence so a future stats
+        wiring can drive end-to-end APPROVED runs immediately; tests
+        cover the unfrozen path explicitly by overriding both the
+        supplier and the builder, so this default is never exercised
+        in CI today.
+        """
+
+        return StageEvidence(
+            sandbox_touchpoints=proposal.touchpoints,
+            static_findings=(),
+            backtest_summary=BacktestSummary(
+                samples=200,
+                pnl_mean=0.0,
+                pnl_stddev=1.0,
+                max_drawdown=0.0,
+            ),
+            shadow_samples=200,
+            shadow_matches=200,
+            canary_orders=100,
+            canary_rejects=0,
+            canary_realised_pnl=0.0,
+        )
+
+    def build_runtime_context_now(
+        self,
+        *,
+        elapsed_ns: int = 0,
+        drift_deviation: float = 0.0,
+        perf_pressure: float | None = None,
+        vol_spike_z: float = 0.0,
+        runtime_monitor: RuntimeMonitorView | None = None,
+    ) -> RuntimeContext:
+        """Build a :class:`RuntimeContext` from the current authority surfaces.
+
+        AUDIT-WIRE.5 helper. Wraps the bound
+        :func:`build_runtime_context` callable with the harness-side
+        defaults (current ``execution.risk_baseline`` snapshot, a
+        zeroed :class:`RuntimeMonitorView` until a runtime monitor is
+        wired into the harness, and the configured
+        ``runtime_latency_budget_ns``). Callers may override any
+        keyword to supply real per-tick scalars; the per-sensor
+        pipeline that produces those scalars is a follow-up wave.
+        """
+
+        view = runtime_monitor or RuntimeMonitorView(
+            fail_rate=0.0,
+            reject_rate=0.0,
+            p99_latency_ns=0,
+        )
+        return self.runtime_context_builder(
+            risk_snapshot=self.risk_baseline,
+            runtime_monitor=view,
+            drift_deviation=drift_deviation,
+            perf_pressure=perf_pressure,
+            vol_spike_z=vol_spike_z,
+            elapsed_ns=elapsed_ns,
+            latency_budget_ns=self.runtime_latency_budget_ns,
+        )
+
+    def all_engines(self) -> dict[str, Any]:
+        return {
+            "intelligence": self.intelligence,
+            "execution": self.execution,
+            "system": self.system,
+            "governance": self.governance,
+            "learning": self.learning,
+            "evolution": self.evolution,
+        }
+
+    def _boot_system_kernel(self) -> None:
+        """Register all six engines with the SystemKernel and boot it.
+
+        Called by HarnessBootManager after all ``_build_*`` sections
+        have completed. The kernel becomes the single canonical state
+        authority — engines are wrapped via :class:`EngineServiceAdapter`
+        so their existing ``check_self() → HealthStatus`` contract
+        maps to ``check_health() → ServiceHealth``.
+
+        After boot the kernel syncs with the governance FSM:
+        - initial mode from ``state_transitions.current_mode()``
+        - initial freeze from the live freeze policy
+        """
+        for _name, engine in self.all_engines().items():
+            self.system_kernel.register_service(EngineServiceAdapter(engine))
+
+        # Wire system_monitor + mind plugins into kernel (Step 10 follow-up)
+        try:
+            from runtime.service_wiring import register_all_services
+
+            register_all_services(self.system_kernel)
+        except Exception as exc:
+            _logger.warning("[BOOT] service_wiring: %s", exc)
+
+        self.system_kernel.boot()
+
+        # Sync initial mode from governance FSM → kernel
+        current_mode = self.governance.state_transitions.current_mode()
+        self.system_kernel.transition_mode(current_mode, reason="boot_sync")
+
+        # Sync initial freeze state
+        freeze = self._live_freeze_policy().is_unfrozen()
+        self.system_kernel.set_freeze(not freeze, reason="boot_sync")
+
+        _logger.info(
+            "[BOOT] SystemKernel booted: phase=%s, mode=%s, services=%d",
+            self.system_kernel.snapshot.phase.value,
+            self.system_kernel.snapshot.mode.value,
+            len(self.system_kernel.snapshot.services),
+        )
+
+    @property
+    def mode(self) -> ModeControlBar:
+        return self.mode_widget
+
+    @property
+    def engines(self) -> EngineStatusGrid:
+        return self.engines_widget
+
+    @property
+    def strategies(self) -> StrategyLifecyclePanel:
+        return self.strategies_widget
+
+    @property
+    def decisions(self) -> DecisionTracePanel:
+        return self.decisions_widget
+
+    @property
+    def memecoin(self) -> MemecoinControlPanel:
+        return self.memecoin_widget
+
+    def next_ts(self) -> int:
+        return wall_ns()
+
+    def current_ts(self) -> int:
+        """Read the monotonic counter WITHOUT incrementing it.
+
+        Read-only diagnostic surfaces (e.g. governance JSON GETs) need a
+        ``now_ns`` value to compute gaps without consuming a sequence
+        number. ``next_ts()`` is reserved for write paths that emit a
+        sequenced event into the ledger.
+        """
+        return wall_ns()
+
+    def record(self, source: str, event: Event) -> None:
+        self.event_seq += 1
+        self.events.appendleft(
+            {
+                "seq": self.event_seq,
+                "source": source,
+                **_event_to_dict(event),
+            }
+        )
+        # Feed the ledger reader so DASH-1 ``/api/dashboard/decisions``
+        # has a live trace. The Phase E0 reader stub uses
+        # ``_seed_for_tests`` as its only ingestion API; that is fine
+        # for the in-process harness.
+        self.ledger_reader._seed_for_tests((event,))
+        # AUDIT-P2.3 — route SIGNAL/EXECUTION events through Governance
+        # so the authority ledger gains a SIGNAL_AUDIT / EXECUTION_AUDIT
+        # row for every harness-emitted decision. ``governance.process``
+        # is a no-op for these kinds beyond the ledger append (it
+        # returns ``()``), so this does not loop and does not produce
+        # downstream bus events. Hazards still reach Governance via
+        # ``_emit_hazard_locked`` (the canonical hazard fan-in path);
+        # we deliberately do not double-route them here. Any exception
+        # is swallowed so a misclassified event cannot poison the
+        # in-memory event ring.
+        if event.kind in (EventKind.SIGNAL, EventKind.EXECUTION):
+            try:
+                self.governance.process(event)
+            except Exception:  # pragma: no cover - defensive guard
+                # A misclassified event must not poison the in-memory
+                # event ring or propagate up to the FastAPI handler;
+                # the missing audit row is the only observable effect.
+                pass
+        # AUDIT-P2.2 — forward every non-HAZARD bus event into
+        # ``SystemEngine.process`` so the pollable hazard sensors
+        # bound in WIRE.4 actually fire on the harness hot path. Any
+        # ``HazardEvent`` they return is fanned through the same
+        # canonical ingestion seam ``_ingest_news_hazard_locked``
+        # uses: ``execution.on_hazard`` so the throttle observer
+        # ring sees the hazard, then ``governance.process`` so the
+        # authority ledger gains a HAZARD audit row and any mode
+        # downgrade actually fires. We intentionally skip
+        # ``EventKind.HAZARD`` to keep the loop bounded — sensors
+        # do not chain off other hazards, and re-polling on a
+        # hazard event would arm the same condition twice.
+        if event.kind != EventKind.HAZARD:
+            try:
+                emitted = self.system.process(event)
+            except Exception:  # pragma: no cover - defensive guard
+                emitted = ()
+            for hazard in emitted:
+                self.record("system", hazard)
+                try:
+                    self.execution.on_hazard(hazard)
+                except Exception:  # pragma: no cover - defensive guard
+                    pass
+                try:
+                    for downstream in self.governance.process(hazard):
+                        self.record("governance", downstream)
+                except Exception:  # pragma: no cover - defensive guard
+                    pass
+
+    def _ingest_market_tick_locked(self, tick: MarketTick) -> None:
+        """Sink callable used by ``ui/feeds/runner.FeedRunner``.
+
+        Acquires :attr:`lock` and runs the same Intelligence -> Execution
+        fan-out as ``POST /api/tick`` so a tick from the Binance public
+        WS pump is byte-identical (per ``_event_to_dict_tick``) to a
+        manually-posted one. Called from the pump's asyncio thread, so
+        the lock is mandatory.
+        """
+
+        with self.lock:
+            self.execution.on_market(tick)
+            self.event_seq += 1
+            self.events.appendleft(
+                {
+                    "seq": self.event_seq,
+                    "source": "feed.binance",
+                    "kind": "MARKET_TICK",
+                    "ts_ns": tick.ts_ns,
+                    "symbol": tick.symbol,
+                    "bid": tick.bid,
+                    "ask": tick.ask,
+                    "last": tick.last,
+                    "venue": tick.venue,
+                }
+            )
+            for sig in self.intelligence.on_market(tick):
+                self.record("intelligence", sig)
+                intent = approve_signal_for_execution(
+                    sig,
+                    ts_ns=wall_ns(),
+                    signer=self.decision_signer,
+                    registry=self.signal_trust_registry,
+                    promotion_store=self.signal_trust_promotions,
+                )
+                for downstream in self.execution.execute(intent):
+                    self.record("execution", downstream)
+
+    def _emit_cognitive_signal_locked(self, sig: SignalEvent) -> None:
+        """``ApprovalEdge`` signal-emitter binding.
+
+        Wave-03 PR-5 — the approval edge is the *only* path that
+        constructs a ``SignalEvent`` carrying
+        ``produced_by_engine="intelligence_engine.cognitive"``
+        (B26 lint pins this). On approve, the edge calls back here
+        with a fully-stamped event; the harness threads it through
+        the same intelligence → execution fan-out as ``/api/signal``
+        so the resulting trade flows through HARDEN-02's execute
+        chokepoint and HARDEN-03's receiver provenance assertion.
+        Holds :attr:`lock` for the duration so the ledger ring and
+        execution state stay consistent with concurrent ticks.
+        """
+
+        with self.lock:
+            self.record("cognitive_chat", sig)
+            for ev in self.intelligence.process(sig):
+                self.record("intelligence", ev)
+                intent = approve_signal_for_execution(
+                    ev,
+                    ts_ns=wall_ns(),
+                    signer=self.decision_signer,
+                    registry=self.signal_trust_registry,
+                    promotion_store=self.signal_trust_promotions,
+                )
+                for downstream in self.execution.execute(intent):
+                    self.record("execution", downstream)
+
+    def _ingest_news_signal_locked(self, sig: SignalEvent) -> None:
+        """``NewsFanout`` signal-sink binding.
+
+        P0-5 — runs the same intelligence -> execution fan-out the
+        Binance pump uses (``_ingest_market_tick_locked``) and the
+        cognitive approval edge uses (``_emit_cognitive_signal_locked``)
+        so a news-projected ``SignalEvent`` flows through HARDEN-02's
+        execute chokepoint without bypassing AuthorityGuard. Holds
+        :attr:`lock` for the duration so the ledger ring and execution
+        state stay consistent with concurrent ticks. Called from the
+        runner's asyncio thread, so the lock is mandatory.
+        """
+        with self.lock:
+            self.record("news.coindesk", sig)
+            for ev in self.intelligence.process(sig):
+                self.record("intelligence", ev)
+                intent = approve_signal_for_execution(
+                    ev,
+                    ts_ns=wall_ns(),
+                    signer=self.decision_signer,
+                    registry=self.signal_trust_registry,
+                    promotion_store=self.signal_trust_promotions,
+                )
+                for downstream in self.execution.execute(intent):
+                    self.record("execution", downstream)
+
+    def _ingest_news_hazard_locked(self, hazard: HazardEvent) -> None:
+        """``NewsFanout`` hazard-sink binding.
+
+        P0-5 — feeds the news-shock hazard event into the live
+        ``GovernanceEngine`` so the throttle / mode-FSM machinery
+        registered by the wave-news-fusion shock sensor (HAZ-NEWS-SHOCK)
+        actually fires in production. Mirrors the
+        ``_ingest_news_signal_locked`` lock discipline; called from the
+        runner's asyncio thread.
+        """
+        with self.lock:
+            self.record("hazard.news", hazard)
+            # AUDIT-WIRE.1 — every hazard the harness sees must reach
+            # the execution-engine throttle adapter, not just the
+            # governance FSM. Without this branch the ``apply_throttle``
+            # chain stayed dark for hazards that never crossed the
+            # mode-FSM CRITICAL/HIGH gate (e.g. WARN-tier news shocks).
+            self.execution.on_hazard(hazard)
+            for downstream in self.governance.process(hazard):
+                self.record("governance", downstream)
+
+    def _ingest_pumpfun_launch_locked(self, ev: Any) -> None:
+        """``PumpFunFeedRunner`` sink — D2.
+
+        Pushes one row per :class:`LaunchEvent` into the
+        ``recent_launches`` ring (bounded by ``maxlen=200``). Called
+        from the runner's asyncio thread, so we acquire the harness
+        lock to keep writes serialized with the event dict reads on
+        the FastAPI sync handlers.
+        """
+
+        with self.lock:
+            self.recent_launches.appendleft(
+                {
+                    "ts_ns": int(ev.ts_ns),
+                    "venue": str(ev.venue),
+                    "chain": str(ev.chain),
+                    "mint": str(ev.mint),
+                    "symbol": str(ev.symbol),
+                    "name": str(ev.name),
+                    "creator": str(ev.creator),
+                    "market_cap_usd": float(ev.market_cap_usd),
+                    "liquidity_usd": float(ev.liquidity_usd),
+                }
+            )
+
+    def _ingest_raydium_snapshot_locked(self, snap: Any) -> None:
+        """``RaydiumPoolFeedRunner`` sink — D2.
+
+        Pushes one row per :class:`PoolSnapshot` into the
+        ``recent_pool_snapshots`` ring (bounded by ``maxlen=500``).
+        Called from the runner's asyncio thread.
+        """
+
+        with self.lock:
+            self.recent_pool_snapshots.appendleft(
+                {
+                    "ts_ns": int(snap.ts_ns),
+                    "venue": str(snap.venue),
+                    "chain": str(snap.chain),
+                    "pool_id": str(snap.pool_id),
+                    "base_mint": str(snap.base_mint),
+                    "quote_mint": str(snap.quote_mint),
+                    "base_symbol": str(snap.base_symbol),
+                    "quote_symbol": str(snap.quote_symbol),
+                    "price": float(snap.price),
+                    "liquidity_usd": float(snap.liquidity_usd),
+                    "volume_24h_usd": float(snap.volume_24h_usd),
+                }
+            )
+
+    def _approval_ledger_append(self, kind: str, payload: Mapping[str, str]) -> None:
+        """``ApprovalEdge`` ledger-append binding.
+
+        Mirrors :func:`build_ledger_append` from the chat runtime
+        (which already wraps ``LedgerAuthorityWriter``); kept here
+        so the approval edge does not have to import the chat
+        runtime's helper. Stamps ``ts_ns`` from the harness time
+        source for replay determinism (INV-15)."""
+
+        self.governance.ledger.append(
+            ts_ns=wall_ns(),
+            kind=kind,
+            payload=dict(payload),
+        )
+
+
+STATE = _State()
+
+
+# ---------------------------------------------------------------------------
+# P2 — SCVS-01/02 boot-time closure check.
+#
+# Previously enforced only at CI time (tools/scvs_lint.py). Running the same
+# pure ``validate_scvs()`` function here at boot surfaces any bidirectional-
+# closure drift in operator logs without blocking startup — a violation in
+# development or a newly-added source that hasn't got a consumes.yaml yet
+# becomes visible immediately on first uvicorn run rather than only in CI.
+#
+# Violations are logged as WARNING (not CRITICAL / RuntimeError) because:
+#   * ``enabled: false`` sources are exempt by design (pre-registered
+#     placeholders for adapters not yet wired).
+#   * A stale consumes.yaml entry is caught by SCVS-02 and surfaced here,
+#     but it is not a safety-critical runtime failure — the adapter simply
+#     won't use the missing source.
+# The CRITICAL / boot-halt version lives in CI (tools/scvs_lint.py).
+# ---------------------------------------------------------------------------
+def _run_scvs_boot_check() -> None:
+    """Run SCVS-01/02 lint at boot; log violations as warnings."""
+    try:
+        from system_engine.scvs.consumption_tracker import (
+            discover_consumption_declarations,
+        )
+        from system_engine.scvs.lint import validate_scvs
+
+        declarations = discover_consumption_declarations([REPO_ROOT])
+        violations = validate_scvs(STATE.source_registry, declarations)
+        if violations:
+            _logger.warning(
+                "[SCVS-BOOT] %d closure violation(s) — "
+                "run tools/scvs_lint.py for the full report:",
+                len(violations),
+            )
+            for v in violations:
+                _logger.warning("[SCVS-BOOT]  %s: %s", v.rule, v.detail)
+        else:
+            _logger.info("[SCVS-BOOT] bidirectional closure check passed (%d declarations)", len(declarations))
+    except Exception as exc:  # pragma: no cover — best-effort; never blocks boot
+        _logger.warning("[SCVS-BOOT] check skipped: %s", exc)
+
+
+_run_scvs_boot_check()
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _event_to_dict(event: Event) -> dict[str, Any]:
+    if not is_dataclass(event):
+        raise TypeError(f"non-dataclass event: {type(event)}")
+    raw = asdict(event)
+    # Enums are JSON-serialisable as their str value (StrEnum).
+    return json.loads(json.dumps(raw, default=str))
+
+
+def _read_yaml(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    with path.open("r", encoding="utf-8") as fh:
+        return yaml.safe_load(fh) or {}
+
+
+# ---------------------------------------------------------------------------
+# Pydantic request models
+# ---------------------------------------------------------------------------
+
+
+class DevelopmentModeRequest(BaseModel):
+    """Body for ``POST /api/operator/development-mode`` (PR-DEV-A).
+
+    The operator-toggled flag that determines whether Indira and Dyon
+    run at full potential (trader discovery, profiling, modeling,
+    heavy learning, structural evolution, slow-loop critique, patch
+    pipeline). Defaults to ``True`` at boot via
+    ``DIXVISION_DEVELOPMENT_MODE``; flipping to ``False`` pauses the
+    learning + research surface while leaving every safety gate in
+    place. Independent of :class:`TradingAllowedRequest` — the two
+    flags compose into one :class:`DevelopmentModePolicy`.
+    """
+
+    enabled: bool = Field(
+        ...,
+        description=(
+            "Target value of the development-mode flag. When True "
+            "(the boot default), Indira and Dyon are unblocked."
+        ),
+    )
+    requestor: str = Field(
+        default="dashboard",
+        min_length=1,
+        max_length=64,
+        description=(
+            "Caller identity recorded on the audit row; defaults to the dashboard origin."
+        ),
+    )
+    reason: str = Field(
+        default="",
+        max_length=256,
+        description=("Free-form rationale; included verbatim in the audit ledger payload."),
+    )
+
+
+class TradingAllowedRequest(BaseModel):
+    """Body for ``POST /api/operator/trading-allowed`` (PR-DEV-A).
+
+    The single operator-toggled switch that opens the Execution Gate.
+    Defaults to ``False`` at boot via ``DIXVISION_TRADING_ALLOWED``;
+    while False the gate emits a synthetic ``REJECTED`` ExecutionEvent
+    with ``meta.reason='development_mode_trading_blocked'`` for every
+    intent. The AuthorityGuard, hazard throttle, kill-switch,
+    mode-effect table, FSM consent envelopes, and HARDEN-04 remain in
+    force as defense-in-depth.
+    """
+
+    enabled: bool = Field(
+        ...,
+        description=(
+            "Target value of the trading-allowed flag. When True "
+            "the Execution Gate dispatches normally; when False "
+            "(the boot default) the gate refuses all dispatch."
+        ),
+    )
+    requestor: str = Field(
+        default="dashboard",
+        min_length=1,
+        max_length=64,
+        description=(
+            "Caller identity recorded on the audit row; defaults to the dashboard origin."
+        ),
+    )
+    reason: str = Field(
+        default="",
+        max_length=256,
+        description=("Free-form rationale; included verbatim in the audit ledger payload."),
+    )
+
+
+class DevelopmentModeResponse(BaseModel):
+    """Response shape for GET / POST development-mode + trading-allowed.
+
+    Carries the full :class:`DevelopmentModePolicy` projection so the
+    cockpit can render both flags + the live :class:`SystemMode` from
+    a single round-trip.
+    """
+
+    development_enabled: bool
+    trading_allowed: bool
+    mode: str
+    learning_unblocked: bool
+    trading_unblocked: bool
+    policy_version: str
+
+
+class LearningOverrideRequest(BaseModel):
+    """Body for ``POST /api/operator/learning-override`` (AUDIT-P1.7).
+
+    The operator-toggled override that, in conjunction with
+    ``mode is SystemMode.LIVE``, unfreezes the
+    :class:`LearningEvolutionFreezePolicy` so the slow learning loop
+    + evolution patch pipeline can emit mutations. Defaults to
+    ``False`` so flipping the override is always an explicit
+    operator act (B36 / HARDEN-04 invariant).
+    """
+
+    enabled: bool = Field(
+        ...,
+        description=(
+            "Target value of the operator override. Adaptive "
+            "mutations require both this flag to be True *and* "
+            "the system mode to be LIVE."
+        ),
+    )
+    requestor: str = Field(
+        default="dashboard",
+        min_length=1,
+        max_length=64,
+        description=(
+            "Caller identity recorded on the audit row; defaults to the dashboard origin."
+        ),
+    )
+    reason: str = Field(
+        default="",
+        max_length=256,
+        description=("Free-form rationale; included verbatim in the audit ledger payload."),
+    )
+
+
+class LearningOverrideResponse(BaseModel):
+    """Response shape for both GET and POST learning-override routes."""
+
+    enabled: bool
+    mode: str
+    is_freeze_active: bool
+
+
+class TickIn(BaseModel):
+    symbol: str = Field(..., min_length=1, max_length=32)
+    bid: float = Field(..., gt=0)
+    ask: float = Field(..., gt=0)
+    last: float = Field(..., gt=0)
+    volume: float = Field(0.0, ge=0)
+    venue: str = ""
+    ts_ns: int | None = None
+
+
+class SignalIn(BaseModel):
+    symbol: str = Field(..., min_length=1, max_length=32)
+    side: str = Field(..., pattern="^(BUY|SELL|HOLD)$")
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    ts_ns: int | None = None
+    qty: float | None = None
+
+
+class BacktestRunIn(BaseModel):
+    """Request envelope for ``POST /api/testing/backtest`` (AUDIT-P2.1).
+
+    Mirrors the form fields surfaced by the dashboard ``Backtester``
+    widget. The deterministic walk is read-only — it never produces an
+    :class:`ExecutionIntent`, never writes to the authority ledger,
+    never feeds the learning loop. The real
+    :class:`~core.contracts.backtest_result.BacktestResult` ingestion
+    seam (Paper-S3) remains the only path that grafts external
+    backtests into Indira's learning surface.
+    """
+
+    strategy: str = Field(..., min_length=1, max_length=64)
+    symbol: str = Field(..., min_length=1, max_length=32)
+    start_iso: str = Field(..., min_length=10, max_length=40)
+    end_iso: str = Field(..., min_length=10, max_length=40)
+    fill_model: str = Field(default="next_tick", min_length=1, max_length=32)
+    slippage_bps: float = Field(default=8.0, ge=0.0, le=10000.0)
+
+
+class TradingViewObservationIn(BaseModel):
+    """Envelope for ``POST /api/feeds/tradingview/observation`` (Wave-04 PR-2).
+
+    Schema mirrors :data:`ui.feeds.tradingview_ideas` module docstring.
+    The endpoint is the operator-controlled ingest point for trader
+    observations sourced from TradingView (webhook relay, alert push,
+    or manual paste). The parser-only adapter pattern lets *any*
+    upstream collector feed the same pipeline.
+    """
+
+    payload: dict[str, Any] = Field(..., description="Decoded TradingView envelope (parser input).")
+    ts_ns: int | None = Field(
+        default=None,
+        description=(
+            "Optional caller-supplied monotonic timestamp. Defaults to "
+            "the harness's monotonic counter (TimeAuthority surrogate)."
+        ),
+    )
+
+
+class TradingViewAlertIn(BaseModel):
+    """Envelope for ``POST /api/feeds/tradingview/alert`` (Paper-S4).
+
+    The body's ``payload`` is the raw JSON the operator's Pine-script
+    ``alert()`` / ``strategy.entry`` hook pushes to the configured
+    webhook URL. See :mod:`ui.feeds.tradingview_alert` for the
+    canonical envelope shape (``ticker``, ``side``, optional
+    ``confidence`` / ``qty`` / ``strategy`` / ``comment``).
+
+    The receiver layer never constructs a :class:`SignalEvent`
+    directly — :func:`ui.feeds.tradingview_alert.parse_tradingview_alert_payload`
+    is the only producer, which keeps the parser pure (INV-15) and
+    the route trivially auditable.
+    """
+
+    payload: dict[str, Any] = Field(
+        ..., description="Decoded Pine-script alert envelope (parser input)."
+    )
+    ts_ns: int | None = Field(
+        default=None,
+        description=(
+            "Optional caller-supplied monotonic timestamp. Defaults to "
+            "``wall_ns()`` (TimeAuthority surrogate). The Pine alert "
+            "envelope itself carries no trustworthy clock."
+        ),
+    )
+
+
+# C-2 / P2-4 / R-1 part 2 — :class:`BinanceFeedStartIn` lives in
+# :mod:`ui.feeds_routes` now (alongside the four feed-route families
+# it parameterises). It is re-exported here for any existing test
+# that imported it directly from ``ui.server``.
+
+
+# ---------------------------------------------------------------------------
+# App
+# ---------------------------------------------------------------------------
+
+
+app = FastAPI(
+    title="DIX VISION v42.2",
+    version="42.2.0",
+    docs_url="/api/docs",
+    redoc_url=None,
+)
+
+# DASH-1 — read-only widget projections for the operator dashboard.
+app.include_router(build_dashboard_router(lambda: STATE))
+
+# P1.5 — deterministic projection routes for the six PR #351 widgets
+# (RouteGraph / PoolHealth / GasEstimator / FundingTable / OracleSpread
+# / LiquidationMap). Read-only and stateless; widgets flip their per-
+# widget status chip from amber ``mock`` to emerald ``live`` once these
+# routes return 200.
+app.include_router(build_projection_router())
+
+# Plugin manager — operator-toggleable plugin lifecycles. Powers the
+# /dash2 "Plugins" page and writes a PLUGIN_LIFECYCLE row to the
+# authority ledger on every successful toggle.
+app.include_router(
+    build_plugin_router(
+        registry_provider=lambda: STATE.plugin_registry,
+        ledger_provider=lambda: STATE.governance.ledger,
+        ts_provider=lambda: STATE.next_ts(),
+    )
+)
+
+# Tier-1 governance widgets — promotion gates, drift oracle, SCVS source
+# liveness, hazard monitor. Read-only JSON projections consumed by the
+# /dash2 governance page.
+app.include_router(build_governance_router(lambda: STATE))
+
+# D1 / EXEC-ADAPTERS — operator dashboard surface for live execution
+# adapters (Hummingbot, Pump.fun, UniswapX, …). Read-only JSON.
+app.include_router(build_execution_router())
+# C-2 / P2-4 / R-1 — runtime topology authority operator surface.
+# The four PR-RT-4 endpoints (declared / active / dormant / capability)
+# live under :mod:`ui.runtime_routes`. The route module never touches
+# the engine wiring; it reads the registrar through this lambda exactly
+# like the dashboard / governance routes do.
+app.include_router(build_runtime_router(lambda: STATE))
+
+
+# C-2 / P2-4 / R-1 part 2 — live data feeds (Binance / CoinDesk /
+# Pump.fun / Raydium) operator surface. Each runner is constructed in
+# ``_State._build_live_feeds`` (the harness owns lifecycle); this router
+# is the thin HTTP projection. URL/method/JSON-shape preserved verbatim
+# from the prior inline handlers.
+app.include_router(build_feeds_router(lambda: STATE))
+
+
+# C-2 / P2-4 / R-1 part 3 — the five cognitive-chat endpoints
+# (status / turn / approvals / approve / reject) live under
+# :mod:`ui.cognitive_routes`. The route module reads ``chat_runtime``
+# and ``approval_edge`` through the same lambda-state-accessor pattern
+# the dashboard / governance / execution / runtime routers use.
+app.include_router(build_cognitive_router(lambda: STATE))
+
+
+# C-2 / P2-4 / R-1 part 4 — operator-management surface (summary /
+# action / audit / source-trust / learning-override / development-mode
+# / trading-allowed) plus the dash_meme wallet column projection. The
+# router reads ``STATE`` through the same lambda-state-accessor pattern
+# the dashboard / governance / runtime / feeds routers use. URLs /
+# methods / request bodies / response models preserved verbatim from
+# the prior inline handlers.
+app.include_router(build_operator_router(lambda: STATE))
+
+# P1 cockpit consolidation — operator surface (chat / wallets / strategies /
+# safety / pairing / autonomy / custom-strategies / scout) previously served
+# by the standalone cockpit/app.py FastAPI app.  Mounting it here makes the
+# canonical React dashboard (dashboard2026/dist at /dash2/) the single entry
+# point for every operator interaction.  The standalone cockpit/app.py is now
+# a thin shim around build_cockpit_router() kept alive for the test suite and
+# any legacy ``uvicorn cockpit:app`` deployments.
+app.include_router(build_cockpit_router())
+
+# Wave-Live PR-4 — root URL routes operators to the live SPA. PR #105
+# redirected the named legacy paths (``/operator``, ``/indira-chat`` etc.)
+# but missed ``/`` itself, so the Windows launcher (which opens
+# ``http://127.0.0.1:8080/``) was still landing on the Phase E1 stub.
+# We redirect to ``/dash2/`` when the React build artefact is present;
+# otherwise we fall back to the stub so operators are not left staring at
+# a 404 if the SPA was not built. The ``dashboard2026/dist`` location is
+# resolved here once at handler-registration time — the actual
+# ``StaticFiles`` mount happens further below.
+_DASH2_DIST = Path(__file__).resolve().parent.parent / "dashboard2026" / "dist"
+_DASH2_INDEX = _DASH2_DIST / "index.html"
+# Freeze availability at module-load time so the ``GET /`` handler's redirect
+# decision and the conditional ``StaticFiles`` mount below stay in lock-step.
+# A per-request ``_DASH2_INDEX.exists()`` check would silently diverge if a
+# developer ran ``npm run build`` after ``uvicorn --reload`` had already
+# imported the module: ``--reload`` only watches ``.py`` files, so the SPA
+# build wouldn't restart the server, the handler would 307 to ``/dash2/``,
+# and the mount that was never registered would 404. Devin Review BUG_0001
+# on PR #123 caught this.
+_DASH2_AVAILABLE: bool = _DASH2_DIST.exists() and _DASH2_INDEX.exists()
+
+if not _DASH2_AVAILABLE:
+    _logger.warning(
+        "[BOOT] dashboard2026/dist not found — /dash2/ unavailable. "
+        "Run: cd dashboard2026 && npm install && npm run build"
+    )
+
+# DIX MEME — DEXtools-styled memecoin dashboard. Same conditional-mount
+# pattern as ``/dash2/``: separate React app, separate launcher, but a
+# *viewer* on the same harness — every execution intent it submits goes
+# through the same ``/api/dashboard/action/intent`` chokepoint and the
+# same Governance FSM as ``/dash2/``. Closing the browser does not stop
+# the harness; the learning loop, sensors, and audit ledger keep
+# running independent of which (or no) dashboard is open.
+_MEME_DIST = Path(__file__).resolve().parent.parent / "dash_meme" / "dist"
+_MEME_INDEX = _MEME_DIST / "index.html"
+_MEME_AVAILABLE: bool = _MEME_DIST.exists() and _MEME_INDEX.exists()
+if not _MEME_AVAILABLE:
+    _logger.warning(
+        "[BOOT] dash_meme/dist not found — /meme/ unavailable. "
+        "Run: cd dash_meme && npm install && npm run build"
+    )
+
+
+@app.get("/", response_class=HTMLResponse)
+def index() -> Any:
+    return RedirectResponse(url="/dash2/", status_code=307)
+
+
+# Wave-Live PR-2 — legacy operator surface retired. The vanilla HTML
+# pages that lived under ``ui/static/`` (operator.html, indira_chat.html,
+# dyon_chat.html, forms_grid.html, credentials.html and their .js/.css
+# siblings) were the Dashboard-2026 wave-01 prototype. They were
+# wholesale superseded by the React/Vite SPA in ``dashboard2026/`` which
+# is mounted at ``/dash2/``. We keep the URLs alive as 307 redirects
+# so any cached link, dashboard tile, or external integrator that still
+# points at ``/operator`` etc. silently lands on the live SPA instead
+# of a 404. ``HTMLResponse`` is intentionally no longer the response
+# class — these endpoints never serve a body, only a Location header.
+_LEGACY_REDIRECTS: tuple[tuple[str, str], ...] = (
+    ("/operator", "/dash2/#/operator"),
+    ("/indira-chat", "/dash2/#/chat"),
+    ("/dyon-chat", "/dash2/#/chat"),
+    ("/forms-grid", "/dash2/#/operator"),
+    ("/credentials", "/dash2/#/credentials"),
+)
+
+
+def _make_legacy_redirect(target: str) -> Any:
+    def _handler() -> RedirectResponse:
+        return RedirectResponse(url=target, status_code=307)
+
+    return _handler
+
+
+for _legacy_path, _dash2_target in _LEGACY_REDIRECTS:
+    app.add_api_route(
+        _legacy_path,
+        _make_legacy_redirect(_dash2_target),
+        methods=["GET"],
+        response_class=RedirectResponse,
+        include_in_schema=False,
+    )
+
+
+# Legacy static dir removed (Phase E1 harness deleted). Any remaining
+# assets (images, icons) can be served from /dash2/assets/ instead.
+
+
+# Wave-02 React build artefact, served under /dash2/* if present.
+# Mount is conditional so operators without Node installed (and CI
+# jobs that don't build the SPA) still get a fully-functional vanilla
+# console at the legacy URLs. ``_DASH2_AVAILABLE`` is the same module-load
+# boolean the ``/`` handler reads — keeping them on one snapshot prevents
+# the redirect-without-mount race documented above.
+if _DASH2_AVAILABLE:
+    app.mount(
+        "/dash2",
+        StaticFiles(directory=str(_DASH2_DIST), html=True),
+        name="dash2",
+    )
+
+
+# DIX MEME — same StaticFiles pattern, mounted at ``/meme/``. Operators
+# launch it via ``start_dixvision_meme.bat`` (separate from the cockpit
+# launcher), but it talks to the *same* API surface as ``/dash2/``. The
+# mount is conditional on a built artefact under ``dash_meme/dist`` so
+# the server still boots when the app hasn't been built (e.g. CI jobs
+# that skip the npm build, or a fresh clone where Node isn't installed).
+if _MEME_AVAILABLE:
+    app.mount(
+        "/meme",
+        StaticFiles(directory=str(_MEME_DIST), html=True),
+        name="meme",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Runtime Kernel — deterministic tick loop (system heartbeat)
+# ---------------------------------------------------------------------------
+# The runtime kernel orchestrates: reconciliation, readiness checks,
+# intent lifecycle management, and fault handling in a single background
+# asyncio task. It does NOT own the engines — it coordinates them.
+from runtime.boot_integration import get_runtime_bootstrap  # noqa: E402
+
+_runtime = get_runtime_bootstrap(tick_interval_ms=100.0)
+_runtime.attach(app, STATE)
+
+
+@app.get("/api/health")
+def health() -> dict[str, Any]:
+    proj = STATE.state_projection
+    if proj.is_booted:
+        out = proj.health_summary()
+    else:
+        out = {}
+        with STATE.lock:
+            for name, eng in STATE.all_engines().items():
+                status = eng.check_self()
+                out[name] = {
+                    "name": eng.name,
+                    "tier": str(eng.tier),
+                    "state": str(status.state),
+                    "detail": status.detail,
+                    "plugin_states": {
+                        slot: {p: str(s) for p, s in d.items()}
+                        for slot, d in status.plugin_states.items()
+                    },
+                }
+    out["_runtime_kernel"] = {
+        "running": _runtime.is_running,
+        "readiness": str(_runtime.readiness) if _runtime.readiness else "not_booted",
+    }
+    return {"engines": out}
+
+
+@app.get("/api/kernel/state")
+def kernel_state() -> dict[str, Any]:
+    """SystemKernel canonical state projection.
+
+    Returns the immutable kernel snapshot: mode, phase, belief
+    (regime + market context), service health, and execution gates.
+    This is the single source of truth for all system state.
+    """
+    return STATE.state_projection.summary()
+
+
+@app.get("/api/runtime/status")
+def runtime_status() -> dict[str, Any]:
+    """Runtime kernel status and readiness report."""
+    result: dict[str, Any] = {
+        "kernel_running": _runtime.is_running,
+    }
+    if _runtime.enforcer:
+        result["governance_enforcer"] = "active"
+    if _runtime.fabric:
+        result["event_fabric"] = "active"
+    if _runtime.readiness:
+        try:
+            report = _runtime.readiness.assess()
+            result["readiness"] = {
+                "level": str(report.level),
+                "passed": report.passed_checks,
+                "total": report.total_checks,
+            }
+        except Exception:
+            result["readiness"] = "error"
+    proj = STATE.state_projection
+    if proj.is_booted:
+        result["system_kernel"] = proj.summary()
+    return result
+
+
+@app.get("/api/registry/engines")
+def registry_engines() -> dict[str, Any]:
+    return _read_yaml(REGISTRY_DIR / "engines.yaml")
+
+
+@app.get("/api/registry/plugins")
+def registry_plugins() -> dict[str, Any]:
+    return _read_yaml(REGISTRY_DIR / "plugins.yaml")
+
+
+# ---------------------------------------------------------------------------
+# Cognitive Router — registry-driven AI provider list (Dashboard-2026 wave-01)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/ai/providers")
+def ai_providers(task: str | None = None) -> dict[str, Any]:
+    """Registry-driven list of enabled AI providers.
+
+    Both Indira Chat and Dyon Chat fetch this at boot to populate
+    their provider dropdown. The list is sourced from
+    ``registry/data_source_registry.yaml`` (rows with
+    ``category: ai`` and ``enabled: true``) — provider names are
+    NEVER hard-coded in widget code (``tools/authority_lint.py`` rule
+    B23 enforces this). Adding a new AI provider is a registry-only
+    change; both widgets pick it up automatically on next boot.
+
+    The optional ``task`` query parameter filters by
+    :class:`TaskClass` value (e.g. ``indira_reasoning``,
+    ``dyon_coding``). When omitted, every enabled AI provider is
+    returned in registry order.
+    """
+
+    registry = STATE.source_registry
+    if task is None:
+        providers = enabled_ai_providers(registry)
+        task_value: str | None = None
+    else:
+        try:
+            task_class = TaskClass(task)
+        except ValueError as exc:
+            raise HTTPException(
+                400,
+                f"unknown task class {task!r}; expected one of {[t.value for t in TaskClass]}",
+            ) from exc
+        providers = select_providers(registry, task_class)
+        task_value = task_class.value
+
+    return {
+        "task": task_value,
+        "providers": [
+            {
+                "id": p.id,
+                "name": p.name,
+                "provider": p.provider,
+                "endpoint": p.endpoint,
+                "capabilities": list(p.capabilities),
+            }
+            for p in providers
+        ],
+        "task_classes": [t.value for t in TaskClass],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Credential discovery — registry-driven "what API keys do I need" matrix
+# (Dashboard-2026 wave-01.5)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/credentials/status", response_model=CredentialsStatusResponse)
+def credentials_status() -> CredentialsStatusResponse:
+    """Return the credential matrix for every ``auth: required`` row.
+
+    Each entry tells the operator (a) which env var name(s) must be
+    set for that source, (b) whether each is currently present in the
+    process environment, (c) where to sign up for a key, and (d)
+    whether a free tier exists.
+
+    Verification (does the key actually authenticate?) is *not* in
+    this endpoint — it lands separately in ``POST /api/credentials/verify``
+    so the read path stays cheap and side-effect-free.
+    """
+
+    requirements = requirements_for_registry(STATE.source_registry)
+    env = resolve_env()
+    statuses = presence_status(requirements, env)
+
+    items: list[CredentialItem] = []
+    counts = {"present": 0, "partial": 0, "missing": 0}
+    for st in statuses:
+        req = st.requirement
+        state_api = PresenceStateApi(st.state.value)
+        items.append(
+            CredentialItem(
+                source_id=req.source_id,
+                source_name=req.source_name,
+                category=req.category,
+                provider=req.provider,
+                env_vars=list(req.env_vars),
+                env_vars_present=list(st.env_vars_present),
+                missing_env_vars=list(st.missing_env_vars),
+                signup_url=req.signup_url,
+                free_tier=req.free_tier,
+                notes=req.notes,
+                state=state_api,
+            ),
+        )
+        counts[st.state.value] += 1
+
+    return CredentialsStatusResponse(
+        summary=CredentialsSummary(
+            total=len(items),
+            present=counts["present"],
+            partial=counts["partial"],
+            missing=counts["missing"],
+        ),
+        writable=not is_devin_session(),
+        items=items,
+    )
+
+
+class CredentialVerifyIn(BaseModel):
+    """Operator-initiated verification request body.
+
+    The operator picks one row from ``GET /api/credentials/status``
+    and asks the server to live-ping it. The secret value never
+    travels — only the ``source_id`` does. The server reads the env
+    var locally (same way the trading engine would), pings the
+    provider's auth-cheap endpoint, and returns a tri-state-plus
+    outcome. No retries, no caching: each click is one ping.
+    """
+
+    source_id: str = Field(..., min_length=1, max_length=128)
+
+
+@app.post("/api/credentials/verify")
+def credentials_verify(body: CredentialVerifyIn) -> dict[str, Any]:
+    """Live auth-ping for one ``auth: required`` source.
+
+    Returns ``{source_id, provider, outcome, http_status, detail}``.
+    The ``outcome`` is one of:
+    ``ok | unauthorized | rate_limited | not_found | server_error |
+    timeout | network_error | no_verifier | missing_key``. ``detail``
+    is operator-readable and **never** echoes the secret value
+    (covered by ``test_credentials_verify_does_not_leak_value``).
+
+    The endpoint is intentionally synchronous; FastAPI runs sync
+    routes in its threadpool so a slow provider does not stall the
+    event loop. Each verifier has a hard 5 s timeout.
+    """
+
+    requirements = requirements_for_registry(STATE.source_registry)
+    matching = next(
+        (r for r in requirements if r.source_id == body.source_id),
+        None,
+    )
+    if matching is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(f"unknown or non-auth-required source_id '{body.source_id}'"),
+        )
+
+    result = verify_provider(
+        matching.provider,
+        resolve_env(),
+        timeout=CREDENTIAL_VERIFY_TIMEOUT_S,
+    )
+    return {
+        "source_id": matching.source_id,
+        "provider": matching.provider,
+        "outcome": result.outcome.value,
+        "http_status": result.http_status,
+        "detail": result.detail,
+    }
+
+
+class CredentialSetIn(BaseModel):
+    """Persist one credential (PR-C, local launcher only).
+
+    The dashboard sends ``{source_id, env_var, value}``. The server
+    refuses the request when (a) the row is not in the registry,
+    (b) ``env_var`` is not declared by that row's blueprint, or
+    (c) we are running inside a Devin session — Devin secrets are
+    operator-set via the ``secrets`` tool, not via the dashboard.
+
+    The secret value is never logged and never echoed back. The
+    response only carries ``{ok, env_var, source_id}``.
+    """
+
+    source_id: str = Field(..., min_length=1, max_length=128)
+    env_var: str = Field(..., min_length=1, max_length=128)
+    value: str = Field(..., min_length=1, max_length=4096)
+
+
+@app.post("/api/credentials/set")
+def credentials_set(body: CredentialSetIn) -> dict[str, Any]:
+    """Write one credential to the local ``.env`` file.
+
+    Returns ``{ok: True, source_id, env_var}`` on success.
+    Refuses with HTTP 409 inside a Devin session, HTTP 404 for an
+    unknown ``source_id``, and HTTP 422 when ``env_var`` does not
+    belong to the row's blueprint.
+    """
+
+    requirements = requirements_for_registry(STATE.source_registry)
+    matching = next(
+        (r for r in requirements if r.source_id == body.source_id),
+        None,
+    )
+    if matching is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(f"unknown or non-auth-required source_id '{body.source_id}'"),
+        )
+    if body.env_var not in matching.env_vars:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"env_var '{body.env_var}' is not declared by "
+                f"source '{body.source_id}' (expected one of "
+                f"{list(matching.env_vars)})"
+            ),
+        )
+
+    try:
+        write_credential(body.env_var, body.value)
+    except StorageNotWritable as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from None
+    except (ValueError, TypeError) as exc:
+        # ``write_credential`` validates name/value shape; surface
+        # those as 422 without leaking the value.
+        raise HTTPException(
+            status_code=422,
+            detail=f"invalid credential payload: {type(exc).__name__}",
+        ) from None
+
+    return {
+        "ok": True,
+        "source_id": matching.source_id,
+        "env_var": body.env_var,
+    }
+
+
+#: Env var that opts the harness into the P0-A admin debug-tick route.
+#: The route drives one ``ClosedLearningLoop`` tick + one
+#: ``StructuralEvolutionLoop`` tick under the live freeze policy and
+#: returns a JSON projection of both :class:`LoopTickResult` /
+#: :class:`StructuralLoopTickResult`. Disabled by default — production
+#: deployments MUST NOT enable it (the live freeze policy is the only
+#: governance gate; an HTTP-exposed tick would be a side channel into
+#: the learning loop even though it still respects HARDEN-04).
+ADMIN_LEARNING_TICK_ENV_VAR = "DIX_LEARNING_DEBUG_TICK"
+
+
+def _admin_learning_tick_enabled() -> bool:
+    """True iff the env var opts the harness into the debug-tick route."""
+
+    return os.environ.get(ADMIN_LEARNING_TICK_ENV_VAR, "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
+def _project_loop_result(result: LoopTickResult) -> dict[str, Any]:
+    """JSON projection of a :class:`LoopTickResult`."""
+
+    return {
+        "ts_ns": result.ts_ns,
+        "frozen": result.frozen,
+        "drained_outcomes": len(result.drained_outcomes),
+        "submitted_samples": len(result.submitted_samples),
+        "emitted_events": len(result.emitted_events),
+        "policy_mode_name": result.policy_mode_name,
+        "operator_override": result.operator_override,
+    }
+
+
+def _project_structural_result(
+    result: StructuralLoopTickResult,
+) -> dict[str, Any]:
+    """JSON projection of a :class:`StructuralLoopTickResult`."""
+
+    return {
+        "ts_ns": result.ts_ns,
+        "frozen": result.frozen,
+        "drained_stats": len(result.drained_stats),
+        "proposals": len(result.proposals),
+        "runs": len(result.runs),
+        "emitted_events": len(result.emitted_events),
+        "policy_mode_name": result.policy_mode_name,
+        "operator_override": result.operator_override,
+    }
+
+
+@app.post("/api/admin/learning/tick")
+def admin_learning_tick() -> dict[str, Any]:
+    """P0-A — env-gated debug tick for both learning/evolution loops.
+
+    Only registered routing path that drives ``ClosedLearningLoop.tick``
+    / ``StructuralEvolutionLoop.tick``. The route refuses with HTTP 403
+    when ``DIX_LEARNING_DEBUG_TICK`` is unset / falsy so production
+    deployments cannot accidentally expose a tick side-channel. When
+    enabled, the route still respects HARDEN-04 — both loops snapshot
+    the live :class:`LearningEvolutionFreezePolicy` via the supplier
+    bound on :class:`_State` and short-circuit to ``frozen=True`` if
+    the mode/override pair is not in the "go" state.
+
+    The returned JSON document carries the per-loop result projections
+    so operators (or smoke tests) can verify wiring without leaking
+    typed engine objects across the HTTP boundary.
+    """
+
+    if not _admin_learning_tick_enabled():
+        raise HTTPException(
+            status_code=403,
+            detail=(f"admin learning tick disabled: set {ADMIN_LEARNING_TICK_ENV_VAR}=1 to enable"),
+        )
+    ts_ns = wall_ns()
+    closed = STATE.closed_learning_loop.tick(ts_ns=ts_ns)
+    # PR-Z2 — feed drained outcomes into the rolling aggregator
+    # *between* the closed + structural tick so the structural
+    # stats supplier observes the current tick's outcomes.
+    for outcome in closed.drained_outcomes:
+        STATE.patch_outcome_feedback.observe(outcome)
+    structural = STATE.structural_evolution_loop.tick(ts_ns=ts_ns)
+    return {
+        "ts_ns": ts_ns,
+        "closed_learning": _project_loop_result(closed),
+        "structural_evolution": _project_structural_result(structural),
+    }
+
+
+_ROUTE_REGISTRAR = HarnessRouteRegistrar()
+"""Canonical FastAPI route → domain inventory + boot-time audit
+(P1.4). See :class:`ui.harness.route_registrar.HarnessRouteRegistrar`
+for the eight domains (core / credentials / operator / admin /
+cognitive / engine / dashboard / feeds) and their expected
+``(METHOD, PATH)`` membership."""
+
+
+@app.get("/api/admin/route_inventory")
+def admin_route_inventory() -> dict[str, Any]:
+    """P1.4 — read-only live route inventory grouped by domain.
+
+    Projects :meth:`HarnessRouteRegistrar.inventory` over the
+    running ``app`` instance so an operator (or a CI smoke test)
+    can confirm every expected route is mounted and grouped under
+    its canonical domain. The same machinery powers the
+    fail-closed boot-time audit invoked at module load: if any
+    expected route goes missing, the harness refuses to boot.
+
+    The response shape is::
+
+        {
+          "domains": [
+            {"name": "core", "routes": [{"method": "GET", "path": "/"}]},
+            ...
+          ],
+          "unexpected": [{"method": "GET", "path": "/foo"}],
+          "ok": true
+        }
+
+    ``unexpected`` is the set of mounted routes that no canonical
+    domain claims; a non-empty list is a signal that
+    :mod:`ui.harness.route_registrar` needs updating after a
+    route was added (boot also raises in that case).
+    """
+
+    report = _ROUTE_REGISTRAR.audit(app)
+    domain_payload: list[dict[str, Any]] = []
+    for domain in _ROUTE_REGISTRAR.domains():
+        domain_payload.append(
+            {
+                "name": domain,
+                "routes": [
+                    {"method": method, "path": path} for method, path in report.by_domain[domain]
+                ],
+            }
+        )
+    return {
+        "domains": domain_payload,
+        "unexpected": [{"method": method, "path": path} for method, path in report.unexpected],
+        "ok": report.ok,
+    }
+
+
+# C-2 / P2-4 / R-1 part 3 — the five cognitive-chat endpoints
+# (status / turn / approvals / approve / reject) moved to
+# :mod:`ui.cognitive_routes` and are mounted via ``include_router``
+# above. The route module reads ``chat_runtime`` + ``approval_edge``
+# through the lambda-state-accessor pattern, so this host module no
+# longer carries the inline ``@app.get/.post`` decorators.
+#
+# C-2 / P2-4 / R-1 part 4 — the operator-management surface was also
+# extracted (to :mod:`ui.operator_routes`) and is mounted above; the
+# previously-inline ``_decision_to_dict`` helper moved with it, so
+# this host module no longer needs the local copy either.
+
+
+def _sync_belief_from_ledger(
+    ledger: tuple[SystemEvent, ...],
+    ts_ns: int,
+) -> None:
+    """Extract BeliefState from the BELIEF_STATE_SNAPSHOT ledger event
+    and push it into the SystemKernel.
+
+    The first event in the meta-controller ledger is always the
+    BELIEF_STATE_SNAPSHOT. We reconstruct the BeliefState from its
+    payload and update the kernel's canonical belief.
+    """
+    from core.coherence.belief_state import BeliefState, Regime
+
+    for ev in ledger:
+        if ev.sub_kind == SystemEventKind.BELIEF_STATE_SNAPSHOT:
+            p = ev.payload
+            try:
+                belief = BeliefState(
+                    ts_ns=ev.ts_ns,
+                    regime=Regime(p.get("regime", "UNKNOWN")),
+                    regime_confidence=float(p.get("regime_confidence", "0.0")),
+                    consensus_side=Side(p.get("consensus_side", "HOLD")),
+                    signal_count=int(p.get("signal_count", "0")),
+                    avg_confidence=float(p.get("avg_confidence", "0.0")),
+                )
+                STATE.system_kernel.update_belief(belief)
+            except (ValueError, KeyError):
+                pass
+            break
+
+
+@app.post("/api/tick")
+def post_tick(body: TickIn) -> dict[str, Any]:
+    ts = body.ts_ns if body.ts_ns is not None else wall_ns()
+    tick = MarketTick(
+        ts_ns=ts,
+        symbol=body.symbol,
+        bid=body.bid,
+        ask=body.ask,
+        last=body.last,
+        volume=body.volume,
+        venue=body.venue,
+    )
+    signals_out: list[dict[str, Any]] = []
+    executions_out: list[dict[str, Any]] = []
+    meta_ledger_out: list[dict[str, Any]] = []
+    with STATE.lock:
+        STATE.execution.on_market(tick)
+        STATE.events.appendleft(
+            {
+                "seq": STATE.event_seq + 1,
+                "source": "tick",
+                "kind": "MARKET_TICK",
+                "ts_ns": tick.ts_ns,
+                "symbol": tick.symbol,
+                "bid": tick.bid,
+                "ask": tick.ask,
+                "last": tick.last,
+            }
+        )
+        STATE.event_seq += 1
+        # P1.1 — drive plugins + meta-controller in one call so the
+        # BeliefState / PressureVector / META_AUDIT / META_DIVERGENCE
+        # ledger emitted by ``MetaControllerHotPath.step`` flows on
+        # the bus. The per-tick :class:`RuntimeContext` is built from
+        # the harness-side authority surfaces; ``elapsed_ns`` is left
+        # at the default (0) because the harness has no runtime
+        # monitor wired in yet (follow-up wave). Shadow signals are
+        # tagged by the engine; Execution rejects them.
+        context = STATE.build_runtime_context_now()
+        emitted_signals, _decision, ledger = STATE.intelligence.run_meta_tick(
+            tick=tick,
+            context=context,
+        )
+        for meta_ev in ledger:
+            STATE.record("intelligence", meta_ev)
+            meta_ledger_out.append(_event_to_dict(meta_ev))
+        # Phase 2 — sync BeliefState into the SystemKernel from the
+        # BELIEF_STATE_SNAPSHOT ledger event emitted by the hot path.
+        _sync_belief_from_ledger(ledger, tick.ts_ns)
+        for sig in emitted_signals:
+            STATE.record("intelligence", sig)
+            signals_out.append(_event_to_dict(sig))
+            intent = approve_signal_for_execution(
+                sig,
+                ts_ns=wall_ns(),
+                signer=STATE.decision_signer,
+                registry=STATE.signal_trust_registry,
+                promotion_store=STATE.signal_trust_promotions,
+            )
+            for downstream in STATE.execution.execute(intent):
+                STATE.record("execution", downstream)
+                executions_out.append(_event_to_dict(downstream))
+    # PR-C (P0-3) — drive the closed-learning + structural-evolution
+    # loops on every production tick so the loops actually run in
+    # the hot path, not just under the env-gated debug route. Both
+    # loops snapshot the live :class:`LearningEvolutionFreezePolicy`
+    # via the policy supplier bound on :class:`_State`, which in
+    # turn reacquires ``STATE.lock`` to read the live mode +
+    # operator-override flag. The supplier therefore MUST run
+    # outside the outer lock (``STATE.lock`` is a non-reentrant
+    # :class:`threading.Lock`); ticking the loops here, after the
+    # ``with STATE.lock`` block, keeps the snapshot consistent
+    # with the just-emitted ledger events while avoiding reentrancy.
+    # Both loops short-circuit to ``frozen=True`` outside the
+    # LIVE + operator_override state (HARDEN-04 / INV-70 preserved
+    # by construction).
+    closed_loop_result = STATE.closed_learning_loop.tick(ts_ns=ts)
+    # PR-Z2 — feed drained outcomes into the rolling aggregator so
+    # ``_structural_stats_supplier`` sees this tick's outcomes
+    # before the structural loop runs.
+    for outcome in closed_loop_result.drained_outcomes:
+        STATE.patch_outcome_feedback.observe(outcome)
+    structural_loop_result = STATE.structural_evolution_loop.tick(ts_ns=ts)
+    return {
+        "accepted": True,
+        "tick": _event_to_dict_tick(tick),
+        "signals": signals_out,
+        "executions": executions_out,
+        "meta_ledger": meta_ledger_out,
+        "closed_learning": _project_loop_result(closed_loop_result),
+        "structural_evolution": _project_structural_result(structural_loop_result),
+    }
+
+
+@app.post("/api/signal")
+def post_signal(body: SignalIn) -> dict[str, Any]:
+    ts = body.ts_ns if body.ts_ns is not None else wall_ns()
+    meta: dict[str, str] = {}
+    if body.qty is not None:
+        meta["qty"] = str(body.qty)
+    sig = SignalEvent(
+        ts_ns=ts,
+        symbol=body.symbol,
+        side=Side(body.side),
+        confidence=body.confidence,
+        plugin_chain=("ui_harness",),
+        meta=meta,
+    )
+    out_events: list[dict[str, Any]] = []
+    with STATE.lock:
+        STATE.record("ui_harness", sig)
+        for ev in STATE.intelligence.process(sig):
+            STATE.record("intelligence", ev)
+            intent = approve_signal_for_execution(
+                ev,
+                ts_ns=wall_ns(),
+                signer=STATE.decision_signer,
+                registry=STATE.signal_trust_registry,
+                promotion_store=STATE.signal_trust_promotions,
+            )
+            for downstream in STATE.execution.execute(intent):
+                STATE.record("execution", downstream)
+                out_events.append(_event_to_dict(downstream))
+    return {"signal": _event_to_dict(sig), "executions": out_events}
+
+
+@app.get("/api/events")
+def get_events(limit: int = 50) -> dict[str, Any]:
+    limit = max(1, min(limit, 500))
+    with STATE.lock:
+        items = list(STATE.events)[:limit]
+    return {"events": items}
+
+
+@app.post("/api/testing/backtest")
+def post_testing_backtest(body: BacktestRunIn) -> dict[str, Any]:
+    """AUDIT-P2.1 — canonical server-side deterministic backtest.
+
+    Runs the same hash-seeded walk the dashboard ``Backtester`` widget
+    historically did entirely in-browser. Pulling the algorithm into
+    the harness gives the audit trail a single source of truth: every
+    backtest the operator runs is keyed by a stable seed of
+    ``(strategy, symbol, range, fill_model, slippage_bps)`` and can be
+    re-run identically by replaying the same payload.
+
+    The endpoint is read-only — running a backtest never produces an
+    :class:`ExecutionIntent`, never writes to the authority ledger, and
+    never feeds the learning loop. The
+    :class:`~core.contracts.backtest_result.BacktestResult` ingestion
+    seam (Paper-S3) remains the only path that grafts external
+    backtests into Indira's learning surface.
+    """
+
+    try:
+        req = BacktestRequest(
+            strategy=body.strategy,  # type: ignore[arg-type]
+            symbol=body.symbol,
+            start_iso=body.start_iso,
+            end_iso=body.end_iso,
+            fill_model=body.fill_model,  # type: ignore[arg-type]
+            slippage_bps=body.slippage_bps,
+        )
+        report = run_deterministic_backtest(req)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    metrics = report.metrics
+    return {
+        "seed": report.seed,
+        "request": {
+            "strategy": report.request.strategy,
+            "symbol": report.request.symbol,
+            "start_iso": report.request.start_iso,
+            "end_iso": report.request.end_iso,
+            "fill_model": report.request.fill_model,
+            "slippage_bps": report.request.slippage_bps,
+        },
+        "equity": list(report.equity),
+        "drawdown": list(report.drawdown),
+        "trades": [
+            {
+                "ts_iso": trade.ts_iso,
+                "side": trade.side,
+                "pnl_pct": trade.pnl_pct,
+                "bars_held": trade.bars_held,
+            }
+            for trade in report.trades
+        ],
+        "metrics": {
+            "final_equity_pct": metrics.final_equity_pct,
+            "cagr": metrics.cagr,
+            "sharpe": metrics.sharpe,
+            "sortino": metrics.sortino,
+            "max_dd_pct": metrics.max_dd_pct,
+            "win_rate": metrics.win_rate,
+            "profit_factor": (
+                None if metrics.profit_factor == float("inf") else metrics.profit_factor
+            ),
+            "avg_trade_pct": metrics.avg_trade_pct,
+            "longest_loss_streak": metrics.longest_loss_streak,
+            "n_trades": metrics.n_trades,
+        },
+        "notes": list(report.notes),
+    }
+
+
+# ---------------------------------------------------------------------------
+# DASH-LIVE-01 — Server-Sent Events bridge (``/api/dashboard/stream``).
+#
+# ``dashboard2026/src/state/realtime.ts`` opens an ``EventSource`` on this
+# URL and dispatches each ``StreamEvent {channel, ts_iso, payload}`` to
+# the per-widget listener bus. If the endpoint is unreachable the bridge
+# falls back to a deterministic mock generator and AUDIT-P1.4 raises a
+# persistent amber banner. Before this endpoint existed the dashboard
+# always fell back to mock; the banner was correct but permanent.
+#
+# The stream is a thin projection over :attr:`_State.events`: every
+# recorded event is mapped to a channel name (lowercased ``kind`` plus a
+# stable alias table for the widgets the legacy mock targeted —
+# ``ticks`` for ``MARKET_TICK``, ``news`` for any kind containing
+# ``NEWS``, ``hazards`` for ``HazardEvent`` ``HAZ_*`` rows, etc.). The
+# payload is the full recorded dict so widgets can read whatever fields
+# they need without us needing to keep a per-channel schema in lock-step
+# with each engine. ``StreamEvent.ts_iso`` is derived from the event's
+# ``ts_ns`` when present, else the recording timestamp; this matches
+# what the mock generator emits and avoids "ts_iso == server-now"
+# clock-skew confusion when the harness replays old events.
+# ---------------------------------------------------------------------------
+
+
+# P1.3 — the SSE channel-alias table, the three per-record helpers,
+# and the ``_sse_event_stream`` async generator now live in
+# :mod:`ui.harness.background_task_manager`. The names below are
+# re-exports so the existing ``tests/test_dashboard_stream_sse.py``
+# regression suite (which imports them directly from ``ui.server``)
+# keeps working byte-stable.
+_SSE_CHANNEL_ALIASES = SSE_CHANNEL_ALIASES
+_sse_channel_for = sse_channel_for
+_sse_ts_iso_for = sse_ts_iso_for
+_sse_format = sse_format
+
+
+def _sse_event_stream(
+    request: Request,
+    *,
+    poll_interval_s: float = 0.25,
+    keepalive_every_s: float = 15.0,
+    backfill_only: bool = False,
+) -> AsyncIterator[bytes]:
+    """Re-export shim — delegates to the manager bound on ``STATE``."""
+
+    return STATE.background_tasks.sse_event_stream(
+        request,
+        poll_interval_s=poll_interval_s,
+        keepalive_every_s=keepalive_every_s,
+        backfill_only=backfill_only,
+    )
+
+
+@app.get("/api/dashboard/stream")
+async def get_dashboard_stream(request: Request, backfill_only: bool = False) -> StreamingResponse:
+    """SSE bridge consumed by ``dashboard2026/src/state/realtime.ts``."""
+
+    headers = {
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+    }
+    return StreamingResponse(
+        STATE.background_tasks.sse_event_stream(request, backfill_only=backfill_only),
+        media_type="text/event-stream",
+        headers=headers,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Live data feeds (SCVS-registered sources)
+# ---------------------------------------------------------------------------
+#
+# C-2 / P2-4 / R-1 part 2 — the four feed-route families (Binance,
+# CoinDesk, Pump.fun, Raydium) were extracted to :mod:`ui.feeds_routes`
+# and are mounted on the FastAPI app above via `build_feeds_router`.
+# The runners themselves are still constructed by the harness in
+# :meth:`_State._build_live_feeds` (harness owns lifecycle); only the
+# HTTP projection moved out of this god-object.
+
+
+@app.post("/api/feeds/tradingview/observation")
+def post_tradingview_observation(body: TradingViewObservationIn) -> dict[str, Any]:
+    """Ingest one TradingView trader observation (SRC-TRADER-TRADINGVIEW-001).
+
+    Wave-04 PR-2 — operator-controlled trader-feed ingest. The body's
+    ``payload`` is fed to :func:`ui.feeds.tradingview_ideas.parse_tradingview_idea_payload`,
+    which never constructs a :class:`TraderObservation` directly (B29
+    forbids it). Construction happens inside
+    :func:`intelligence_engine.trader_modeling.aggregator.make_trader_observation`,
+    the only B29-allowed runtime location, and the resulting record is
+    projected into a :class:`SystemEvent` for the audit ledger via
+    :func:`intelligence_engine.trader_modeling.observation.observation_as_system_event`.
+
+    Returns ``{"accepted": False, "reason": "..."}`` (HTTP 200) for
+    malformed payloads so a webhook relay can keep streaming without
+    fragile error handling. Returns ``{"accepted": True, "event": ...}``
+    on success.
+    """
+    ts = body.ts_ns if body.ts_ns is not None else wall_ns()
+    parsed = parse_tradingview_idea_payload(
+        body.payload,
+        ts_ns=ts,
+        source_feed=TRADINGVIEW_SOURCE_FEED,
+    )
+    if parsed is None:
+        return {
+            "accepted": False,
+            "reason": "payload rejected by tradingview parser",
+            "source_feed": TRADINGVIEW_SOURCE_FEED,
+        }
+    model, observation_kind, meta = parsed
+    observation = make_trader_observation(
+        ts_ns=ts,
+        model=model,
+        observation_kind=observation_kind,
+        meta=meta,
+    )
+    event = observation_as_system_event(observation)
+    with STATE.lock:
+        STATE.record("feed.tradingview", event)
+    return {
+        "accepted": True,
+        "source_feed": TRADINGVIEW_SOURCE_FEED,
+        "trader_id": observation.trader_id,
+        "observation_kind": observation.observation_kind,
+        "ts_ns": observation.ts_ns,
+    }
+
+
+@app.post("/api/feeds/tradingview/alert")
+def post_tradingview_alert(body: TradingViewAlertIn) -> dict[str, Any]:
+    """Ingest one TradingView Pine-script alert (Paper-S4).
+
+    The operator configures their Pine ``alert()`` / ``strategy.entry``
+    hook to push a JSON envelope at this URL. The body's ``payload``
+    is fed to :func:`ui.feeds.tradingview_alert.parse_tradingview_alert_payload`,
+    which is the *only* producer of the resulting :class:`SignalEvent`
+    (the route layer never builds one directly — keeps the parser
+    pure under INV-15 and the route trivially auditable).
+
+    The signal is stamped :attr:`SignalTrust.EXTERNAL_LOW` and
+    ``signal_source = TRADINGVIEW_ALERT_SOURCE_FEED`` so the
+    governance gate (Paper-S5/S6) can apply the per-source cap from
+    ``registry/external_signal_trust.yaml`` before the resulting
+    intent reaches the execute chokepoint. From there the flow is
+    identical to :func:`post_signal` — Intelligence -> Execution
+    via the harness approver shim.
+
+    Returns ``{"accepted": False, "reason": "..."}`` (HTTP 200) for
+    malformed payloads so TradingView's webhook engine does not retry
+    on a Pine-side authoring bug. Returns
+    ``{"accepted": True, "executions": [...]}`` on success.
+    """
+
+    ts = body.ts_ns if body.ts_ns is not None else wall_ns()
+    parsed = parse_tradingview_alert_payload(body.payload, ts_ns=ts)
+    if parsed is None:
+        return {
+            "accepted": False,
+            "reason": "payload rejected by tradingview alert parser",
+            "source_feed": TRADINGVIEW_ALERT_SOURCE_FEED,
+        }
+    sig = parsed.signal
+    out_events: list[dict[str, Any]] = []
+    with STATE.lock:
+        STATE.record("feed.tradingview_alert", sig)
+        for ev in STATE.intelligence.process(sig):
+            STATE.record("intelligence", ev)
+            intent = approve_signal_for_execution(
+                ev,
+                ts_ns=wall_ns(),
+                signer=STATE.decision_signer,
+                registry=STATE.signal_trust_registry,
+                promotion_store=STATE.signal_trust_promotions,
+            )
+            for downstream in STATE.execution.execute(intent):
+                STATE.record("execution", downstream)
+                out_events.append(_event_to_dict(downstream))
+    return {
+        "accepted": True,
+        "source_feed": TRADINGVIEW_ALERT_SOURCE_FEED,
+        "signal": _event_to_dict(sig),
+        "executions": out_events,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Internals
+# ---------------------------------------------------------------------------
+
+
+def _event_to_dict_tick(tick: MarketTick) -> dict[str, Any]:
+    return {
+        "kind": "MARKET_TICK",
+        "ts_ns": tick.ts_ns,
+        "symbol": tick.symbol,
+        "bid": tick.bid,
+        "ask": tick.ask,
+        "last": tick.last,
+        "volume": tick.volume,
+        "venue": tick.venue,
+    }
+
+
+_ROUTE_REGISTRAR.audit_or_raise(app)
+"""P1.4 boot-time fail-closed audit — every expected route must be
+mounted on ``app`` and grouped under its canonical domain in
+:mod:`ui.harness.route_registrar`. Any drift raises
+:class:`RuntimeError` here at module load so the harness refuses
+to boot with an out-of-date inventory."""
+
+
+def create_app() -> FastAPI:
+    """Return the canonical DIX VISION FastAPI application.
+
+    Shim for callers that expect a factory (``start.py``, some test
+    fixtures). The app is constructed at module-import time; this
+    function simply returns the already-built singleton so it is safe
+    to call multiple times.
+    """
+    return app
+
+
+__all__: Sequence[str] = ("app", "STATE", "create_app")

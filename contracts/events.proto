@@ -1,0 +1,209 @@
+syntax = "proto3";
+
+// Canonical 4-event bus. Mirror of core/contracts/events.py (Phase E0,
+// Lane A: Python-first; Protobuf reserved for future polyglot ports per
+// build_plan.md §Phase E9).
+//
+// Refs:
+//  - manifest.md §0.4 (CORE TRUTH), §1 (invariants)
+//  - docs/total_recall_index.md §13 (EVT-01..04)
+//  - INV-08 (only typed events cross domain)
+//  - INV-11 (no direct cross-engine calls)
+//  - HARDEN-03 (all events carry produced_by_engine provenance)
+//
+// **Do not edit one side without the other.** The Python dataclasses are
+// the binding source of truth for Phase E0; this file exists so that
+// downstream language ports translate mechanically.
+
+package dixvision.v42_2;
+
+option java_package = "ai.dixvision.v42_2";
+
+enum Side {
+  SIDE_UNSPECIFIED = 0;
+  BUY = 1;
+  SELL = 2;
+  HOLD = 3;
+}
+
+enum HazardSeverity {
+  HAZARD_SEVERITY_UNSPECIFIED = 0;
+  INFO = 1;
+  LOW = 2;
+  MEDIUM = 3;
+  HIGH = 4;
+  CRITICAL = 5;
+}
+
+enum ExecutionStatus {
+  EXECUTION_STATUS_UNSPECIFIED = 0;
+  PROPOSED = 1;
+  APPROVED = 2;
+  REJECTED = 3;
+  SUBMITTED = 4;
+  FILLED = 5;
+  PARTIALLY_FILLED = 6;
+  CANCELLED = 7;
+  FAILED = 8;
+}
+
+enum SystemEventKind {
+  SYSTEM_EVENT_KIND_UNSPECIFIED = 0;
+  HEARTBEAT = 1;
+  HEALTH_REPORT = 2;
+  PLUGIN_LIFECYCLE = 3;   // PLUGIN-ACT-06
+  UPDATE_PROPOSED = 4;    // offline → Governance
+  LEDGER_COMMIT = 5;
+  // v3.3 T1a — coherence projection snapshots (INV-53 calibration hook).
+  // Read-only by definition; emitted by core.coherence so the offline
+  // learning_engine.calibration.coherence_calibrator has a ledgered
+  // window to read against realised outcomes.
+  BELIEF_STATE_SNAPSHOT = 6;
+  PRESSURE_VECTOR_SNAPSHOT = 7;
+  // v3.3 T1b — INV-52 shadow meta-controller divergence record.
+  // The shadow policy never reaches PolicyEngine; it only emits this
+  // event so the offline learning_engine can compare alternative
+  // decisions against the primary policy's actual outcome.
+  META_DIVERGENCE = 8;
+  // v3.1 H5 + v3.3 J3 — reward shaping per-component breakdown.
+  // Emitted by learning_engine.lanes.reward_shaping per realised
+  // trade so the offline calibrator can attribute reward drift to
+  // individual components (consensus / strength / coverage / sizing
+  // / latency / slippage / fallback / shaping_version).
+  REWARD_BREAKDOWN = 9;
+  // v3.3 J3 — per-tick meta-controller audit record.
+  // Emitted by intelligence_engine.meta_controller.runtime_adapter
+  // alongside BELIEF_STATE_SNAPSHOT / PRESSURE_VECTOR_SNAPSHOT every
+  // hot-path tick so the offline calibrator can attribute drift to
+  // confidence / sizing components and the final decision.
+  META_AUDIT = 10;
+  // v3.4 Wave 2 — INV-53 reader-side calibration report.
+  // Emitted by learning_engine.calibration.coherence_calibrator once
+  // per closed window over BELIEF_STATE_SNAPSHOT /
+  // PRESSURE_VECTOR_SNAPSHOT / META_AUDIT / REWARD_BREAKDOWN ledger
+  // rows. Read-only by Governance — never gates execution.
+  CALIBRATION_REPORT = 11;
+  // v3.5 SCVS Phase 2 — runtime source liveness transitions emitted by
+  // system_engine.scvs.source_manager. Pure projection of a caller-
+  // supplied now_ns against the per-source heartbeat memo; one row per
+  // status transition (UNKNOWN→LIVE, LIVE→STALE, STALE→LIVE).
+  // Critical-source STALE transitions additionally emit an HAZ-13
+  // hazard for governance escalation (SCVS-06).
+  SOURCE_HEARTBEAT = 12;
+  SOURCE_STALE = 13;
+  SOURCE_RECOVERED = 14;
+  // v3.5 SCVS Phase 3 — silent-fallback audit (rule SCVS-10). Engines
+  // that swap to a fallback source MUST emit this event so the ledger
+  // has an explicit record of the substitution.
+  SOURCE_FALLBACK_ACTIVATED = 15;
+  // v3.6 BEHAVIOR-P4 — per-decision audit record. Emitted by
+  // core.coherence.decision_trace.as_system_event once per decision so
+  // the offline calibrator and the operator dashboard's Decision-Trace
+  // widget (DASH-04) can reconstruct *why* each decision happened
+  // (confidence breakdown, active hazards, throttle applied, execution
+  // outcome). The trace_id is a deterministic hash of (symbol, ts_ns,
+  // plugin_chain) so replays produce identical ledger rows (INV-15).
+  DECISION_TRACE = 16;
+  // v3.6 BEHAVIOR-P5 — patch pipeline ledger surface. Emitted by
+  // evolution_engine.patch_pipeline.events when a structural mutation
+  // enters / advances through / leaves the Phase 4 patch pipeline.
+  // The dashboard's Strategy-Lifecycle widget (DASH-SLP-01) and the
+  // Indira/Dyon chat widgets read these to render reviewable cards.
+  // Distinct from UPDATE_PROPOSED, which is the non-structural
+  // parameter-update surface.
+  //  * PATCH_PROPOSED       — new PatchProposal registered (Stage = PROPOSED)
+  //  * PATCH_STAGE_VERDICT  — one stage produced a verdict
+  //  * PATCH_DECISION       — terminal decision (APPROVED / REJECTED / ROLLED_BACK)
+  // All three have deterministic, key-sorted JSON payloads so replays
+  // produce byte-identical ledger rows (INV-15, INV-66).
+  PATCH_PROPOSED = 17;
+  PATCH_STAGE_VERDICT = 18;
+  PATCH_DECISION = 19;
+  // Wave-04 PR-1 — Trader-Intelligence first-class structured layer.
+  // Carries a TraderObservation payload (see
+  // core/contracts/trader_intelligence.py) so external traders are
+  // modelled as data, not imitated. Producer authority is symmetric
+  // to LearningUpdate (B27) and PatchProposal (B28): only
+  // intelligence_engine.trader_modeling.* may construct the payload
+  // (lint rule B29). The wrapping SystemEvent still carries
+  // produced_by_engine and is asserted at receivers via HARDEN-03's
+  // runtime guard. Field number 20 (next available, no renumbering of
+  // existing entries — wire-format stable). Declaration position
+  // mirrors Python source-of-truth ordering in core/contracts/events.py.
+  TRADER_OBSERVED = 20;
+  // P0 refinement (PR #392) — canonical projection of a governance-
+  // policy value-object's current state (mode + override + version).
+  // Emitted by core.contracts.learning_evolution_freeze
+  // .LearningEvolutionFreezePolicy.to_system_event so the audit-ledger
+  // row shape is owned by the policy and not duplicated at every call
+  // site (operator override flip, harness boot, lifecycle transition).
+  // Field number 21 (next available after TRADER_OBSERVED = 20).
+  POLICY_STATE = 21;
+}
+
+// EVT-01
+// HARDEN-03: All events carry produced_by_engine for provenance triad-lock assertion.
+message SignalEvent {
+  int64 ts_ns = 1;
+  string symbol = 2;
+  Side side = 3;
+  double confidence = 4;
+  repeated string plugin_chain = 5;
+  map<string, string> meta = 6;
+  // HARDEN-03 Triad Lock provenance: engine that constructed this event.
+  // Used by polyglot consumers to verify event authenticity and replay safety.
+  string produced_by_engine = 7;
+}
+
+// EVT-02
+// HARDEN-03: All events carry produced_by_engine for provenance triad-lock assertion.
+message ExecutionEvent {
+  int64 ts_ns = 1;
+  string symbol = 2;
+  Side side = 3;
+  double qty = 4;
+  double price = 5;
+  ExecutionStatus status = 6;
+  string venue = 7;
+  string order_id = 8;
+  map<string, string> meta = 9;
+  // HARDEN-03 Triad Lock provenance: engine that constructed this event.
+  // Used by polyglot consumers to verify event authenticity and replay safety.
+  string produced_by_engine = 10;
+}
+
+// EVT-03
+// HARDEN-03: All events carry produced_by_engine for provenance triad-lock assertion.
+message SystemEvent {
+  int64 ts_ns = 1;
+  SystemEventKind sub_kind = 2;
+  string source = 3;
+  map<string, string> payload = 4;
+  map<string, string> meta = 5;
+  // HARDEN-03 Triad Lock provenance: engine that constructed this event.
+  // Used by polyglot consumers to verify event authenticity and replay safety.
+  string produced_by_engine = 6;
+}
+
+// EVT-04 — only signal that crosses Indira ↔ Dyon domain.
+// HARDEN-03: All events carry produced_by_engine for provenance triad-lock assertion.
+message HazardEvent {
+  int64 ts_ns = 1;
+  string code = 2;
+  HazardSeverity severity = 3;
+  string source = 4;
+  string detail = 5;
+  map<string, string> meta = 6;
+  // HARDEN-03 Triad Lock provenance: engine that constructed this event.
+  // Used by polyglot consumers to verify event authenticity and replay safety.
+  string produced_by_engine = 7;
+}
+
+message Event {
+  oneof payload {
+    SignalEvent signal = 1;
+    ExecutionEvent execution = 2;
+    SystemEvent system = 3;
+    HazardEvent hazard = 4;
+  }
+}

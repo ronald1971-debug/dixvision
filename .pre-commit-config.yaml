@@ -1,0 +1,19 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '^(DIX VISION v42\.2.*\.txt|data/)'
+      - id: end-of-file-fixer
+        exclude: '^(DIX VISION v42\.2.*\.txt|core/contracts/|data/)'
+      - id: check-yaml
+        exclude: '^cloud/k8s/'       # multi-document manifests
+      - id: check-toml
+      - id: check-added-large-files
+      - id: debug-statements
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
+        args: [--fix]

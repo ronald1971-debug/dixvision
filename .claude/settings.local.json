@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cmd /c \"npm view @vitejs/plugin-react dist-tags 2>&1\")",
+      "PowerShell(cmd /c \"npm view @vitejs/plugin-react@6 peerDependencies 2>&1\")",
+      "PowerShell(cmd /c \"npm view @vitejs/plugin-react@5 peerDependencies 2>&1\")",
+      "PowerShell(cmd /c \"cd C:\\\\dix_vision_v42_2\\\\dashboard2026 && npm install 2>&1\")",
+      "PowerShell(cmd /c \"cd C:\\\\dix_vision_v42_2\\\\dashboard2026 && npm run build 2>&1\")",
+      "PowerShell(cmd /c \"cd C:\\\\dix_vision_v42_2\\\\dash_meme && npm install 2>&1 && npm run build 2>&1\")",
+      "Bash(python -c ' *)",
+      "Bash(Get-ChildItem -Recurse -Filter \"*.py\")",
+      "Bash(Measure-Object)",
+      "PowerShell($base = \"c:\\\\dix_vision_v42_2\"; @\\(\"governance_engine\\\\services\\\\opa_policy.py\", \"governance_engine\\\\control_plane\\\\invariant_verifier.py\"\\) | ForEach-Object { Join-Path $base $_ | Resolve-Path -Relative })",
+      "Bash(Select-Object -ExpandProperty Count)",
+      "Bash(grep -rn \"^\\\\s*\\\\.\\\\.\\\\.\\\\s*$\" --include=\"*.py\" --exclude-dir=\".venv\" --exclude-dir=\"dixvision.egg-info\" .)"
+    ]
+  }
+}

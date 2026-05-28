@@ -1,0 +1,296 @@
+<<<<<<< HEAD
+syntax = "proto3";
+
+// EXECUTION-domain messages. Produced by `mind` as intents; consumed
+// by `execution/` (Rust) which interfaces with exchanges.
+//
+// Invariants:
+//   - Every OrderIntent carries the `risk_version_used` of the risk
+//     cache it was stamped against (Tier-0 Step 1).
+//   - Every ExecutionEvent carries a deterministic `event_id` so
+//     replay can deduplicate retried submissions.
+
+package dixvision.v42_2.execution;
+
+import "market.proto";
+
+enum OrderType {
+  UNKNOWN_ORDER_TYPE = 0;
+  MARKET             = 1;
+  LIMIT              = 2;
+  STOP_MARKET        = 3;
+  STOP_LIMIT         = 4;
+  POST_ONLY          = 5;
+  IOC                = 6;
+  FOK                = 7;
+}
+
+enum TimeInForce {
+  UNKNOWN_TIF = 0;
+  GTC         = 1;
+  IOC_TIF     = 2;
+  FOK_TIF     = 3;
+  DAY         = 4;
+}
+
+enum OrderLifecycle {
+  UNKNOWN_LIFECYCLE = 0;
+  PENDING           = 1;
+  SUBMITTED         = 2;
+  PARTIALLY_FILLED  = 3;
+  FILLED            = 4;
+  CANCELLED         = 5;
+  REJECTED          = 6;
+  EXPIRED           = 7;
+}
+
+// OrderIntent is the producer-side message: mind has decided it wants
+// an order; execution has not yet seen the venue.
+message OrderIntent {
+  string            intent_id          = 1;   // deterministic hash
+  uint64            sequence           = 2;
+  int64             wall_ns            = 3;
+  dixvision.v42_2.market.Venue venue   = 4;
+  string            symbol             = 5;
+  dixvision.v42_2.market.Side  side    = 6;
+  OrderType         order_type         = 7;
+  TimeInForce       time_in_force      = 8;
+  double            size               = 9;
+  double            limit_price        = 10;
+  double            stop_price         = 11;
+  int64             size_e8            = 12;
+  int64             limit_price_e8     = 13;
+  int64             stop_price_e8      = 14;
+  // MANDATORY: which risk-cache revision stamped this intent.
+  // See Tier-0 Step 1 (system/fast_risk_cache version_id).
+  string            risk_version_used  = 15;
+  // Sandbox/paper/canary/active — enforced by strategy_lifecycle.
+  string            strategy_phase     = 16;
+  string            strategy_id        = 17;
+}
+
+// OrderEvent is every state transition an order undergoes after
+// submission. The full sequence is reconstructable from replay.
+message OrderEvent {
+  string            event_id           = 1;
+  string            intent_id          = 2;
+  uint64            sequence           = 3;
+  int64             wall_ns            = 4;
+  OrderLifecycle    lifecycle          = 5;
+  string            venue_order_id     = 6;
+  double            filled_size        = 7;
+  double            avg_fill_price     = 8;
+  int64             filled_size_e8     = 9;
+  int64             avg_fill_price_e8  = 10;
+  string            rejection_reason   = 11;
+}
+
+// Fill is a single atomic fill. Multiple fills may be emitted for
+// one OrderIntent; summing them must equal the final OrderEvent's
+// filled_size.
+message Fill {
+  string            fill_id            = 1;
+  string            intent_id          = 2;
+  uint64            sequence           = 3;
+  int64             wall_ns            = 4;
+  double            size               = 5;
+  double            price              = 6;
+  int64             size_e8            = 7;
+  int64             price_e8           = 8;
+  double            fee_usd            = 9;
+  int64             fee_usd_e8         = 10;
+}
+
+// AdapterState is emitted by each exchange adapter on every
+// circuit-breaker transition (Tier-0 Step 8).
+enum AdapterHealth {
+  UNKNOWN_HEALTH = 0;
+  HEALTHY        = 1;
+  DEGRADED       = 2;
+  CIRCUIT_OPEN   = 3;
+  DISABLED       = 4;
+}
+
+message AdapterState {
+  uint64        sequence           = 1;
+  int64         wall_ns            = 2;
+  dixvision.v42_2.market.Venue venue = 3;
+  AdapterHealth health             = 4;
+  uint32        consecutive_fails  = 5;
+  uint32        consecutive_wins   = 6;
+  string        last_failure_kind  = 7;
+}
+||||||| 889ca71
+=======
+syntax = "proto3";
+
+// Canonical execution contract. Mirror of core/contracts/execution.py
+// (Phase 2, EXEC-01..14, INV-17 T1 purity, INV-15 determinism).
+//
+// Refs:
+//  - manifest.md §0.2 (ENGINE-02 Indira→Execution path), §2 (INV-17 T1 purity)
+//  - execution_engine/hot_path/fast_execute.py (branch order canonical)
+//  - docs/total_recall_index.md §EXEC-01..14
+//  - build_plan.md Phase 2 (execution core)
+//
+// The execution gate is the most determinism-critical path in the system.
+// Every field must be indexable and carry full provenance.
+// No floating-point intermediate state; only start/end snaps.
+
+package dixvision.v42_2;
+
+option java_package = "ai.dixvision.v42_2";
+
+enum ExecutionRejectReason {
+  REASON_UNSPECIFIED = 0;
+  REJECTED_LIMIT = 1;           // qty_above_cap or halted reason
+  REJECTED_RISK_STALE = 2;      // ts_ns staleness breach
+  REJECTED_NO_MARK = 3;         // mark_price <= 0.0
+  REJECTED_LOW_CONFIDENCE = 4;  // confidence < floor
+  REJECTED_HOLD = 5;            // side == HOLD
+}
+
+enum ExecutionGateStatus {
+  GATE_STATUS_UNSPECIFIED = 0;
+  APPROVED = 1;                 // passed all gates, execution safe
+  REJECTED = 2;                 // gated out at one branch
+}
+
+// Risk snapshot at the moment a decision was made.
+// Immutable once frozen for replay determinism (INV-15).
+// T1 (hot-path) contract — all fields MUST be computable in <1ms.
+message RiskSnapshot {
+  // Timestamp (ns) when risk cache was read. INV-09 clock source authority.
+  int64 ts_ns = 1;
+
+  // Market mark price from the tick that triggered decision.
+  // REJECTED_NO_MARK if <= 0.0 (market closed or invalid).
+  double mark_price = 2;
+
+  // Position quantity limit (caps per venue + account + instrument).
+  // REJECTED_LIMIT if proposed qty > cap.
+  double qty_cap = 3;
+
+  // Current cached position (contracts / shares / coins held).
+  // For replay determinism, must be read at decision time, not recomputed.
+  double current_position = 4;
+
+  // Remaining intraday risk budget (in base currency).
+  // Depletes as trades fill; used to gate oversized fills.
+  double remaining_budget = 5;
+
+  // System halted flag. Checked first in the decision ladder.
+  // If true, all orders are REJECTED_LIMIT (reason="halted").
+  bool halted = 6;
+
+  // Version identifier for this RiskSnapshot schema.
+  // Incremented on field additions; used in replay validation.
+  // Stored in ledger events so readers know which version they're reading.
+  string risk_version = 7;
+
+  // HARDEN-03: engine that produced this snapshot (provenance triad).
+  string produced_by_engine = 8;
+}
+
+// Execution gate decision. Immutable contract for the critical path.
+message ExecutionGateDecision {
+  // Incoming signal metadata
+  int64 ts_ns = 1;              // signal timestamp (ns)
+  string symbol = 2;            // trading instrument
+  int32 side = 3;               // Side enum: BUY=1, SELL=2, HOLD=3
+  double confidence = 4;        // signal confidence (0.0..1.0)
+  string venue = 5;             // execution venue (e.g., "binance")
+  double proposed_qty = 6;      // qty to execute if approved
+
+  // Snapshot state at decision time
+  RiskSnapshot risk_snapshot = 7;  // frozen state for determinism
+
+  // Decision outcome
+  ExecutionGateStatus status = 8;    // APPROVED | REJECTED
+  ExecutionRejectReason reason = 9;  // detailed reject reason (if rejected)
+
+  // Execution metadata
+  string trace_id = 10;         // deterministic hash(symbol, ts_ns, plugin_chain)
+  map<string, string> context = 11;  // agent_context keys (v3.2 B15 schema)
+
+  // HARDEN-03: Provenance triad
+  string produced_by_engine = 12;    // ENGINE-02 (execution_engine)
+
+  // Replay invariants
+  // All fields above must produce identical outputs under identical inputs.
+  // This message MUST be a pure function of (signal, risk_snapshot, config).
+  // If you are tempted to add a clock or random field, you have broken INV-15.
+}
+
+// Execution adapter interface contract (IExecutionAdapter in Python).
+// Each venue integration (Binance, OANDA, IBKR, etc.) implements this.
+message ExecutionAdapterContract {
+  // Venue identifier (lowercase, e.g., "binance", "oanda").
+  string venue_id = 1;
+
+  // Human-readable name.
+  string display_name = 2;
+
+  // Supported asset classes (SPOT, FUTURES, FOREX, CFD, etc.).
+  repeated string supported_asset_classes = 3;
+
+  // Supported order types (MARKET, LIMIT, STOP_LOSS, TAKE_PROFIT, etc.).
+  repeated string supported_order_types = 4;
+
+  // Max orders per second this adapter can submit.
+  double rate_limit_orders_per_sec = 5;
+
+  // Whether the adapter can report real-time fills (live execution path).
+  bool supports_live_fills = 6;
+
+  // Whether the adapter supports paper-trading mode.
+  bool supports_paper_trading = 7;
+
+  // Minimum order size (base currency) before venue will accept.
+  double min_order_value = 8;
+
+  // Max concurrent orders the venue will accept per account.
+  int32 max_concurrent_orders = 9;
+
+  // HARDEN-03: This contract is immutable; served from registry.
+  // Used to validate domain isolation (SAFE-13, INV-20).
+  string produced_by_engine = 10;
+}
+
+// Order fill record — immutable once ledgered.
+// Produced by adapters, consumed by reconciliation and PnL attribution.
+message FillRecord {
+  int64 ts_filled_ns = 1;       // execution timestamp on venue
+  string symbol = 2;
+  int32 side = 3;               // BUY or SELL
+  double qty_filled = 4;
+  double price = 5;             // actual fill price
+  double fee = 6;               // transaction cost (venue + slippage)
+  string venue = 7;
+  string order_id = 8;          // venue order ID
+  map<string, string> meta = 9; // venue-specific data
+
+  // HARDEN-03: provenance
+  string produced_by_engine = 10;  // adapter that filled this
+}
+
+// Summary of all fills for a trade lifecycle (NEW → PENDING → PARTIAL → FILLED → CLOSED).
+message TradeLifecycleSummary {
+  string trace_id = 1;          // deterministic hash(symbol, ts_ns, plugin_chain)
+  int64 trade_start_ts_ns = 2;  // when first order was submitted
+  int64 trade_end_ts_ns = 3;    // when trade closed or cancelled
+
+  double total_qty_requested = 4;   // original qty from signal
+  double total_qty_filled = 5;      // sum of all fills
+  double qty_cancelled = 6;         // qty that expired / cancelled
+
+  double total_fees = 7;            // sum of all fill fees
+  double realized_pnl = 8;          // (sell_value - buy_value - fees) in base currency
+
+  repeated FillRecord fills = 9;    // all fills in order
+  map<string, string> rejection_log = 10;  // if rejected at any stage
+
+  // HARDEN-03: provenance (ENGINE-02)
+  string produced_by_engine = 11;
+}
+>>>>>>> origin/main

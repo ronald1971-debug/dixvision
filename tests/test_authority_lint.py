@@ -1,0 +1,1276 @@
+"""Phase E0 — authority_lint rule unit tests.
+
+Each lint rule (T1, C2, C3, W1, L1, L2, L3, B1) is exercised against
+synthetic source trees built in temp directories. The tests guarantee:
+
+* the real repo passes ``authority_lint`` with zero violations;
+* every rule fires on a synthetic violation;
+* every rule does NOT fire on its allow-listed shape.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from tools.authority_lint import lint_repo
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _write(root: Path, rel: str, body: str) -> None:
+    p = root / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(body, encoding="utf-8")
+
+
+@pytest.fixture
+def fake_repo(tmp_path: Path) -> Path:
+    # Minimal package skeleton so AST parses + module names resolve.
+    for pkg in (
+        "core",
+        "core/contracts",
+        "state",
+        "state/ledger",
+        "intelligence_engine",
+        "execution_engine",
+        "system_engine",
+        "governance_engine",
+        "learning_engine",
+        "evolution_engine",
+        "mind",
+        "mind/neuromorphic",
+        "mind/web_autolearn",
+        "execution_engine/adapters",
+        "execution_engine/adapters/memecoin",
+        "wallet",
+    ):
+        _write(tmp_path, f"{pkg}/__init__.py", "")
+    return tmp_path
+
+
+def _rule_codes(violations) -> list[str]:
+    return [v.rule for v in violations]
+
+
+def test_real_repo_passes_zero_violations():
+    violations = lint_repo(REPO_ROOT)
+    assert violations == [], "\n".join(v.format(REPO_ROOT) for v in violations)
+
+
+# ---------------------------------------------------------------------------
+# T1
+# ---------------------------------------------------------------------------
+
+
+def test_t1_fires_on_hot_path_to_governance(fake_repo: Path):
+    _write(fake_repo, "mind/fast_execute.py", "from governance import kernel\n")
+    assert "T1" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_t1_allows_core_contracts(fake_repo: Path):
+    _write(
+        fake_repo,
+        "mind/fast_execute.py",
+        "from core.contracts.events import SignalEvent\n",
+    )
+    assert "T1" not in _rule_codes(lint_repo(fake_repo))
+
+
+# ---------------------------------------------------------------------------
+# C2 / C3 / W1
+# ---------------------------------------------------------------------------
+
+
+def test_c2_fires_on_neuromorphic_to_execution(fake_repo: Path):
+    _write(
+        fake_repo,
+        "mind/neuromorphic/decide.py",
+        "import execution_engine\n",
+    )
+    assert "C2" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_c3_fires_on_web_autolearn_to_governance(fake_repo: Path):
+    _write(
+        fake_repo,
+        "mind/web_autolearn/scrape.py",
+        "import governance\n",
+    )
+    assert "C3" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_w1_fires_on_memecoin_to_main_wallet(fake_repo: Path):
+    _write(
+        fake_repo,
+        "execution_engine/adapters/memecoin/router.py",
+        "from wallet.main_wallet import resolve\n",
+    )
+    assert "W1" in _rule_codes(lint_repo(fake_repo))
+
+
+# ---------------------------------------------------------------------------
+# L1
+# ---------------------------------------------------------------------------
+
+
+def test_l1_fires_learning_to_evolution(fake_repo: Path):
+    _write(
+        fake_repo,
+        "learning_engine/lane.py",
+        "from evolution_engine.engine import EvolutionEngine\n",
+    )
+    assert "L1" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_l1_fires_evolution_to_learning(fake_repo: Path):
+    _write(
+        fake_repo,
+        "evolution_engine/lane.py",
+        "from learning_engine.engine import LearningEngine\n",
+    )
+    assert "L1" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_l1_allows_shared_core_contracts(fake_repo: Path):
+    _write(
+        fake_repo,
+        "learning_engine/lane.py",
+        "from core.contracts.events import SystemEvent\n",
+    )
+    _write(
+        fake_repo,
+        "evolution_engine/lane.py",
+        "from core.contracts.events import SystemEvent\n",
+    )
+    codes = _rule_codes(lint_repo(fake_repo))
+    assert "L1" not in codes
+
+
+# ---------------------------------------------------------------------------
+# L2 / L3
+# ---------------------------------------------------------------------------
+
+
+def test_l2_fires_offline_to_runtime(fake_repo: Path):
+    _write(
+        fake_repo,
+        "learning_engine/bad.py",
+        "from intelligence_engine.engine import IntelligenceEngine\n",
+    )
+    codes = _rule_codes(lint_repo(fake_repo))
+    assert "L2" in codes
+
+
+def test_l2_allows_ledger_reader(fake_repo: Path):
+    _write(
+        fake_repo,
+        "state/ledger/reader.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "learning_engine/good.py",
+        "from state.ledger.reader import LedgerReader\n",
+    )
+    codes = _rule_codes(lint_repo(fake_repo))
+    assert "L2" not in codes
+
+
+def test_l3_fires_runtime_to_offline(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/bad.py",
+        "from learning_engine.engine import LearningEngine\n",
+    )
+    codes = _rule_codes(lint_repo(fake_repo))
+    assert "L3" in codes
+
+
+# ---------------------------------------------------------------------------
+# B1
+# ---------------------------------------------------------------------------
+
+
+def test_b1_fires_intelligence_to_execution(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/bad.py",
+        "from execution_engine.engine import ExecutionEngine\n",
+    )
+    codes = _rule_codes(lint_repo(fake_repo))
+    assert "B1" in codes
+
+
+def test_b1_allows_core_contracts(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/good.py",
+        "from core.contracts.events import SignalEvent\n",
+    )
+    codes = _rule_codes(lint_repo(fake_repo))
+    assert "B1" not in codes
+
+
+def test_b1_fires_for_each_runtime_pair(fake_repo: Path):
+    pairs = [
+        ("intelligence_engine", "execution_engine"),
+        ("intelligence_engine", "system_engine"),
+        ("intelligence_engine", "governance_engine"),
+        ("execution_engine", "system_engine"),
+        ("execution_engine", "governance_engine"),
+        ("system_engine", "governance_engine"),
+    ]
+    for src, dst in pairs:
+        _write(
+            fake_repo,
+            f"{src}/bad_to_{dst}.py",
+            f"from {dst}.engine import _\n",
+        )
+    codes = _rule_codes(lint_repo(fake_repo))
+    assert codes.count("B1") >= len(pairs)
+
+
+# ---------------------------------------------------------------------------
+# B7 — dashboard isolation
+# ---------------------------------------------------------------------------
+
+
+def _scaffold_dashboard(fake_repo: Path) -> None:
+    _write(fake_repo, "dashboard_backend/__init__.py", "")
+    _write(fake_repo, "dashboard_backend/control_plane/__init__.py", "")
+
+
+def test_b7_fires_on_dashboard_to_execution_engine(fake_repo: Path):
+    _scaffold_dashboard(fake_repo)
+    _write(
+        fake_repo,
+        "dashboard_backend/control_plane/bad.py",
+        "from execution_engine.hot_path import run\n",
+    )
+    assert "B7" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b7_fires_on_dashboard_to_learning_engine(fake_repo: Path):
+    _scaffold_dashboard(fake_repo)
+    _write(
+        fake_repo,
+        "dashboard_backend/control_plane/bad.py",
+        "from learning_engine import smuggle\n",
+    )
+    assert "B7" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b7_allows_core_contracts(fake_repo: Path):
+    _scaffold_dashboard(fake_repo)
+    _write(
+        fake_repo,
+        "dashboard_backend/control_plane/ok.py",
+        "from core.contracts.events import SignalEvent\n",
+    )
+    assert "B7" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b7_allows_governance_control_plane(fake_repo: Path):
+    _scaffold_dashboard(fake_repo)
+    _write(
+        fake_repo,
+        "governance_engine/control_plane/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "dashboard_backend/control_plane/ok.py",
+        "from governance_engine.control_plane import OperatorInterfaceBridge\n",
+    )
+    assert "B7" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b7_allows_strategy_lifecycle_fsm(fake_repo: Path):
+    _scaffold_dashboard(fake_repo)
+    _write(
+        fake_repo,
+        "intelligence_engine/strategy_runtime/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "intelligence_engine/strategy_runtime/state_machine.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "dashboard_backend/control_plane/ok.py",
+        "from intelligence_engine.strategy_runtime.state_machine import StrategyState\n",
+    )
+    assert "B7" not in _rule_codes(lint_repo(fake_repo))
+
+
+# ---------------------------------------------------------------------------
+# B17 — shadow meta-controller is non-acting (INV-52)
+# ---------------------------------------------------------------------------
+
+
+def test_b17_fires_on_shadow_to_governance(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/meta_controller/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "intelligence_engine/meta_controller/policy/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "intelligence_engine/meta_controller/policy/shadow_policy.py",
+        "from governance_engine import smuggle\n",
+    )
+    assert "B17" in _rule_codes(lint_repo(fake_repo))
+
+
+# ---------------------------------------------------------------------------
+# B20 — Triad Lock: Governance is order-blind (INV-56)
+# ---------------------------------------------------------------------------
+
+
+def test_b20_fires_on_governance_to_execution_engine(fake_repo: Path):
+    _write(
+        fake_repo,
+        "governance_engine/bad.py",
+        "from execution_engine.adapters.paper import PaperBroker\n",
+    )
+    codes = _rule_codes(lint_repo(fake_repo))
+    assert "B20" in codes
+
+
+def test_b20_fires_on_governance_to_execution_hot_path(fake_repo: Path):
+    _write(
+        fake_repo,
+        "governance_engine/bad.py",
+        "from execution_engine.hot_path import fast_execute\n",
+    )
+    assert "B20" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b20_does_not_fire_for_intelligence_to_execution(fake_repo: Path):
+    # B1 still fires here, but B20 must not — B20 is governance-only.
+    _write(
+        fake_repo,
+        "intelligence_engine/bad.py",
+        "from execution_engine.engine import ExecutionEngine\n",
+    )
+    codes = _rule_codes(lint_repo(fake_repo))
+    assert "B20" not in codes
+
+
+def test_b20_does_not_fire_for_governance_to_core_contracts(fake_repo: Path):
+    _write(
+        fake_repo,
+        "governance_engine/ok.py",
+        "from core.contracts.events import SystemEvent\n",
+    )
+    assert "B20" not in _rule_codes(lint_repo(fake_repo))
+
+
+# ---------------------------------------------------------------------------
+# B21 — Triad Lock: only execution_engine constructs ExecutionEvent (INV-56)
+# ---------------------------------------------------------------------------
+
+
+def test_b21_fires_on_governance_constructing_execution_event(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "governance_engine/bad.py",
+        "ExecutionEvent(ts_ns=0)\n",
+    )
+    assert "B21" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b21_fires_on_intelligence_constructing_execution_event(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "intelligence_engine/bad.py",
+        "ExecutionEvent(ts_ns=0)\n",
+    )
+    assert "B21" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b21_allows_execution_engine(fake_repo: Path):
+    _write(
+        fake_repo,
+        "execution_engine/ok.py",
+        "ExecutionEvent(ts_ns=0)\n",
+    )
+    assert "B21" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b21_allows_tests_directory(fake_repo: Path):
+    _write(fake_repo, "tests/__init__.py", "")
+    _write(
+        fake_repo,
+        "tests/test_thing.py",
+        "ExecutionEvent(ts_ns=0)\n",
+    )
+    assert "B21" not in _rule_codes(lint_repo(fake_repo))
+
+
+# ---------------------------------------------------------------------------
+# B22 — Triad Lock: only intelligence_engine constructs SignalEvent (INV-56)
+# ---------------------------------------------------------------------------
+
+
+def test_b22_fires_on_governance_constructing_signal_event(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "governance_engine/bad.py",
+        "SignalEvent(ts_ns=0)\n",
+    )
+    assert "B22" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b22_fires_on_execution_constructing_signal_event(fake_repo: Path):
+    _write(
+        fake_repo,
+        "execution_engine/bad.py",
+        "SignalEvent(ts_ns=0)\n",
+    )
+    assert "B22" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b22_allows_intelligence_engine(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/ok.py",
+        "SignalEvent(ts_ns=0)\n",
+    )
+    assert "B22" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b22_allows_ui_dev_harness(fake_repo: Path):
+    _write(fake_repo, "ui/__init__.py", "")
+    _write(
+        fake_repo,
+        "ui/server.py",
+        "SignalEvent(ts_ns=0)\n",
+    )
+    assert "B22" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b22_allows_tests_directory(fake_repo: Path):
+    _write(fake_repo, "tests/__init__.py", "")
+    _write(
+        fake_repo,
+        "tests/test_thing.py",
+        "SignalEvent(ts_ns=0)\n",
+    )
+    assert "B22" not in _rule_codes(lint_repo(fake_repo))
+
+
+# ---------------------------------------------------------------------------
+# B31 — mode-effect table is the only mode-conditional decision oracle
+# ---------------------------------------------------------------------------
+
+
+def test_b31_fires_on_engine_hardcoding_mode(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/regime_router.py",
+        "from core.contracts.governance import SystemMode\n"
+        "def gate(m):\n"
+        "    return m == SystemMode.LIVE\n",
+    )
+    assert "B31" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b31_allows_governance_control_plane(fake_repo: Path):
+    _write(
+        fake_repo,
+        "governance_engine/control_plane/state_transition_manager.py",
+        "from core.contracts.governance import SystemMode\n"
+        "def init():\n"
+        "    return SystemMode.LOCKED\n",
+    )
+    assert "B31" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b31_allows_mode_control_bar(fake_repo: Path):
+    _write(fake_repo, "dashboard_backend/__init__.py", "")
+    _write(fake_repo, "dashboard_backend/control_plane/__init__.py", "")
+    _write(
+        fake_repo,
+        "dashboard_backend/control_plane/mode_control_bar.py",
+        "from core.contracts.governance import SystemMode\n"
+        "ALL = [SystemMode.SAFE, SystemMode.PAPER, SystemMode.LIVE]\n",
+    )
+    assert "B31" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b31_allows_tests(fake_repo: Path):
+    _write(fake_repo, "tests/__init__.py", "")
+    _write(
+        fake_repo,
+        "tests/test_modes.py",
+        "from core.contracts.governance import SystemMode\nassert SystemMode.LIVE\n",
+    )
+    assert "B31" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b31_fires_on_execution_engine_set_membership(fake_repo: Path):
+    _write(
+        fake_repo,
+        "execution_engine/dispatcher.py",
+        "from core.contracts.governance import SystemMode\n"
+        "ENABLED = {SystemMode.LIVE, SystemMode.CANARY}\n",
+    )
+    codes = _rule_codes(lint_repo(fake_repo))
+    # Two attribute references → at least two B31 hits.
+    assert codes.count("B31") >= 2
+
+
+# ---------------------------------------------------------------------------
+# B-CLOCK — raw clock chokepoint (P0-1a, INV-15)
+# ---------------------------------------------------------------------------
+
+
+def test_b_clock_fires_on_runtime_time_time_ns(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/foo.py",
+        "import time\n\ndef now() -> int:\n    return time.time_ns()\n",
+    )
+    assert "B-CLOCK" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_clock_fires_on_runtime_datetime_now(fake_repo: Path):
+    _write(
+        fake_repo,
+        "execution_engine/bar.py",
+        "import datetime\n\ndef stamp():\n    return datetime.now()\n",
+    )
+    assert "B-CLOCK" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_clock_allows_system_time_source(fake_repo: Path):
+    _write(
+        fake_repo,
+        "system/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "system/time_source.py",
+        "import time\n\ndef wall_ns() -> int:\n    return time.time_ns()\n",
+    )
+    assert "B-CLOCK" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_clock_allows_tests_directory(fake_repo: Path):
+    _write(
+        fake_repo,
+        "tests/test_x.py",
+        "import time\n\ndef test_x():\n    assert time.time_ns() > 0\n",
+    )
+    assert "B-CLOCK" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_clock_passes_when_callsite_uses_authority(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/foo.py",
+        "from system.time_source import wall_ns\n\ndef now() -> int:\n    return wall_ns()\n",
+    )
+    assert "B-CLOCK" not in _rule_codes(lint_repo(fake_repo))
+
+
+# ---------------------------------------------------------------------------
+# B32 — Mode FSM single mutator (P0-6, GOV-CP-03)
+# ---------------------------------------------------------------------------
+
+
+def test_b32_fires_on_runtime_self_mode_assignment(fake_repo: Path):
+    _write(
+        fake_repo,
+        "dashboard_backend/control_plane/foo.py",
+        "from core.contracts.governance import SystemMode\n"
+        "class Sneak:\n"
+        "    def force(self) -> None:\n"
+        "        self._mode = SystemMode.LIVE\n",
+    )
+    assert "B32" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b32_fires_on_state_dot_mode_assignment(fake_repo: Path):
+    _write(
+        fake_repo,
+        "ui/operator_bridge.py",
+        "from core.contracts.governance import SystemMode\n"
+        "def shove(state) -> None:\n"
+        "    state.mode = SystemMode.AUTO\n",
+    )
+    assert "B32" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b32_fires_on_annotated_assignment(fake_repo: Path):
+    _write(
+        fake_repo,
+        "ui/dashboard_route.py",
+        "from core.contracts.governance import SystemMode\n"
+        "class Holder:\n"
+        "    def __init__(self) -> None:\n"
+        "        self.system_mode: SystemMode = SystemMode.LOCKED\n",
+    )
+    assert "B32" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b32_allows_state_transition_manager(fake_repo: Path):
+    _write(
+        fake_repo,
+        "governance_engine/control_plane/state_transition_manager.py",
+        "from core.contracts.governance import SystemMode\n"
+        "class STM:\n"
+        "    def force(self) -> None:\n"
+        "        self._mode = SystemMode.LIVE\n",
+    )
+    assert "B32" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b32_allows_tests_directory(fake_repo: Path):
+    _write(
+        fake_repo,
+        "tests/test_x.py",
+        "from core.contracts.governance import SystemMode\n"
+        "class Stub:\n"
+        "    pass\n"
+        "def test_x():\n"
+        "    s = Stub()\n"
+        "    s._mode = SystemMode.SAFE\n",
+    )
+    assert "B32" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b32_allows_non_systemmode_rhs(fake_repo: Path):
+    _write(
+        fake_repo,
+        "ui/widget.py",
+        "class W:\n    def render(self) -> None:\n        self.mode = 'compact'\n",
+    )
+    assert "B32" not in _rule_codes(lint_repo(fake_repo))
+
+
+# ---------------------------------------------------------------------------
+# B35 — Operator-vs-AI separation (Hardening-S1 item 7)
+# ---------------------------------------------------------------------------
+
+
+def test_b35_fires_on_intelligence_engine_proposed_false(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/escalator.py",
+        "from core.contracts.events import SystemEvent, SystemEventKind\n"
+        "def go() -> SystemEvent:\n"
+        "    return SystemEvent(\n"
+        "        ts_ns=1,\n"
+        "        sub_kind=SystemEventKind.UPDATE_PROPOSED,\n"
+        "        source='intelligence',\n"
+        "        proposed=False,\n"
+        "    )\n",
+    )
+    assert "B35" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b35_fires_on_learning_engine_proposed_false(fake_repo: Path):
+    _write(
+        fake_repo,
+        "learning_engine/sneaky.py",
+        "from core.contracts.events import SystemEvent, SystemEventKind\n"
+        "def go() -> SystemEvent:\n"
+        "    return SystemEvent(\n"
+        "        ts_ns=1,\n"
+        "        sub_kind=SystemEventKind.UPDATE_PROPOSED,\n"
+        "        source='learning',\n"
+        "        proposed=False,\n"
+        "    )\n",
+    )
+    assert "B35" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b35_fires_on_evolution_engine_proposed_false(fake_repo: Path):
+    _write(
+        fake_repo,
+        "evolution_engine/escalator.py",
+        "from core.contracts.events import SystemEvent, SystemEventKind\n"
+        "def go() -> SystemEvent:\n"
+        "    return SystemEvent(\n"
+        "        ts_ns=1,\n"
+        "        sub_kind=SystemEventKind.UPDATE_PROPOSED,\n"
+        "        source='evolution',\n"
+        "        proposed=False,\n"
+        "    )\n",
+    )
+    assert "B35" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b35_silent_for_default_proposed_true(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/well_behaved.py",
+        "from core.contracts.events import SystemEvent, SystemEventKind\n"
+        "def go() -> SystemEvent:\n"
+        "    return SystemEvent(\n"
+        "        ts_ns=1,\n"
+        "        sub_kind=SystemEventKind.UPDATE_PROPOSED,\n"
+        "        source='intelligence',\n"
+        "    )\n",
+    )
+    assert "B35" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b35_silent_for_explicit_proposed_true(fake_repo: Path):
+    _write(
+        fake_repo,
+        "learning_engine/well_behaved.py",
+        "from core.contracts.events import SystemEvent, SystemEventKind\n"
+        "def go() -> SystemEvent:\n"
+        "    return SystemEvent(\n"
+        "        ts_ns=1,\n"
+        "        sub_kind=SystemEventKind.UPDATE_PROPOSED,\n"
+        "        source='learning',\n"
+        "        proposed=True,\n"
+        "    )\n",
+    )
+    assert "B35" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b35_allows_operator_domain_proposed_false(fake_repo: Path):
+    _write(
+        fake_repo,
+        "ui/operator_action.py",
+        "from core.contracts.events import SystemEvent, SystemEventKind\n"
+        "def go() -> SystemEvent:\n"
+        "    return SystemEvent(\n"
+        "        ts_ns=1,\n"
+        "        sub_kind=SystemEventKind.PLUGIN_LIFECYCLE,\n"
+        "        source='operator:dashboard',\n"
+        "        proposed=False,\n"
+        "    )\n",
+    )
+    assert "B35" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b35_allows_governance_proposed_false(fake_repo: Path):
+    _write(
+        fake_repo,
+        "governance_engine/internal.py",
+        "from core.contracts.events import SystemEvent, SystemEventKind\n"
+        "def go() -> SystemEvent:\n"
+        "    return SystemEvent(\n"
+        "        ts_ns=1,\n"
+        "        sub_kind=SystemEventKind.PLUGIN_LIFECYCLE,\n"
+        "        source='governance',\n"
+        "        proposed=False,\n"
+        "    )\n",
+    )
+    assert "B35" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b35_allows_tests_directory(fake_repo: Path):
+    _write(
+        fake_repo,
+        "tests/test_x.py",
+        "from core.contracts.events import SystemEvent, SystemEventKind\n"
+        "def test_x():\n"
+        "    SystemEvent(\n"
+        "        ts_ns=1,\n"
+        "        sub_kind=SystemEventKind.UPDATE_PROPOSED,\n"
+        "        source='whatever',\n"
+        "        proposed=False,\n"
+        "    )\n",
+    )
+    assert "B35" not in _rule_codes(lint_repo(fake_repo))
+
+
+# ---------------------------------------------------------------------------
+# B36 — DecisionSigner construction restriction (Hardening-S1 item 2)
+# ---------------------------------------------------------------------------
+
+
+def test_b36_fires_on_ui_constructing_decision_signer(fake_repo: Path):
+    _write(
+        fake_repo,
+        "ui/forge.py",
+        "from governance_engine.control_plane.decision_signer import "
+        "DecisionSigner\n"
+        "def go() -> DecisionSigner:\n"
+        "    return DecisionSigner()\n",
+    )
+    assert "B36" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b36_fires_on_intelligence_engine_constructing_decision_signer(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "intelligence_engine/forge.py",
+        "from governance_engine.control_plane.decision_signer import "
+        "DecisionSigner\n"
+        "def go() -> DecisionSigner:\n"
+        "    return DecisionSigner()\n",
+    )
+    assert "B36" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b36_fires_on_execution_engine_constructing_decision_signer(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "execution_engine/forge.py",
+        "from governance_engine.control_plane.decision_signer import "
+        "DecisionSigner\n"
+        "def go() -> DecisionSigner:\n"
+        "    return DecisionSigner()\n",
+    )
+    assert "B36" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b36_allows_governance_engine(fake_repo: Path):
+    _write(
+        fake_repo,
+        "governance_engine/boot.py",
+        "from governance_engine.control_plane.decision_signer import "
+        "DecisionSigner\n"
+        "def go() -> DecisionSigner:\n"
+        "    return DecisionSigner()\n",
+    )
+    assert "B36" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b36_allows_tests(fake_repo: Path):
+    _write(
+        fake_repo,
+        "tests/test_signer.py",
+        "from governance_engine.control_plane.decision_signer import "
+        "DecisionSigner\n"
+        "def test_x():\n"
+        "    DecisionSigner()\n",
+    )
+    assert "B36" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b36_silent_when_decision_signer_only_referenced_not_called(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "ui/uses_signer.py",
+        "from governance_engine.control_plane.decision_signer import "
+        "DecisionSigner\n"
+        "def go(s: DecisionSigner) -> str:\n"
+        "    return s.sign(content_hash='x', governance_decision_id='g')\n",
+    )
+    assert "B36" not in _rule_codes(lint_repo(fake_repo))
+
+
+# ---------------------------------------------------------------------------
+# B-POLARS — polars containment (S-10.4, INV-15)
+# ---------------------------------------------------------------------------
+
+
+def test_b_polars_fires_on_execution_engine_top_level_import(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "execution_engine/uses_polars.py",
+        "import polars as pl\n",
+    )
+    assert "B-POLARS" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_fires_on_governance_engine_from_import(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "governance_engine/uses_polars.py",
+        "from polars import LazyFrame\n",
+    )
+    assert "B-POLARS" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_fires_on_system_engine_top_level_import(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "system_engine/uses_polars.py",
+        "import polars\n",
+    )
+    assert "B-POLARS" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_fires_on_core_top_level_import(fake_repo: Path):
+    _write(
+        fake_repo,
+        "core/uses_polars.py",
+        "import polars\n",
+    )
+    assert "B-POLARS" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_fires_on_meta_controller_hot_path(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/meta_controller/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "intelligence_engine/meta_controller/hot_path.py",
+        "import polars\n",
+    )
+    assert "B-POLARS" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_fires_on_lazy_function_local_import(fake_repo: Path):
+    _write(
+        fake_repo,
+        "execution_engine/lazy.py",
+        "def go():\n    import polars as pl\n    return pl\n",
+    )
+    # Lazy / function-local imports are caught because ``_iter_imports``
+    # walks the full AST. This is a tighter contract than per-file
+    # top-of-module scanning.
+    assert "B-POLARS" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_fires_on_polars_subpackage_import(fake_repo: Path):
+    _write(
+        fake_repo,
+        "execution_engine/uses_polars.py",
+        "from polars.exceptions import ComputeError\n",
+    )
+    assert "B-POLARS" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_allows_learning_engine_analytics(fake_repo: Path):
+    _write(
+        fake_repo,
+        "learning_engine/analytics/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "learning_engine/analytics/uses_polars.py",
+        "def go():\n    import polars as pl\n    return pl\n",
+    )
+    assert "B-POLARS" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_allows_evolution_engine(fake_repo: Path):
+    _write(
+        fake_repo,
+        "evolution_engine/batch.py",
+        "import polars\n",
+    )
+    assert "B-POLARS" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_allows_tests_directory(fake_repo: Path):
+    _write(
+        fake_repo,
+        "tests/test_polars_x.py",
+        "import polars as pl\n\ndef test_x():\n    assert pl is not None\n",
+    )
+    assert "B-POLARS" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_allows_intelligence_engine_outside_hot_path(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "intelligence_engine/cognitive/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "intelligence_engine/cognitive/analytics.py",
+        "import polars\n",
+    )
+    # Only ``intelligence_engine.meta_controller.hot_path`` is locked
+    # down; the cognitive subsystem may use polars for offline analysis.
+    assert "B-POLARS" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_silent_when_no_polars_imported_anywhere(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "execution_engine/clean.py",
+        "from core.contracts.events import SignalEvent\n",
+    )
+    assert "B-POLARS" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_polars_real_repo_passes(fake_repo: Path):
+    """Sanity — the real repo's polars usage must already be compliant."""
+    # Re-runs the top-of-file ``test_real_repo_passes_zero_violations``
+    # narrowed to B-POLARS specifically so a regression here is
+    # immediately attributable to the polars containment rule.
+    assert "B-POLARS" not in _rule_codes(lint_repo(REPO_ROOT))
+
+
+# ---------------------------------------------------------------------------
+# B-TORCH — torch containment (I-36, INV-15)
+# ---------------------------------------------------------------------------
+
+
+def test_b_torch_fires_on_execution_engine_top_level_import(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "execution_engine/uses_torch.py",
+        "import torch\n",
+    )
+    assert "B-TORCH" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_fires_on_governance_engine_from_import(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "governance_engine/uses_torch.py",
+        "from torch import nn\n",
+    )
+    assert "B-TORCH" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_fires_on_system_engine_top_level_import(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "system_engine/uses_torch.py",
+        "import torch\n",
+    )
+    assert "B-TORCH" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_fires_on_core_top_level_import(fake_repo: Path):
+    _write(
+        fake_repo,
+        "core/uses_torch.py",
+        "import torch\n",
+    )
+    assert "B-TORCH" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_fires_on_meta_controller_hot_path(fake_repo: Path):
+    _write(
+        fake_repo,
+        "intelligence_engine/meta_controller/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "intelligence_engine/meta_controller/hot_path.py",
+        "import torch\n",
+    )
+    assert "B-TORCH" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_fires_on_lazy_function_local_import(fake_repo: Path):
+    _write(
+        fake_repo,
+        "execution_engine/lazy.py",
+        "def go():\n    import torch\n    return torch\n",
+    )
+    # Lazy / function-local imports are caught because ``_iter_imports``
+    # walks the full AST. This is a tighter contract than per-file
+    # top-of-module scanning.
+    assert "B-TORCH" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_fires_on_torch_subpackage_import(fake_repo: Path):
+    _write(
+        fake_repo,
+        "execution_engine/uses_torch.py",
+        "from torch.nn import functional as F\n",
+    )
+    assert "B-TORCH" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_allows_learning_engine_lanes(fake_repo: Path):
+    _write(
+        fake_repo,
+        "learning_engine/lanes/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "learning_engine/lanes/uses_torch.py",
+        "def go():\n    import torch\n    return torch\n",
+    )
+    assert "B-TORCH" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_allows_evolution_engine(fake_repo: Path):
+    _write(
+        fake_repo,
+        "evolution_engine/sandbox.py",
+        "import torch\n",
+    )
+    assert "B-TORCH" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_allows_tests_directory(fake_repo: Path):
+    _write(
+        fake_repo,
+        "tests/test_torch_x.py",
+        "import torch\n\ndef test_x():\n    assert torch is not None\n",
+    )
+    assert "B-TORCH" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_allows_intelligence_engine_outside_hot_path(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "intelligence_engine/cognitive/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "intelligence_engine/cognitive/uses_torch.py",
+        "import torch\n",
+    )
+    # Only ``intelligence_engine.meta_controller.hot_path`` is locked
+    # down; the cognitive subsystem may load torch lazily for offline
+    # model evaluation.
+    assert "B-TORCH" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_silent_when_no_torch_imported_anywhere(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "execution_engine/clean.py",
+        "from core.contracts.events import SignalEvent\n",
+    )
+    assert "B-TORCH" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_torch_real_repo_passes(fake_repo: Path):
+    """Sanity — the real repo's torch usage must already be compliant."""
+    # Re-runs the top-of-file ``test_real_repo_passes_zero_violations``
+    # narrowed to B-TORCH specifically so a regression here is
+    # immediately attributable to the torch containment rule.
+    assert "B-TORCH" not in _rule_codes(lint_repo(REPO_ROOT))
+
+
+# ---------------------------------------------------------------------------
+# B-DEV-INDIRA — Indira full-potential pin (PR-DEV-B)
+# ---------------------------------------------------------------------------
+#
+# PR-DEV-A inverted the default safety stance: Indira (and Dyon) run
+# full-bore at boot regardless of :class:`SystemMode`. The mode-effect
+# table (``core.contracts.mode_effects.effect_for``) is the
+# governance-tier oracle for mode-conditional execution-side
+# behaviour; Indira must never gate its own signal-emission surface
+# on it. B-DEV-INDIRA pins this by rejecting ``effect_for(...)`` calls
+# anywhere under ``intelligence_engine.*`` — the
+# :class:`LearningGate` is the single sanctioned consultation point.
+
+
+def test_b_dev_indira_fires_on_intelligence_engine_effect_for_call(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "intelligence_engine/some_module.py",
+        "from core.contracts.mode_effects import effect_for\n"
+        "def gated(mode):\n"
+        "    return effect_for(mode).signals_emit\n",
+    )
+    assert "B-DEV-INDIRA" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_dev_indira_fires_on_nested_intelligence_engine_subpackage(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "intelligence_engine/meta_controller/__init__.py",
+        "",
+    )
+    _write(
+        fake_repo,
+        "intelligence_engine/meta_controller/gate.py",
+        "from core.contracts.mode_effects import effect_for\n"
+        "def gated(mode):\n"
+        "    return effect_for(mode).signals_emit\n",
+    )
+    assert "B-DEV-INDIRA" in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_dev_indira_silent_for_execution_engine(fake_repo: Path):
+    """Execution-side code is the legitimate consumer of the
+    mode-effect table (e.g. CANARY size-cap clamp). The rule only
+    fires inside ``intelligence_engine.*``."""
+
+    _write(
+        fake_repo,
+        "execution_engine/uses_effect_for.py",
+        "from core.contracts.mode_effects import effect_for\n"
+        "def gated(mode):\n"
+        "    return effect_for(mode).execute_orders\n",
+    )
+    assert "B-DEV-INDIRA" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_dev_indira_silent_for_governance_engine(fake_repo: Path):
+    _write(
+        fake_repo,
+        "governance_engine/uses_effect_for.py",
+        "from core.contracts.mode_effects import effect_for\n"
+        "def gated(mode):\n"
+        "    return effect_for(mode).signals_emit\n",
+    )
+    assert "B-DEV-INDIRA" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_dev_indira_silent_when_intelligence_engine_skips_effect_for(
+    fake_repo: Path,
+):
+    _write(
+        fake_repo,
+        "intelligence_engine/clean.py",
+        "from intelligence_engine.learning_gate import LearningGate\n"
+        "def go(gate: LearningGate) -> bool:\n"
+        "    return gate.is_open()\n",
+    )
+    assert "B-DEV-INDIRA" not in _rule_codes(lint_repo(fake_repo))
+
+
+def test_b_dev_indira_real_repo_passes():
+    """Sanity — the real repo's intelligence_engine.* tier already
+    avoids ``effect_for`` calls; a regression here is immediately
+    attributable to a new mode-gating leak into Indira."""
+
+    assert "B-DEV-INDIRA" not in _rule_codes(lint_repo(REPO_ROOT))

@@ -1,0 +1,38 @@
+# BUILD-DIRECTIVE §23 — Operator Authority defaults.
+# Read by server.py at boot. Persisted back on change via
+# OperatorInterfaceBridge.
+
+operator_authority:
+  learning: FULL
+  practice: "ON"
+  live_execution: BLOCKED
+  operator_id: ronald
+  notes: "Build-out: Indira and Dyon developing to full potential"
+
+trading_mode:
+  NORMAL: FULL_AUTO
+  COPY_TRADING: SEMI_AUTO
+  MEMECOIN: MANUAL
+
+semi_auto_policy:
+  NORMAL:
+    entry_requires_approval: true
+    exit_auto: true
+    risk_reduce_auto: true
+    notional_threshold_usd: 5000
+    position_fraction_cap: 0.05
+    volatility_cap_zscore: 3.0
+  COPY_TRADING:
+    entry_requires_approval: true
+    exit_auto: true
+    risk_reduce_auto: true
+    notional_threshold_usd: 2000
+    position_fraction_cap: 0.02
+    volatility_cap_zscore: 2.5
+  MEMECOIN:
+    entry_requires_approval: true
+    exit_auto: true
+    risk_reduce_auto: true
+    notional_threshold_usd: 500
+    position_fraction_cap: 0.01
+    volatility_cap_zscore: 4.0

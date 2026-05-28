@@ -1,0 +1,93 @@
+@import "react-grid-layout/css/styles.css";
+@import "react-resizable/css/styles.css";
+
+/*
+ * dash-pro.B.0 — Webfonts.
+ *
+ * IBM Plex Sans drives display text (operator labels, headers).
+ * JetBrains Mono drives numeric / mono surfaces (price tickers,
+ * tables, monospaced ledgers). Loaded via Google Fonts CDN for
+ * the first cut; a follow-up will vendor them so the launcher
+ * works fully offline.
+ */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+/*
+ * dash-pro.B.0 — Theme tokens are the single source of truth
+ * for the operator-dashboard palette. Tailwind utilities such
+ * as `bg-bg`, `bg-surface`, `border-border`, `text-ok`, etc.
+ * resolve through the CSS variables defined in tokens.css via
+ * the `rgb(var(--name) / <alpha-value>)` bridge in
+ * tailwind.config.js — so theme switching is a one-attribute
+ * mutation on <html data-theme="…">.
+ */
+@import "./theme/tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: rgb(var(--bg));
+  color: rgb(var(--text-primary));
+  font-family: var(--font-display);
+}
+
+/* Tabular numerics by default on table cells, mono blocks, and
+ * any surface that opts in. Operators reading orderbooks and
+ * fills should never see a "1" jitter when the value changes. */
+table,
+.tabular-nums,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* J-track layout profile — accent color hint on the top
+   ribbon so the operator can tell at a glance which preset
+   is active. The pages themselves still read the profile via
+   the constraint engine to pick dial values. */
+html[data-layout-profile="conservative"] {
+  --accent-glow: rgba(61, 220, 132, 0.18);
+}
+html[data-layout-profile="standard"] {
+  --accent-glow: rgba(58, 160, 255, 0.18);
+}
+html[data-layout-profile="aggressive"] {
+  --accent-glow: rgba(255, 90, 90, 0.18);
+}
+html[data-layout-profile="custom"] {
+  --accent-glow: rgba(255, 170, 59, 0.18);
+}
+header[data-layout-glow] {
+  box-shadow: inset 0 -1px 0 var(--accent-glow);
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: var(--accent-placeholder) !important;
+  border: 1px dashed rgb(var(--accent) / 0.6);
+  border-radius: 4px;
+  opacity: 1;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  border-right-color: rgb(var(--hairline));
+  border-bottom-color: rgb(var(--hairline));
+}
+
+.widget-drag-handle {
+  cursor: move;
+}
+
+.widget-drag-handle :where(button, a, input, textarea, select) {
+  cursor: auto;
+}

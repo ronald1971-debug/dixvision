@@ -1,0 +1,68 @@
+# BUILD-DIRECTIVE §24 — Approved external data sources.
+# Each source starts at trust=UNTRUSTED. Only the operator can promote
+# via POST /api/operator/external_source (source_trust_promotions.py).
+#
+# Fields:
+#   platform:    Source platform name
+#   trust:       UNTRUSTED | LOW | MEDIUM | HIGH | VERIFIED
+#   methods:     Allowed fetch methods (B-FETCH enforced)
+#   approved_by: Operator ID who approved (empty if UNTRUSTED)
+#   approved_ts: Epoch ns when approved (0 if UNTRUSTED)
+#   notes:       Free-form
+
+sources:
+  - platform: tradingview
+    trust: UNTRUSTED
+    methods: [fetch_signals, fetch_strategy_results]
+    approved_by: ""
+    approved_ts: 0
+    notes: "TradingView alerts and ideas — read-only"
+
+  - platform: mt5
+    trust: UNTRUSTED
+    methods: [fetch_signals, fetch_market_data]
+    approved_by: ""
+    approved_ts: 0
+    notes: "MetaTrader 5 signal export — read-only"
+
+  - platform: quantconnect
+    trust: UNTRUSTED
+    methods: [fetch_backtests, fetch_strategy_results]
+    approved_by: ""
+    approved_ts: 0
+    notes: "QuantConnect backtest results — read-only"
+
+  - platform: backtrader
+    trust: UNTRUSTED
+    methods: [fetch_backtests, fetch_strategy_results]
+    approved_by: ""
+    approved_ts: 0
+    notes: "Backtrader strategy results — read-only"
+
+  - platform: vectorbt
+    trust: UNTRUSTED
+    methods: [fetch_backtests, fetch_strategy_results]
+    approved_by: ""
+    approved_ts: 0
+    notes: "VectorBT backtest analytics — read-only"
+
+  - platform: freqtrade
+    trust: UNTRUSTED
+    methods: [fetch_signals, fetch_backtests, fetch_strategy_results]
+    approved_by: ""
+    approved_ts: 0
+    notes: "Freqtrade strategy signals and backtests — read-only"
+
+  - platform: jesse
+    trust: UNTRUSTED
+    methods: [fetch_signals, fetch_backtests]
+    approved_by: ""
+    approved_ts: 0
+    notes: "Jesse framework signals — read-only"
+
+  - platform: qstrader
+    trust: UNTRUSTED
+    methods: [fetch_backtests, fetch_strategy_results]
+    approved_by: ""
+    approved_ts: 0
+    notes: "QSTrader portfolio simulation results — read-only"

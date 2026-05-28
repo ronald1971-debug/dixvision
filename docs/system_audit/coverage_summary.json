@@ -1,0 +1,120 @@
+{
+  "analyzed": 1245,
+  "by_bucket": {
+    ".agents": {
+      "total": 1,
+      "with_findings": 0
+    },
+    ".github": {
+      "total": 5,
+      "with_findings": 0
+    },
+    "_root": {
+      "total": 5,
+      "with_findings": 0
+    },
+    "contracts": {
+      "total": 1,
+      "with_findings": 0
+    },
+    "core": {
+      "total": 54,
+      "with_findings": 30
+    },
+    "dash_meme": {
+      "total": 43,
+      "with_findings": 0
+    },
+    "dashboard2026": {
+      "total": 192,
+      "with_findings": 0
+    },
+    "dashboard_backend": {
+      "total": 8,
+      "with_findings": 4
+    },
+    "docs": {
+      "total": 62,
+      "with_findings": 0
+    },
+    "enforcement": {
+      "total": 1,
+      "with_findings": 0
+    },
+    "evolution_engine": {
+      "total": 35,
+      "with_findings": 27
+    },
+    "execution_engine": {
+      "total": 40,
+      "with_findings": 27
+    },
+    "governance_engine": {
+      "total": 30,
+      "with_findings": 22
+    },
+    "immutable_core": {
+      "total": 2,
+      "with_findings": 0
+    },
+    "intelligence_engine": {
+      "total": 105,
+      "with_findings": 52
+    },
+    "learning_engine": {
+      "total": 33,
+      "with_findings": 24
+    },
+    "opponent_model": {
+      "total": 2,
+      "with_findings": 1
+    },
+    "registry": {
+      "total": 18,
+      "with_findings": 0
+    },
+    "scripts": {
+      "total": 7,
+      "with_findings": 1
+    },
+    "sensory": {
+      "total": 36,
+      "with_findings": 26
+    },
+    "simulation": {
+      "total": 25,
+      "with_findings": 23
+    },
+    "simulation_engine": {
+      "total": 3,
+      "with_findings": 2
+    },
+    "state": {
+      "total": 26,
+      "with_findings": 20
+    },
+    "system": {
+      "total": 3,
+      "with_findings": 2
+    },
+    "system_engine": {
+      "total": 68,
+      "with_findings": 35
+    },
+    "tests": {
+      "total": 382,
+      "with_findings": 299
+    },
+    "tools": {
+      "total": 25,
+      "with_findings": 17
+    },
+    "ui": {
+      "total": 33,
+      "with_findings": 19
+    }
+  },
+  "files_with_findings": 631,
+  "orphan_modules": 2,
+  "total_files": 1245
+}

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- DIX VISION v42.2 WinSW Service Configuration
+     WinSW (https://github.com/winsw/winsw) is the recommended
+     actively-maintained alternative to NSSM.
+
+     Install:
+       1. Download winsw.exe from https://github.com/winsw/winsw/releases
+       2. Rename it to DIX_VISION.exe
+       3. Place this XML next to it as DIX_VISION.xml
+       4. Run: DIX_VISION.exe install
+       5. Run: DIX_VISION.exe start
+-->
+<service>
+  <id>DIX_VISION</id>
+  <name>DIX VISION v42.2 Trading Engine</name>
+  <description>Autonomous trading system — Janus-Sentinel</description>
+  <executable>python.exe</executable>
+  <arguments>windows\service\service_wrapper.py</arguments>
+  <startmode>Automatic</startmode>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>3</keepFiles>
+  </log>
+  <onfailure action="restart" delay="5 sec" />
+  <onfailure action="restart" delay="10 sec" />
+  <onfailure action="none" />
+  <resetfailure>1 hour</resetfailure>
+</service>

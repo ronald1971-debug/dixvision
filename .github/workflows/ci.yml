@@ -1,0 +1,50 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    # CI-speedup — bound the whole job at 20 minutes so a hung test
+    # can no longer block the queue at the GitHub-Actions 6-hour
+    # default. The per-test budget lives in [tool.pytest.ini_options].
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Ruff
+        run: ruff check .
+
+      - name: Authority lint (T1 / C2 / C3 / W1 / L1 / L2 / L3 / B1)
+        run: python tools/authority_lint.py --strict .
+
+      - name: SCVS lint (SCVS-01 / SCVS-02 + SCVS-08 warnings)
+        run: python tools/scvs_lint.py .
+
+      - name: Authority matrix lint (registry/authority_matrix.yaml)
+        run: python tools/authority_matrix_lint.py
+
+      - name: Constraint engine lint (registry/constraint_rules.yaml)
+        run: python tools/constraint_lint.py
+
+      - name: Pytest
+        # The per-test budget configured in
+        # ``[tool.pytest.ini_options]`` (``pytest-timeout``) aborts
+        # any individual test that exceeds 120s, so a hung WS /
+        # asyncio / network-blocked test can no longer pin the job
+        # at the GitHub-Actions 6-hour default.
+        run: pytest -q

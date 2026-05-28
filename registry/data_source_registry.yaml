@@ -1,0 +1,442 @@
+# SCVS — Source & Consumption Validation System (Phase 1).
+#
+# Refs:
+#   docs/manifest_v3.5_delta.md §SCVS (INV-57, SAFE-54..56)
+#   system_engine/scvs/source_registry.py  (loader + schema)
+#
+# Every external data input the system can ingest is declared here.
+# Per SCVS-01 / SCVS-02, the relationship between this file and the
+# per-module ``consumes.yaml`` declarations must be bidirectionally
+# closed:
+#
+#   * every ``enabled: true`` source must appear in some
+#     ``consumes.yaml`` (no unused live source) — SCVS-01.
+#   * every ``consumes.yaml`` ``source_id`` must appear here
+#     (no phantom consumption) — SCVS-02.
+#
+# Phase 1 ships the registry skeleton + the lint surface; runtime
+# heartbeats / hazard escalation / schema enforcement land in
+# SCVS Phase 2 + Phase 3. Most rows are ``enabled: false`` until
+# their adapters are actually wired and exercised by a module.
+#
+# Schema (per source):
+#   id:        SRC-<CATEGORY>-<PROVIDER>-<NNN>     (string, unique)
+#   name:      human-readable name                 (string, required)
+#   category:  market | news | social | onchain    (string, required)
+#              | macro | regulatory | dev | alt
+#              | trader | ai | synthetic | sensory
+#   provider:  short provider id                   (string, required)
+#   endpoint:  canonical URL / wss / API root       (string, required)
+#   schema:    fully-qualified contract reference  (string, required)
+#   auth:      none | required                     (string, required)
+#   enabled:   feed is wired and live              (bool, default false)
+#   critical:  liveness-fail halts dependents      (bool, default false)
+#   notes:     free-form provenance pointer        (string, optional)
+
+version: v0.1.0
+
+sources:
+  # -----------------------------------------------------------------
+  # Market — centralised exchanges (CEX)
+  # -----------------------------------------------------------------
+  - id: SRC-MARKET-BINANCE-001
+    name: "Binance spot WS+REST"
+    category: market
+    provider: binance
+    endpoint: "wss://stream.binance.com:9443"
+    schema: "core.contracts.market.MarketTick"
+    auth: none
+    enabled: true
+    critical: false
+    notes: >-
+      Read-only public 24hrTicker stream consumed by ui.feeds.binance_public_ws
+      (see ui/feeds/consumes.yaml). No credentials required, no order routing.
+      Pump is opt-in via ``POST /api/feeds/binance/start``.
+  - id: SRC-MARKET-COINBASE-001
+    name: "Coinbase Advanced Trade WS"
+    category: market
+    provider: coinbase
+    endpoint: "wss://advanced-trade-ws.coinbase.com"
+    schema: "core.contracts.market.MarketTick"
+    auth: none
+    enabled: false
+    critical: false
+  - id: SRC-MARKET-KRAKEN-001
+    name: "Kraken WS+REST"
+    category: market
+    provider: kraken
+    endpoint: "wss://ws.kraken.com"
+    schema: "core.contracts.market.MarketTick"
+    auth: none
+    enabled: false
+    critical: false
+
+  # -----------------------------------------------------------------
+  # Market — decentralised exchanges (DEX) + derivatives
+  # -----------------------------------------------------------------
+  - id: SRC-MARKET-UNISWAP-001
+    name: "Uniswap V3 subgraph"
+    category: market
+    provider: uniswap
+    endpoint: "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3"
+    schema: "core.contracts.market.MarketTick"
+    auth: none
+    enabled: false
+    critical: false
+  - id: SRC-MARKET-DERIBIT-001
+    name: "Deribit WS"
+    category: market
+    provider: deribit
+    endpoint: "wss://www.deribit.com/ws/api/v2"
+    schema: "core.contracts.market.MarketTick"
+    auth: none
+    enabled: false
+    critical: false
+
+  # -----------------------------------------------------------------
+  # News
+  # -----------------------------------------------------------------
+  - id: SRC-NEWS-COINDESK-001
+    name: "CoinDesk RSS"
+    category: news
+    provider: coindesk
+    endpoint: "https://www.coindesk.com/arc/outboundfeeds/rss/"
+    schema: "core.contracts.news.NewsItem"
+    auth: none
+    enabled: true
+    critical: false
+  - id: SRC-NEWS-REUTERS-001
+    name: "Reuters wire (placeholder — auth required)"
+    category: news
+    provider: reuters
+    endpoint: "https://www.reuters.com"
+    schema: "sensory.web_autolearn.contracts.NewsItem"
+    auth: required
+    enabled: false
+    critical: false
+
+  # -----------------------------------------------------------------
+  # Social / sentiment
+  # -----------------------------------------------------------------
+  - id: SRC-SOCIAL-X-001
+    name: "X (Twitter) v2 API"
+    category: social
+    provider: x
+    endpoint: "https://api.x.com/2"
+    schema: "sensory.web_autolearn.contracts.SocialPost"
+    auth: required
+    enabled: false
+    critical: false
+  - id: SRC-SOCIAL-REDDIT-001
+    name: "Reddit JSON"
+    category: social
+    provider: reddit
+    endpoint: "https://www.reddit.com"
+    schema: "sensory.web_autolearn.contracts.SocialPost"
+    auth: none
+    enabled: false
+    critical: false
+
+  # -----------------------------------------------------------------
+  # On-chain intelligence
+  # -----------------------------------------------------------------
+  - id: SRC-ONCHAIN-GLASSNODE-001
+    name: "Glassnode REST"
+    category: onchain
+    provider: glassnode
+    endpoint: "https://api.glassnode.com/v1"
+    schema: "sensory.onchain.contracts.OnChainMetric"
+    auth: required
+    enabled: false
+    critical: false
+  - id: SRC-ONCHAIN-DUNE-001
+    name: "Dune Analytics API"
+    category: onchain
+    provider: dune
+    endpoint: "https://api.dune.com/api/v1"
+    schema: "sensory.onchain.contracts.OnChainMetric"
+    auth: required
+    enabled: false
+    critical: false
+
+  # -----------------------------------------------------------------
+  # Macro / policy
+  # -----------------------------------------------------------------
+  - id: SRC-MACRO-FRED-001
+    name: "FRED (Federal Reserve)"
+    category: macro
+    provider: fred
+    endpoint: "https://api.stlouisfed.org/fred"
+    schema: "core.contracts.macro.MacroObservation"
+    auth: required
+    enabled: true
+    critical: false
+  - id: SRC-MACRO-BLS-001
+    name: "U.S. Bureau of Labor Statistics"
+    category: macro
+    provider: bls
+    endpoint: "https://api.bls.gov/publicAPI/v2"
+    schema: "core.contracts.macro.MacroObservation"
+    auth: required
+    enabled: true
+    critical: false
+
+  # -----------------------------------------------------------------
+  # Regulatory / filings
+  # -----------------------------------------------------------------
+  - id: SRC-REG-SEC-EDGAR-001
+    name: "SEC EDGAR full-text search"
+    category: regulatory
+    provider: sec
+    endpoint: "https://efts.sec.gov/LATEST/search-index"
+    schema: "sensory.regulatory.contracts.Filing"
+    auth: none
+    enabled: false
+    critical: false
+
+  # -----------------------------------------------------------------
+  # Developer / technical / code
+  # -----------------------------------------------------------------
+  - id: SRC-DEV-GITHUB-001
+    name: "GitHub REST v3"
+    category: dev
+    provider: github
+    endpoint: "https://api.github.com"
+    schema: "sensory.dev.contracts.RepoEvent"
+    auth: required
+    enabled: false
+    critical: false
+
+  # -----------------------------------------------------------------
+  # Alternative / edge
+  # -----------------------------------------------------------------
+  - id: SRC-ALT-POLYMARKET-001
+    name: "Polymarket prediction markets"
+    category: alt
+    provider: polymarket
+    endpoint: "https://clob.polymarket.com"
+    schema: "sensory.alt.contracts.PredictionMarket"
+    auth: none
+    enabled: false
+    critical: false
+
+  # -----------------------------------------------------------------
+  # Trader feeds (Trader-Intelligence layer — Wave-04 PR-2)
+  #
+  # Producers parse adapter-specific payloads into
+  # ``core.contracts.trader_intelligence.TraderModel`` data and hand
+  # them to ``intelligence_engine.trader_modeling.aggregator``
+  # (the only B29-allowed runtime constructor of ``TraderObservation``).
+  # The aggregator wraps each one as a ``SystemEvent
+  # (sub_kind=TRADER_OBSERVED)`` row on the existing 4-event bus.
+  # -----------------------------------------------------------------
+  - id: SRC-TRADER-TRADINGVIEW-001
+    name: "TradingView ideas / alerts (read-only envelope ingest)"
+    category: trader
+    provider: tradingview
+    endpoint: "https://www.tradingview.com"
+    schema: "core.contracts.trader_intelligence.TraderModel"
+    auth: none
+    enabled: true
+    critical: false
+    notes: >-
+      Read-only structured-envelope ingest path consumed by
+      ui.feeds.tradingview_ideas (parser) and
+      intelligence_engine.trader_modeling (aggregator). No live
+      WebSocket / scrape — envelopes are pushed via
+      ``POST /api/feeds/tradingview/observation`` from a webhook
+      relay or operator. Per Wave-04 PR-2 architectural plan: the
+      pipeline is the load-bearing artefact, not the specific source.
+
+  # -----------------------------------------------------------------
+  # AI providers (Cognitive Router Layer — registry-driven)
+  #
+  # Chat widgets (Indira Chat, Dyon Chat) read this section at boot
+  # and on hot-reload; the provider list is NEVER hard-coded in
+  # widget code. Adding a row here makes the provider appear in both
+  # widgets automatically (subject to the chat widgets' authority
+  # lint, which forbids string literals naming a specific provider).
+  #
+  # ``capabilities`` is the small extension that lets the router pick
+  # providers per task class. Allowed tags are listed in
+  # ``system_engine.scvs.source_registry.ALLOWED_AI_CAPABILITIES``.
+  # -----------------------------------------------------------------
+  - id: SRC-AI-OPENAI-001
+    name: "OpenAI ChatGPT"
+    category: ai
+    provider: openai
+    endpoint: "https://api.openai.com/v1"
+    schema: "sensory.cognitive.contracts.AIResponse"
+    auth: required
+    enabled: true
+    critical: false
+    capabilities:
+      - reasoning
+      - code_gen
+      - multimodal
+      - tool_use
+      - long_context
+  - id: SRC-AI-GEMINI-001
+    name: "Google Gemini"
+    category: ai
+    provider: google
+    # ``v1beta`` is required for ``generateContent`` with system
+    # prompts and ``responseMimeType``; ``v1`` rejects those fields.
+    # Must stay in sync with ``GoogleGeminiChatTransport.BASE_URL``.
+    endpoint: "https://generativelanguage.googleapis.com/v1beta"
+    schema: "sensory.cognitive.contracts.AIResponse"
+    auth: required
+    enabled: true
+    critical: false
+    capabilities:
+      - reasoning
+      - multimodal
+      - long_context
+      - tool_use
+  - id: SRC-AI-GROK-001
+    name: "xAI Grok"
+    category: ai
+    provider: xai
+    endpoint: "https://api.x.ai/v1"
+    schema: "sensory.cognitive.contracts.AIResponse"
+    auth: required
+    enabled: true
+    critical: false
+    capabilities:
+      - reasoning
+      - realtime_search
+      - tool_use
+  - id: SRC-AI-DEEPSEEK-001
+    name: "DeepSeek"
+    category: ai
+    provider: deepseek
+    endpoint: "https://api.deepseek.com/v1"
+    schema: "sensory.cognitive.contracts.AIResponse"
+    auth: required
+    enabled: true
+    critical: false
+    capabilities:
+      - reasoning
+      - code_gen
+      - long_context
+  - id: SRC-AI-DEVIN-001
+    name: "Devin AI"
+    category: ai
+    provider: cognition
+    endpoint: "https://api.devin.ai/v1"
+    schema: "sensory.cognitive.contracts.AIResponse"
+    auth: required
+    enabled: true
+    critical: false
+    capabilities:
+      - code_gen
+      - reasoning
+      - tool_use
+      - agent_orchestration
+      - long_context
+    notes: >-
+      Devin AI multi-step coding agent. Used by Dyon Chat for delegating
+      connector authoring and patch tasks. This is an external TOOL, not
+      a system voice — it has no charter and no authority over system state.
+
+  # -----------------------------------------------------------------
+  # Synthetic — internal scenario generator + replay
+  # -----------------------------------------------------------------
+  - id: SRC-SYN-REPLAY-001
+    name: "Internal replay buffer (RAL)"
+    category: synthetic
+    provider: internal
+    endpoint: "internal://replay"
+    schema: "core.contracts.market.MarketTick"
+    auth: none
+    enabled: false
+    critical: false
+
+  # -----------------------------------------------------------------
+  # Sensory — local feature extractors (C-4 / P2-2)
+  #
+  # The sensory perimeter (neuromorphic SNNs, web-autolearn curator,
+  # technical indicators) is registered here so that the SCVS lint can
+  # enforce bidirectional closure once any consumer declares the
+  # corresponding ``source_id`` in its ``consumes.yaml``. Until then
+  # the rows are ``enabled: false`` — purely declarative — and SCVS-01
+  # (unused live source) does not fire.
+  #
+  # The ``endpoint`` field uses the ``local://`` scheme to mark the
+  # producer as in-repo (no network egress, no credential). The
+  # ``schema`` field points at the typed value class emitted by the
+  # sensor so consumers can resolve the contract at import time.
+  # -----------------------------------------------------------------
+  - id: SRC-SENSORY-SNN-INDIRA-001
+    name: "Neuromorphic SNN — Indira pulse signal (NEUR-01)"
+    category: sensory
+    provider: local
+    endpoint: "local://sensory.neuromorphic.indira_signal"
+    schema: "sensory.neuromorphic.contracts.PulseSignal"
+    auth: none
+    enabled: false
+    critical: false
+    notes: >-
+      LIF / SNN feature extractor over a window of MarketTick rows.
+      Producer: sensory.neuromorphic.indira_signal.SNNLifDetector.
+      Output: PulseSignal (polarity + intensity). Frozen weights;
+      runtime-safe (b-14 norse-torch surface). Consumed by
+      intelligence_engine.* via the BeliefState projector.
+  - id: SRC-SENSORY-SNN-DYON-001
+    name: "Neuromorphic SNN — Dyon anomaly pulse (NEUR-02)"
+    category: sensory
+    provider: local
+    endpoint: "local://sensory.neuromorphic.dyon_anomaly"
+    schema: "sensory.neuromorphic.contracts.AnomalyPulse"
+    auth: none
+    enabled: false
+    critical: false
+    notes: >-
+      Z-score-based anomaly detector over a numeric metric window.
+      Producer: sensory.neuromorphic.dyon_anomaly. Output:
+      AnomalyPulse (z_score + severity). Never emits a hazard by
+      itself — escalation policy lives in system_engine.* (Dyon).
+  - id: SRC-SENSORY-SNN-GOVERNANCE-001
+    name: "Neuromorphic SNN — Governance risk pulse (NEUR-03)"
+    category: sensory
+    provider: local
+    endpoint: "local://sensory.neuromorphic.governance_risk"
+    schema: "sensory.neuromorphic.contracts.RiskPulse"
+    auth: none
+    enabled: false
+    critical: false
+    notes: >-
+      STDP-trained SNN over decision-audit-trail features. Producer:
+      sensory.neuromorphic.governance_risk_snn. Output: RiskPulse
+      (risk_kind + risk_score). One input among many for governance
+      decisions; never a sole-gate.
+  - id: SRC-SENSORY-WEB-AUTOLEARN-001
+    name: "Web autolearn curator (WEBLEARN-04)"
+    category: sensory
+    provider: local
+    endpoint: "local://sensory.web_autolearn.curator"
+    schema: "sensory.web_autolearn.contracts.CuratedItem"
+    auth: none
+    enabled: false
+    critical: false
+    notes: >-
+      Crawler -> AI filter -> curator pipeline producing CuratedItem
+      rows. Upstream raw inputs are external sources registered above
+      (Reuters, X, Reddit). This row registers the LOCAL projection.
+      Producer: sensory.web_autolearn.curator. Consumed by the slow-
+      loop learner and the cognitive RAG knowledge index.
+  - id: SRC-SENSORY-INDICATORS-001
+    name: "Technical indicators bank"
+    category: sensory
+    provider: local
+    endpoint: "local://sensory.indicators.technical"
+    schema: "sensory.indicators.technical.IndicatorBank"
+    auth: none
+    enabled: false
+    critical: false
+    notes: >-
+      Pure-Python rolling indicators (RSI / MACD / ATR / ADX / VWAP /
+      OBV / BBANDS / STOCH) computed on demand from a MarketTick
+      window. Producer: sensory.indicators.technical. Consumed by
+      intelligence_engine.* alpha plugins via the BeliefState
+      projector.
