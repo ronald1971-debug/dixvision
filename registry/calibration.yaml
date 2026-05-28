@@ -5,6 +5,13 @@
 # fractions unless noted.
 
 version: "v1"
+window_ns: 86400000000000    # default calibration window: 24h in nanoseconds
+thresholds:
+  belief_drift: 0.15         # INV-53: max acceptable belief drift
+  pressure_drift: 0.20       # INV-53: max acceptable pressure drift
+  divergence: 0.10           # INV-55: max sim-vs-live divergence
+  critical: 0.35             # SAFE-49/50: governance alert threshold
+
 coherence_calibrator:
   window_ns: 86400000000000          # 24h in nanoseconds
   min_samples_per_window: 50

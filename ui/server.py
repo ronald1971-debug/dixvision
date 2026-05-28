@@ -1466,6 +1466,14 @@ class _State:
         )
 
 
+def _event_to_dict(event: Event) -> dict[str, Any]:
+    if not is_dataclass(event):
+        raise TypeError(f"non-dataclass event: {type(event)}")
+    raw = asdict(event)
+    # Enums are JSON-serialisable as their str value (StrEnum).
+    return json.loads(json.dumps(raw, default=str))
+
+
 STATE = _State()
 
 
@@ -1516,14 +1524,6 @@ _run_scvs_boot_check()
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _event_to_dict(event: Event) -> dict[str, Any]:
-    if not is_dataclass(event):
-        raise TypeError(f"non-dataclass event: {type(event)}")
-    raw = asdict(event)
-    # Enums are JSON-serialisable as their str value (StrEnum).
-    return json.loads(json.dumps(raw, default=str))
 
 
 def _read_yaml(path: Path) -> dict[str, Any]:

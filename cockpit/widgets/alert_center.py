@@ -1,58 +1,48 @@
 """Cockpit widget — alert center.
 
-Aggregates and prioritises active alerts from the hazard lane
-and liveness watchdog. Read-only. B1.
+Reads active alerts from the hazard event ring on ui.server.STATE
+and the liveness watchdog. No constructor injection required.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["AlertEntry", "AlertCenterState", "AlertCenterWidget"]
-
-
-@dataclass(frozen=True, slots=True)
-class AlertEntry:
-    alert_id: str
-    ts_ns: int
-    severity: str       # "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO"
-    source: str
-    message: str
-    acknowledged: bool
-
-
-@dataclass(frozen=True, slots=True)
-class AlertCenterState:
-    ts_ns: int
-    alerts: tuple[AlertEntry, ...]
-    unacknowledged_count: int
-    critical_count: int
-
+__all__ = ["alert_center_payload"]
 
 _SEVERITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}
 
 
-class AlertCenterWidget:
-    """Read/acknowledge interface for alert center panel."""
+def alert_center_payload(limit: int = 50) -> dict[str, Any]:
+    alerts: list[dict[str, Any]] = []
+    try:
+        from ui.server import STATE  # noqa: PLC0415
+        # Pull recent events from the in-memory ring, filter to HAZARD kind
+        from core.contracts.events import EventKind  # noqa: PLC0415
+        ring = list(STATE.events)[:limit * 2]
+        for entry in ring:
+            ev = entry.get("event") if isinstance(entry, dict) else None
+            if ev is None:
+                continue
+            if getattr(ev, "kind", None) != EventKind.HAZARD:
+                continue
+            alerts.append({
+                "alert_id": str(getattr(ev, "id", id(ev))),
+                "ts_ns": getattr(ev, "ts_ns", 0),
+                "severity": getattr(ev, "severity", "INFO"),
+                "source": entry.get("source", "unknown"),
+                "message": getattr(ev, "message", str(ev)),
+                "acknowledged": False,
+            })
+            if len(alerts) >= limit:
+                break
+    except Exception:  # noqa: BLE001
+        pass
 
-    def __init__(self, alert_store: Any) -> None:
-        self._store = alert_store
-
-    def get_state(self, ts_ns: int, limit: int = 50) -> AlertCenterState:
-        raw = self._store.active(limit=limit)
-        alerts = tuple(
-            sorted(raw, key=lambda a: _SEVERITY_ORDER.get(a.severity, 99))
-        )
-        unack = sum(1 for a in alerts if not a.acknowledged)
-        critical = sum(1 for a in alerts if a.severity == "CRITICAL")
-        return AlertCenterState(
-            ts_ns=ts_ns,
-            alerts=alerts,
-            unacknowledged_count=unack,
-            critical_count=critical,
-        )
-
-    def acknowledge(self, alert_id: str, operator_id: str, ts_ns: int) -> bool:
-        return self._store.acknowledge(alert_id=alert_id,
-                                       operator_id=operator_id, ts_ns=ts_ns)
+    alerts.sort(key=lambda a: _SEVERITY_ORDER.get(a["severity"], 99))
+    critical = sum(1 for a in alerts if a["severity"] == "CRITICAL")
+    return {
+        "alerts": alerts,
+        "unacknowledged_count": len(alerts),
+        "critical_count": critical,
+    }

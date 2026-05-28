@@ -381,17 +381,19 @@ class TestLongHorizonMemoryStore(unittest.TestCase):
         self.assertLessEqual(p.confidence, 1.0)
 
     def test_drift_rate_computed_with_enough_obs(self) -> None:
-        # Increasing confidence → positive drift_rate
+        # Observations spaced 2 days apart so week-scale regression has signal
+        _2_DAYS_NS = 2 * 86_400_000_000_000
         for i in range(10):
             self.store.observe("sys", PatternKind.BEHAVIORAL_DRIFT,
-                               0.1 + i * 0.08, _ts() + i * 1_000_000_000)
+                               0.1 + i * 0.08, _ts() + i * _2_DAYS_NS)
         p = self.store.get("sys", PatternKind.BEHAVIORAL_DRIFT)
         self.assertGreater(p.drift_rate, 0.0)
 
     def test_declining_confidence_negative_drift(self) -> None:
+        _2_DAYS_NS = 2 * 86_400_000_000_000
         for i in range(10):
             self.store.observe("sys", PatternKind.BEHAVIORAL_DRIFT,
-                               0.9 - i * 0.08, _ts() + i * 1_000_000_000)
+                               0.9 - i * 0.08, _ts() + i * _2_DAYS_NS)
         p = self.store.get("sys", PatternKind.BEHAVIORAL_DRIFT)
         self.assertLess(p.drift_rate, 0.0)
 

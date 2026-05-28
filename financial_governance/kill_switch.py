@@ -163,6 +163,7 @@ class KillSwitch:
         with self._lock:
             return self._state is not KillSwitchState.SAFE
 
+    @property
     def state(self) -> KillSwitchState:
         with self._lock:
             return self._state

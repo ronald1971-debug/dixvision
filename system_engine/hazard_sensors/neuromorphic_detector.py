@@ -152,4 +152,11 @@ class NeuromorphicDetector:
         )
 
 
+    def reset(self) -> None:
+        """Disarm the latch and clear all buffered samples."""
+        self._armed = False
+        self._burst_samples.clear()
+        self._corr_samples.clear()
+
+
 __all__ = ["NeuromorphicDetector"]

@@ -72,7 +72,7 @@ __all__ = (
     "enable_aiofiles_factory",
 )
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("aiofiles",)
 
 #: Maximum buffered records before an automatic flush (canonical default).
 DEFAULT_BATCH_SIZE_MAX: Final[int] = 256
@@ -468,7 +468,7 @@ class AsyncLedgerWriter:
         self._path.parent.mkdir(parents=True, exist_ok=True)
         fd = os.open(
             str(self._path),
-            os.O_WRONLY | os.O_APPEND | os.O_CREAT,
+            os.O_WRONLY | os.O_APPEND | os.O_CREAT | getattr(os, "O_BINARY", 0),
             0o644,
         )
         try:

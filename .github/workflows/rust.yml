@@ -1,0 +1,67 @@
+name: rust
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/rust_bridge/**"
+      - ".github/workflows/rust.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "tools/rust_bridge/**"
+      - ".github/workflows/rust.yml"
+
+# Only the rust_bridge template is compiled here.
+# Full Rust revival is gated by the shadow window in docs/rust_revival_schedule.yaml.
+# This CI validates that the template crate compiles and tests pass in isolation.
+
+jobs:
+  rust-build:
+    name: Rust bridge template — build & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Cargo registry + build artefacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            tools/rust_bridge/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('tools/rust_bridge/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: rustfmt check
+        working-directory: tools/rust_bridge
+        run: cargo fmt --check
+
+      - name: clippy
+        working-directory: tools/rust_bridge
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: build (debug)
+        working-directory: tools/rust_bridge
+        run: cargo build
+
+      - name: build (release)
+        working-directory: tools/rust_bridge
+        run: cargo build --release
+
+      - name: test
+        working-directory: tools/rust_bridge
+        run: cargo test
+
+      - name: bench binary compiles
+        working-directory: tools/rust_bridge
+        run: cargo build --release --bin fast_risk_cache_bench

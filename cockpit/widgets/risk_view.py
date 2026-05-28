@@ -1,7 +1,7 @@
 """Cockpit widget — risk dashboard view.
 
-Aggregates and formats risk data for the operator dashboard.
-Read-only. B1.
+Pulls from get_risk_cache() and get_arbiter() directly.
+No constructor injection required.
 """
 
 from __future__ import annotations
@@ -9,71 +9,53 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["RiskViewWidget", "RiskViewState"]
+from system.fast_risk_cache import get_risk_cache
+
+__all__ = ["risk_view_payload"]
 
 
-@dataclass(frozen=True, slots=True)
-class RiskBar:
-    label: str
-    current: float
-    limit: float
-    pct_used: float
-    status: str    # "OK" | "WARNING" | "CRITICAL"
+def risk_view_payload() -> dict[str, Any]:
+    rc = get_risk_cache().get()
+    drawdown_pct_used = 0.0
+    if rc.circuit_breaker_drawdown and rc.circuit_breaker_drawdown > 0:
+        drawdown_pct_used = min(100.0, rc.circuit_breaker_drawdown)
 
+    def _status(pct: float) -> str:
+        if pct >= 90:
+            return "CRITICAL"
+        if pct >= 70:
+            return "WARNING"
+        return "OK"
 
-@dataclass(frozen=True, slots=True)
-class RiskViewState:
-    ts_ns: int
-    bars: tuple[RiskBar, ...]
-    alert_count: int
-    kill_switch_armed: bool
+    bars = [
+        {
+            "label": "Drawdown limit",
+            "current": rc.circuit_breaker_drawdown,
+            "limit": 100.0,
+            "pct_used": drawdown_pct_used,
+            "status": _status(drawdown_pct_used),
+        },
+        {
+            "label": "Loss limit",
+            "current": rc.circuit_breaker_loss_pct,
+            "limit": 100.0,
+            "pct_used": rc.circuit_breaker_loss_pct or 0.0,
+            "status": _status(rc.circuit_breaker_loss_pct or 0.0),
+        },
+        {
+            "label": "Max order size USD",
+            "current": rc.max_order_size_usd,
+            "limit": rc.max_order_size_usd,
+            "pct_used": 0.0,
+            "status": "OK",
+        },
+    ]
 
-
-def _bar_status(pct: float) -> str:
-    if pct >= 90:
-        return "CRITICAL"
-    if pct >= 70:
-        return "WARNING"
-    return "OK"
-
-
-class RiskViewWidget:
-    """Read interface for risk dashboard rendering."""
-
-    def __init__(self, risk_provider: Any) -> None:
-        self._risk = risk_provider
-
-    def get_state(self, ts_ns: int) -> RiskViewState:
-        snap = self._risk.get_snapshot(ts_ns)
-        bars: list[RiskBar] = [
-            RiskBar(
-                label="Exposure",
-                current=snap.total_exposure_usd,
-                limit=snap.max_exposure_usd,
-                pct_used=snap.exposure_utilisation_pct,
-                status=_bar_status(snap.exposure_utilisation_pct),
-            ),
-            RiskBar(
-                label="Drawdown",
-                current=snap.current_drawdown_pct,
-                limit=snap.drawdown_limit_pct,
-                pct_used=(snap.current_drawdown_pct / snap.drawdown_limit_pct * 100
-                           if snap.drawdown_limit_pct > 0 else 0.0),
-                status=_bar_status(snap.current_drawdown_pct / snap.drawdown_limit_pct * 100
-                                    if snap.drawdown_limit_pct > 0 else 0.0),
-            ),
-        ]
-        for pos in snap.positions:
-            bars.append(RiskBar(
-                label=pos.symbol,
-                current=abs(pos.current_qty),
-                limit=pos.limit_qty,
-                pct_used=pos.utilisation_pct,
-                status=_bar_status(pos.utilisation_pct),
-            ))
-        alerts = sum(1 for b in bars if b.status != "OK")
-        return RiskViewState(
-            ts_ns=ts_ns, bars=tuple(bars),
-            alert_count=alerts,
-            kill_switch_armed=snap.kill_condition_triggered,
-        )
+    alert_count = sum(1 for b in bars if b["status"] != "OK")
+    return {
+        "bars": bars,
+        "alert_count": alert_count,
+        "trading_allowed": rc.trading_allowed,
+        "safe_mode": rc.safe_mode,
+        "kill_switch_active": not rc.trading_allowed,
+    }

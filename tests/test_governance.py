@@ -82,13 +82,13 @@ class TestFinancialGovernance:
 
     def test_capital_throttle_blocks_when_exceeded(self):
         from financial_governance.capital_throttle import CapitalThrottle
-        throttle = CapitalThrottle(limit_usd=1000.0, window_seconds=60.0)
+        throttle = CapitalThrottle(limit_usd=1000.0, window_ns=60_000_000_000)
         status = throttle.record_deployment(1500.0)
         assert status.throttled is True
 
     def test_capital_throttle_allows_within_limit(self):
         from financial_governance.capital_throttle import CapitalThrottle
-        throttle = CapitalThrottle(limit_usd=10_000.0, window_seconds=60.0)
+        throttle = CapitalThrottle(limit_usd=10_000.0, window_ns=60_000_000_000)
         status = throttle.record_deployment(500.0)
         assert status.throttled is False
 
@@ -113,31 +113,31 @@ class TestSystemGovernance:
         guard = ContractIntegrityGuard()
         guard.register_contract(
             subsystem="execution_engine",
-            interface="ExecutionIntent",
+            interface={"ExecutionIntent"},
             version="2",
             emits_audit=True,
         )
-        result = guard.validate(
+        violations = guard.validate(
             source="intelligence_engine",
             target="execution_engine",
-            required_interface="ExecutionIntent",
+            required_interface={"ExecutionIntent"},
             required_version="2",
         )
-        assert result.valid is True
+        assert len(violations) == 0
 
     def test_contract_integrity_fails_on_version_mismatch(self):
         from system_governance.contract_integrity import ContractIntegrityGuard
         guard = ContractIntegrityGuard()
         guard.register_contract(
             subsystem="execution_engine",
-            interface="ExecutionIntent",
+            interface={"ExecutionIntent"},
             version="1",
             emits_audit=True,
         )
-        result = guard.validate(
+        violations = guard.validate(
             source="intelligence_engine",
             target="execution_engine",
-            required_interface="ExecutionIntent",
+            required_interface={"ExecutionIntent"},
             required_version="2",
         )
-        assert result.valid is False
+        assert len(violations) > 0

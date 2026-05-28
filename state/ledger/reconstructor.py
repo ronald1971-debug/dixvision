@@ -15,6 +15,7 @@ Deterministic (INV-15): same ledger slice always produces same output.
 from __future__ import annotations
 
 import hashlib
+import json
 import threading
 from dataclasses import dataclass
 from typing import Any, Callable
@@ -77,14 +78,29 @@ class LedgerReconstructor:
             ReconstructionResult with the final state and checksum.
         """
         store = get_event_store()
-        events = store.query(
-            stream_kind=stream_kind,
-            since_ts_ns=since_ts_ns,
-            limit=limit,
-        )
+        raw = store.query(event_type=stream_kind, limit=limit)
 
-        if until_ts_ns is not None:
-            events = [e for e in events if e.ts_ns <= until_ts_ns]
+        # Normalise results: EventStore.query returns dicts; tests may inject
+        # LedgerEvent objects directly via mocking — handle both.
+        events: list[LedgerEvent] = []
+        for r in raw:
+            if isinstance(r, LedgerEvent):
+                events.append(r)
+            else:
+                payload = r.get("payload", {})
+                if isinstance(payload, str):
+                    payload = json.loads(payload)
+                events.append(LedgerEvent(
+                    event_id=r.get("event_id", ""),
+                    event_type=r.get("event_type", stream_kind),
+                    sub_type=r.get("sub_type", ""),
+                    source=r.get("source", ""),
+                    payload=payload,
+                    timestamp_utc=r.get("timestamp_utc", ""),
+                    sequence=r.get("sequence", 0),
+                    prev_hash=r.get("prev_hash", ""),
+                    event_hash=r.get("event_hash", ""),
+                ))
 
         with self._lock:
             reducers = list(self._reducers.get(stream_kind, []))
@@ -101,7 +117,7 @@ class LedgerReconstructor:
             "|".join(hash_parts).encode()
         ).hexdigest() if hash_parts else ""
 
-        actual_until = events[-1].ts_ns if events else since_ts_ns
+        actual_until = since_ts_ns
 
         return ReconstructionResult(
             stream_kind=stream_kind,

@@ -1,73 +1,32 @@
-"""Cockpit API — /mode endpoint.
+"""Cockpit API — /mode payload builder.
 
-Reads and sets the system operating mode: LIVE, PAPER, SIM, MAINTENANCE.
-Mode transitions are validated and logged. B1.
+Operating mode here refers to the system health mode (NORMAL / DEGRADED /
+SAFE_MODE / EMERGENCY_HALT) managed by governance.mode_manager, distinct
+from the autonomy mode in autonomy.py.
+Called by ui/cockpit_routes.py.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["OperatingMode", "ModeTransitionResult", "ModeController"]
-
-_VALID_MODES = frozenset({"LIVE", "PAPER", "SIM", "MAINTENANCE"})
-_VALID_TRANSITIONS: dict[str, frozenset[str]] = {
-    "LIVE": frozenset({"PAPER", "MAINTENANCE"}),
-    "PAPER": frozenset({"LIVE", "SIM", "MAINTENANCE"}),
-    "SIM": frozenset({"PAPER", "MAINTENANCE"}),
-    "MAINTENANCE": frozenset({"PAPER", "SIM"}),
-}
+__all__ = ["mode_payload"]
 
 
-@dataclass(frozen=True, slots=True)
-class OperatingMode:
-    current: str
-    since_ns: int
-
-
-@dataclass(frozen=True, slots=True)
-class ModeTransitionResult:
-    ts_ns: int
-    from_mode: str
-    to_mode: str
-    accepted: bool
-    rejection_reason: str
-
-
-class ModeController:
-    """Controls and validates operating mode transitions."""
-
-    def __init__(self, mode_store: Any, mode_log: Any) -> None:
-        self._store = mode_store
-        self._log = mode_log
-
-    def current(self) -> OperatingMode:
-        return self._store.get()
-
-    def transition(
-        self, ts_ns: int, to_mode: str, operator_id: str
-    ) -> ModeTransitionResult:
-        current = self._store.get()
-        if to_mode not in _VALID_MODES:
-            return ModeTransitionResult(
-                ts_ns=ts_ns, from_mode=current.current, to_mode=to_mode,
-                accepted=False,
-                rejection_reason=f"Invalid mode: {to_mode!r}",
-            )
-        allowed = _VALID_TRANSITIONS.get(current.current, frozenset())
-        if to_mode not in allowed:
-            return ModeTransitionResult(
-                ts_ns=ts_ns, from_mode=current.current, to_mode=to_mode,
-                accepted=False,
-                rejection_reason=f"Transition {current.current!r} → {to_mode!r} not allowed",
-            )
-        self._store.set(to_mode, ts_ns=ts_ns)
-        self._log.record(
-            ts_ns=ts_ns, operator_id=operator_id,
-            from_mode=current.current, to_mode=to_mode,
-        )
-        return ModeTransitionResult(
-            ts_ns=ts_ns, from_mode=current.current, to_mode=to_mode,
-            accepted=True, rejection_reason="",
-        )
+def mode_payload() -> dict[str, Any]:
+    try:
+        from governance.mode_manager import get_mode_manager  # noqa: PLC0415
+        mm = get_mode_manager()
+        return {
+            "current_mode": mm.current_mode().value,
+            "since_ns": mm.since_ns(),
+            "transition_count": mm.transition_count(),
+        }
+    except ImportError:
+        # Fallback: read from the system kernel state projection
+        try:
+            from ui.server import STATE  # noqa: PLC0415
+            mode = STATE.system_kernel.snapshot.mode
+            return {"current_mode": mode.value, "since_ns": 0, "transition_count": 0}
+        except Exception:  # noqa: BLE001
+            return {"current_mode": "UNKNOWN", "since_ns": 0, "transition_count": 0}

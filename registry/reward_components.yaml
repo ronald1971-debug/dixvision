@@ -4,6 +4,18 @@
 # Versioned alongside learning_engine/performance_analysis/reward_shaping.py.
 
 version: "v1"
+allowed_components:
+  - pnl
+  - risk_adj
+  - drawdown_pen
+  - latency_pen
+  - slippage_pen
+  - confidence_bonus
+  - regime_alignment
+  - lens_calibration_penalty
+  - sim_overconfidence_penalty
+  - fallback_pen
+
 components:
   - key: "pnl"
     description: "Raw realised PnL (base component)."

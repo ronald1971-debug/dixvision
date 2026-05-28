@@ -1,59 +1,35 @@
-"""Cockpit API — /ai endpoint.
+"""Cockpit API — /ai payload builder.
 
-Returns AI cognitive state: regime, confidence, memory usage,
-active hypotheses. Read-only. B1.
+Wraps cockpit.llm (get_router) for the operator AI-provider surface.
+Called by ui/cockpit_routes.py.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["AIStateSnapshot", "AIStateProvider"]
+from cockpit.llm import get_router as get_llm_router
+
+__all__ = ["ai_payload"]
 
 
-@dataclass(frozen=True, slots=True)
-class HypothesisSummary:
-    id: str
-    description: str
-    confidence: float
-    age_ticks: int
-
-
-@dataclass(frozen=True, slots=True)
-class AIStateSnapshot:
-    ts_ns: int
-    regime: str
-    regime_confidence: float
-    hidden_state: str
-    memory_utilisation_pct: float
-    active_hypotheses: tuple[HypothesisSummary, ...]
-    overconfidence_flag: bool
-
-
-class AIStateProvider:
-    """Assembles AIStateSnapshot from intelligence engine state."""
-
-    def __init__(self, intelligence_state: Any, memory_store: Any) -> None:
-        self._intel = intelligence_state
-        self._memory = memory_store
-
-    def get_snapshot(self, ts_ns: int) -> AIStateSnapshot:
-        intel = self._intel.current()
-        mem_util = self._memory.utilisation_pct()
-        hypotheses = tuple(
-            HypothesisSummary(
-                id=h.id, description=h.description,
-                confidence=h.confidence, age_ticks=h.age_ticks,
-            )
-            for h in intel.active_hypotheses[:10]
-        )
-        return AIStateSnapshot(
-            ts_ns=ts_ns,
-            regime=intel.regime,
-            regime_confidence=intel.regime_confidence,
-            hidden_state=intel.hidden_state,
-            memory_utilisation_pct=mem_util,
-            active_hypotheses=hypotheses,
-            overconfidence_flag=intel.overconfidence_flag,
-        )
+def ai_payload() -> dict[str, Any]:
+    rows = get_llm_router().status()
+    return {
+        "providers": [
+            {
+                "name": s.name,
+                "role": s.role,
+                "model": s.model,
+                "enabled": s.enabled,
+                "has_key": s.has_key,
+                "capabilities": s.capabilities,
+                "cost_per_1k_tokens_usd": s.cost_per_1k_tokens_usd,
+                "local": s.local,
+                "total_calls": s.total_calls,
+                "total_cost_usd": round(s.total_cost_usd, 6),
+                "last_error": s.last_error,
+            }
+            for s in rows
+        ],
+    }

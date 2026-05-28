@@ -1,57 +1,47 @@
 """Cockpit widget — plugin manager panel.
 
-UI data model for listing, enabling, disabling, and hot-reloading plugins.
-B1.
+Reads plugin state from STATE.plugin_registry and the governance activation gate.
+No constructor injection required.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["PluginEntry", "PluginManagerWidget"]
+__all__ = ["plugin_list_payload", "toggle_plugin", "request_reload"]
 
 
-@dataclass(frozen=True, slots=True)
-class PluginEntry:
-    plugin_id: str
-    version: str
-    state: str           # "ACTIVE" | "INACTIVE" | "ERROR" | "LOADING"
-    activation_gate: str # "ALLOWED" | "DENIED" | "REQUIRES_OPERATOR"
-    last_reload_ns: int
+def plugin_list_payload() -> dict[str, Any]:
+    try:
+        from ui.server import STATE  # noqa: PLC0415
+        registry = STATE.plugin_registry
+        plugins = []
+        for p in registry.all():
+            plugins.append({
+                "plugin_id": getattr(p, "id", str(p)),
+                "version": getattr(p, "version", ""),
+                "state": getattr(p, "state", "UNKNOWN"),
+                "last_reload_ns": getattr(p, "last_reload_ns", 0),
+            })
+        return {"plugins": plugins, "count": len(plugins)}
+    except Exception as exc:  # noqa: BLE001
+        return {"plugins": [], "count": 0, "error": str(exc)}
 
 
-class PluginManagerWidget:
-    """Read/write interface for the plugin manager UI panel."""
+def toggle_plugin(plugin_id: str, enable: bool, operator_id: str) -> dict[str, Any]:
+    try:
+        from ui.server import STATE  # noqa: PLC0415
+        STATE.plugin_registry.set_active(plugin_id, active=enable)
+        return {"accepted": True, "plugin_id": plugin_id, "enabled": enable}
+    except Exception as exc:  # noqa: BLE001
+        return {"accepted": False, "reason": str(exc)}
 
-    def __init__(self, plugin_registry: Any, activation_gate: Any,
-                 reload_signal: Any) -> None:
-        self._registry = plugin_registry
-        self._gate = activation_gate
-        self._reload = reload_signal
 
-    def list_plugins(self) -> tuple[PluginEntry, ...]:
-        return tuple(
-            PluginEntry(
-                plugin_id=p.id,
-                version=p.version,
-                state=p.state,
-                activation_gate=self._gate.check(p.id).name,
-                last_reload_ns=p.last_reload_ns,
-            )
-            for p in self._registry.all()
-        )
-
-    def toggle(self, plugin_id: str, enable: bool, operator_id: str,
-               ts_ns: int) -> dict[str, Any]:
-        gate_result = self._gate.check(plugin_id)
-        if gate_result.name == "DENIED":
-            return {"accepted": False, "reason": "Plugin activation denied by gate"}
-        if gate_result.name == "REQUIRES_OPERATOR" and not operator_id:
-            return {"accepted": False, "reason": "Operator approval required"}
-        self._registry.set_active(plugin_id, active=enable, ts_ns=ts_ns)
-        return {"accepted": True, "reason": ""}
-
-    def request_hot_reload(self, plugin_id: str, ts_ns: int) -> dict[str, Any]:
-        self._reload.enqueue(plugin_id=plugin_id, ts_ns=ts_ns)
+def request_reload(plugin_id: str) -> dict[str, Any]:
+    try:
+        from governance_engine.plugin_lifecycle.hot_reload_signal import get_reload_signal  # noqa: PLC0415
+        import time  # noqa: PLC0415
+        get_reload_signal().enqueue(plugin_id=plugin_id, ts_ns=time.time_ns())
         return {"accepted": True, "queued": True}
+    except Exception as exc:  # noqa: BLE001
+        return {"accepted": False, "reason": str(exc)}

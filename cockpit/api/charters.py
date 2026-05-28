@@ -1,54 +1,30 @@
-"""Cockpit API — /charters endpoint.
+"""Cockpit API — /charters payload builder.
 
-Returns active strategy charters: definitions, lifecycle state,
-performance metrics. Read-only. B1.
+Wraps core.charter.all_charters() for the cockpit operator surface.
+Called by ui/cockpit_routes.py.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["CharterSummary", "CharterProvider"]
+from core.charter import all_charters
+
+__all__ = ["charters_payload"]
 
 
-@dataclass(frozen=True, slots=True)
-class CharterSummary:
-    strategy_id: str
-    kind: str
-    lifecycle_state: str     # "SHADOW" | "ACTIVE" | "RETIRING" | "FROZEN"
-    sharpe: float
-    drawdown_pct: float
-    win_rate: float
-    trade_count: int
-    plugin_chain: tuple[str, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class CharterListResponse:
-    ts_ns: int
-    charters: tuple[CharterSummary, ...]
-
-
-class CharterProvider:
-    """Assembles CharterListResponse from registry + performance state."""
-
-    def __init__(self, strategy_registry: Any, performance_store: Any) -> None:
-        self._registry = strategy_registry
-        self._perf = performance_store
-
-    def list_charters(self, ts_ns: int) -> CharterListResponse:
-        summaries: list[CharterSummary] = []
-        for strategy in self._registry.all():
-            perf = self._perf.get(strategy.id)
-            summaries.append(CharterSummary(
-                strategy_id=strategy.id,
-                kind=strategy.kind,
-                lifecycle_state=strategy.lifecycle_state,
-                sharpe=perf.sharpe if perf else 0.0,
-                drawdown_pct=perf.drawdown_pct if perf else 0.0,
-                win_rate=perf.win_rate if perf else 0.0,
-                trade_count=perf.trade_count if perf else 0,
-                plugin_chain=tuple(strategy.plugin_chain),
-            ))
-        return CharterListResponse(ts_ns=ts_ns, charters=tuple(summaries))
+def charters_payload() -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for voice, c in all_charters().items():
+        out.append({
+            "voice": voice.value,
+            "domain": c.domain.value,
+            "what": c.what,
+            "how": list(c.how),
+            "why": list(c.why),
+            "not_do": list(c.not_do),
+            "accountability": list(c.accountability),
+            "tools": list(c.tools),
+            "peers_readable": c.peers_readable,
+        })
+    return out

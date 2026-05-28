@@ -1,74 +1,75 @@
-"""Cockpit API — /custom_strategies endpoint.
-
-Supports creation and management of operator-defined strategies.
-Validates against registry schema before committing. B1.
-"""
+"""Cockpit API — /custom-strategies payload builders."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["StrategyDraft", "StrategyRegistrationResult", "CustomStrategyHandler"]
+from mind import custom_strategies as _cs
+from mind.strategy_arbiter import get_arbiter
 
-_VALID_KINDS = frozenset({"MOMENTUM", "MEAN_REVERSION", "MICROSTRUCTURE", "HYBRID"})
-
-
-@dataclass(frozen=True, slots=True)
-class StrategyDraft:
-    proposed_id: str
-    kind: str
-    plugin_chain: tuple[str, ...]
-    mutable_params: dict[str, Any]
-    operator_id: str
-    ts_ns: int
-
-
-@dataclass(frozen=True, slots=True)
-class StrategyRegistrationResult:
-    ts_ns: int
-    proposed_id: str
-    accepted: bool
-    assigned_id: str
-    rejection_reason: str
+__all__ = [
+    "list_custom_strategies",
+    "create_custom_strategy",
+    "sandbox_strategy",
+    "shadow_strategy",
+    "canary_strategy",
+    "request_live_strategy",
+    "promote_live_strategy",
+    "retire_strategy",
+]
 
 
-class CustomStrategyHandler:
-    """Validate and register operator-submitted strategy drafts."""
+def _serialise(s: "_cs.CustomStrategy") -> dict[str, Any]:
+    return {
+        "id": s.strategy_id,
+        "name": s.name,
+        "author": s.author,
+        "language": s.language,
+        "state": s.state.value if hasattr(s.state, "value") else str(s.state),
+        "detail": s.detail,
+        "created_utc": s.created_utc,
+        "updated_utc": s.updated_utc,
+    }
 
-    def __init__(self, strategy_registry: Any, plugin_registry: Any) -> None:
-        self._strategies = strategy_registry
-        self._plugins = plugin_registry
 
-    def register(self, draft: StrategyDraft) -> StrategyRegistrationResult:
-        if draft.kind not in _VALID_KINDS:
-            return StrategyRegistrationResult(
-                ts_ns=draft.ts_ns, proposed_id=draft.proposed_id,
-                accepted=False, assigned_id="",
-                rejection_reason=f"Invalid kind: {draft.kind!r}. Must be one of {sorted(_VALID_KINDS)}",
-            )
-        for plugin_id in draft.plugin_chain:
-            if not self._plugins.exists(plugin_id):
-                return StrategyRegistrationResult(
-                    ts_ns=draft.ts_ns, proposed_id=draft.proposed_id,
-                    accepted=False, assigned_id="",
-                    rejection_reason=f"Unknown plugin: {plugin_id!r}",
-                )
-        if self._strategies.exists(draft.proposed_id):
-            return StrategyRegistrationResult(
-                ts_ns=draft.ts_ns, proposed_id=draft.proposed_id,
-                accepted=False, assigned_id="",
-                rejection_reason=f"Strategy ID already exists: {draft.proposed_id!r}",
-            )
-        self._strategies.register(
-            id=draft.proposed_id,
-            kind=draft.kind,
-            plugin_chain=list(draft.plugin_chain),
-            mutable_params=dict(draft.mutable_params),
-            lifecycle_state="SHADOW",
-        )
-        return StrategyRegistrationResult(
-            ts_ns=draft.ts_ns, proposed_id=draft.proposed_id,
-            accepted=True, assigned_id=draft.proposed_id,
-            rejection_reason="",
-        )
+def list_custom_strategies() -> dict[str, Any]:
+    arb = get_arbiter()
+    arb.refresh_decay()
+    return {"strategies": arb.state()}
+
+
+def create_custom_strategy(
+    name: str, source: str, author: str, language: str
+) -> dict[str, Any]:
+    s = _cs.submit(name=name, source=source, author=author, language=language)
+    return _serialise(s)
+
+
+def sandbox_strategy(strategy_id: str, operator_id: str = "operator") -> dict[str, Any]:
+    s = _cs.run_sandbox(strategy_id)
+    return _serialise(s)
+
+
+def shadow_strategy(strategy_id: str, operator_id: str = "operator") -> dict[str, Any]:
+    s = _cs.promote_shadow(strategy_id)
+    return _serialise(s)
+
+
+def canary_strategy(strategy_id: str, operator_id: str = "operator") -> dict[str, Any]:
+    s = _cs.promote_canary(strategy_id)
+    return _serialise(s)
+
+
+def request_live_strategy(strategy_id: str, operator_id: str = "operator") -> dict[str, Any]:
+    result = _cs.request_go_live(strategy_id, operator_id=operator_id)
+    return result  # already a dict
+
+
+def promote_live_strategy(strategy_id: str, operator_id: str = "operator") -> dict[str, Any]:
+    s = _cs.promote_live(strategy_id)
+    return _serialise(s)
+
+
+def retire_strategy(strategy_id: str, operator_id: str = "operator", reason: str = "") -> dict[str, Any]:
+    s = _cs.retire(strategy_id, reason=reason)
+    return _serialise(s)

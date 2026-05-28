@@ -149,8 +149,14 @@ def parse_pairs(
 ClientFactory = Callable[[], httpx.AsyncClient]
 
 
+_DEFAULT_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (compatible; DIXVision/42; +https://github.com/dixvision)",
+    "Accept": "application/json",
+}
+
+
 def _default_client_factory() -> httpx.AsyncClient:
-    return httpx.AsyncClient(timeout=DEFAULT_TIMEOUT_S)
+    return httpx.AsyncClient(timeout=DEFAULT_TIMEOUT_S, headers=_DEFAULT_HEADERS)
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,6 +216,8 @@ class RaydiumPoolPoller:
         self._errors = 0
         self._last_poll_ts_ns: int | None = None
         self._running = False
+        self._consecutive_errors = 0
+        self._retry_after_s: float | None = None
 
     @property
     def url(self) -> str:
@@ -244,10 +252,16 @@ class RaydiumPoolPoller:
                         pass
                 if ok:
                     delay = self._retry_delay_s
+                    self._consecutive_errors = 0
                     sleep_for = self._poll_interval_s
                 else:
-                    sleep_for = delay
-                    delay = min(delay * 2.0, self._retry_delay_max_s)
+                    self._consecutive_errors += 1
+                    if self._retry_after_s is not None:
+                        sleep_for = self._retry_after_s
+                        self._retry_after_s = None
+                    else:
+                        sleep_for = delay
+                        delay = min(delay * 2.0, self._retry_delay_max_s)
                 if self._stop_event.is_set():
                     break
                 try:
@@ -263,6 +277,30 @@ class RaydiumPoolPoller:
         except httpx.HTTPError:
             self._errors += 1
             LOG.exception("raydium_pools: GET %s failed", self._url)
+            return False
+        if resp.status_code == 429:
+            self._errors += 1
+            raw_retry = resp.headers.get("Retry-After", "")
+            try:
+                self._retry_after_s = max(float(raw_retry), self._retry_delay_s)
+            except (ValueError, TypeError):
+                self._retry_after_s = None
+            consecutive = self._consecutive_errors + 1
+            if consecutive <= 1 or self._retry_after_s is not None:
+                LOG.warning(
+                    "raydium_pools: GET %s -> 429 (rate-limited); "
+                    "retry-after=%.0fs",
+                    self._url,
+                    self._retry_after_s or self._retry_delay_s,
+                )
+            elif consecutive == 5:
+                LOG.warning(
+                    "raydium_pools: %d consecutive 429s; further rate-limit "
+                    "warnings suppressed until successful poll",
+                    consecutive,
+                )
+            else:
+                LOG.debug("raydium_pools: GET %s -> 429 (#%d)", self._url, consecutive)
             return False
         if resp.status_code != 200:
             self._errors += 1

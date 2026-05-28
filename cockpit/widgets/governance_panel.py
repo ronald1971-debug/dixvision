@@ -1,85 +1,68 @@
 """Cockpit widget — governance panel.
 
-Displays pending patch proposals, trust scores, and triple-window
-dry-run results for operator review. Read-only. B1.
+Reads pending patch proposals and trust scores from the live governance engine.
+No constructor injection required.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["PatchProposalRow", "GovernancePanelState", "GovernancePanelWidget"]
+__all__ = ["governance_panel_payload"]
 
 
-@dataclass(frozen=True, slots=True)
-class PatchProposalRow:
-    intent_id: str
-    strategy_id: str
-    parameter: str
-    old_value: Any
-    new_value: Any
-    reason: str
-    pipeline_stage: str   # "PROPOSED" | "VALIDATED" | "DRY_RUN" | "APPROVED" | "REJECTED"
-    dry_run_passed: bool
-    ts_ns: int
+def governance_panel_payload() -> dict[str, Any]:
+    try:
+        from ui.server import STATE  # noqa: PLC0415
+        gov = STATE.governance
 
+        # Pending proposals from the governance ledger
+        try:
+            pending_raw = gov.pending_proposals() if hasattr(gov, "pending_proposals") else []
+        except Exception:  # noqa: BLE001
+            pending_raw = []
 
-@dataclass(frozen=True, slots=True)
-class TrustRow:
-    source_id: str
-    score: float
-    streak: int
-    status: str    # "TRUSTED" | "PROBATION" | "SUSPENDED"
+        proposals = [
+            {
+                "intent_id": getattr(p, "intent_id", str(i)),
+                "strategy_id": getattr(p, "strategy_id", ""),
+                "parameter": getattr(p, "parameter", ""),
+                "old_value": getattr(p, "old_value", None),
+                "new_value": getattr(p, "new_value", None),
+                "reason": getattr(p, "reason", ""),
+                "stage": getattr(p, "stage", "PROPOSED"),
+                "ts_ns": getattr(p, "ts_ns", 0),
+            }
+            for i, p in enumerate(pending_raw)
+        ]
 
+        # Trust scores
+        try:
+            trust_raw = gov.trust_scores() if hasattr(gov, "trust_scores") else []
+        except Exception:  # noqa: BLE001
+            trust_raw = []
 
-@dataclass(frozen=True, slots=True)
-class GovernancePanelState:
-    ts_ns: int
-    pending_proposals: tuple[PatchProposalRow, ...]
-    trust_scores: tuple[TrustRow, ...]
-    proposals_awaiting_operator: int
+        trust_scores = [
+            {
+                "source_id": getattr(t, "source_id", str(i)),
+                "score": getattr(t, "score", 0.5),
+                "streak": getattr(t, "streak", 0),
+                "status": (
+                    "TRUSTED" if getattr(t, "score", 0) >= 0.7
+                    else "PROBATION" if getattr(t, "score", 0) >= 0.4
+                    else "SUSPENDED"
+                ),
+            }
+            for i, t in enumerate(trust_raw)
+        ]
 
-
-class GovernancePanelWidget:
-    """Read interface for governance panel rendering."""
-
-    def __init__(self, patch_store: Any, trust_engine: Any) -> None:
-        self._patches = patch_store
-        self._trust = trust_engine
-
-    def get_state(self, ts_ns: int) -> GovernancePanelState:
-        proposals_raw = self._patches.pending()
-        proposals = tuple(
-            PatchProposalRow(
-                intent_id=p.intent_id,
-                strategy_id=p.strategy_id,
-                parameter=p.parameter,
-                old_value=p.old_value,
-                new_value=p.new_value,
-                reason=p.reason,
-                pipeline_stage=p.stage,
-                dry_run_passed=getattr(p, "dry_run_passed", False),
-                ts_ns=p.ts_ns,
-            )
-            for p in proposals_raw
-        )
-        trust_rows = tuple(
-            TrustRow(
-                source_id=t.source_id,
-                score=t.score,
-                streak=t.streak,
-                status=("TRUSTED" if t.score >= 0.7
-                        else "PROBATION" if t.score >= 0.4
-                        else "SUSPENDED"),
-            )
-            for t in self._trust.all_sources()
-        )
-        awaiting = sum(1 for p in proposals
-                       if p.pipeline_stage in ("DRY_RUN", "VALIDATED"))
-        return GovernancePanelState(
-            ts_ns=ts_ns,
-            pending_proposals=proposals,
-            trust_scores=trust_rows,
-            proposals_awaiting_operator=awaiting,
-        )
+        return {
+            "pending_proposals": proposals,
+            "proposals_awaiting_operator": sum(
+                1 for p in proposals if p["stage"] in ("DRY_RUN", "VALIDATED")
+            ),
+            "trust_scores": trust_scores,
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"pending_proposals": [], "proposals_awaiting_operator": 0,
+                "trust_scores": [], "error": str(exc)}

@@ -1,88 +1,73 @@
-"""Cockpit API — /operator endpoint.
-
-Accepts and validates operator commands (halt, resume, override,
-param_change). Returns action receipts. B1.
-"""
+"""Cockpit API — /operator payload builders."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["OperatorCommand", "CommandReceipt", "OperatorCommandHandler"]
+from security import operator as _op
 
-_VALID_ACTIONS = frozenset({"HALT", "RESUME", "OVERRIDE", "PARAM_CHANGE", "PLUGIN_TOGGLE"})
-
-
-@dataclass(frozen=True, slots=True)
-class OperatorCommand:
-    ts_ns: int
-    operator_id: str
-    action: str
-    target: str
-    payload: dict[str, Any]
-    session_id: str
+__all__ = [
+    "pending_approvals",
+    "approval_history",
+    "request_approval",
+    "approve_request",
+    "deny_request",
+    "revoke_request",
+]
 
 
-@dataclass(frozen=True, slots=True)
-class CommandReceipt:
-    ts_ns: int
-    operator_id: str
-    action: str
-    target: str
-    accepted: bool
-    rejection_reason: str
+def _serialise(r: "_op.ApprovalRequest") -> dict[str, Any]:
+    return {
+        "id": r.request_id,
+        "kind": r.kind.value if hasattr(r.kind, "value") else str(r.kind),
+        "subject": r.subject,
+        "payload": r.payload,
+        "state": r.state.value if hasattr(r.state, "value") else str(r.state),
+        "created_utc": r.created_utc,
+        "ttl_sec": r.ttl_sec,
+        "approvers": list(r.approvers) if r.approvers else [],
+    }
 
 
-class OperatorCommandHandler:
-    """Validates and dispatches operator commands to the appropriate engine."""
+def pending_approvals() -> dict[str, Any]:
+    rows = _op.pending()
+    return {"count": len(rows), "requests": [_serialise(r) for r in rows]}
 
-    def __init__(
-        self,
-        halt_fn: Any,
-        override_fn: Any,
-        param_fn: Any,
-        plugin_fn: Any,
-        action_log: Any,
-    ) -> None:
-        self._halt = halt_fn
-        self._override = override_fn
-        self._param = param_fn
-        self._plugin = plugin_fn
-        self._log = action_log
 
-    def handle(self, cmd: OperatorCommand) -> CommandReceipt:
-        if cmd.action not in _VALID_ACTIONS:
-            return CommandReceipt(
-                ts_ns=cmd.ts_ns, operator_id=cmd.operator_id,
-                action=cmd.action, target=cmd.target,
-                accepted=False, rejection_reason=f"Unknown action: {cmd.action!r}",
-            )
-        try:
-            if cmd.action == "HALT":
-                self._halt(reason=f"operator:{cmd.operator_id}", ts_ns=cmd.ts_ns)
-            elif cmd.action == "RESUME":
-                self._halt.clear(ts_ns=cmd.ts_ns)
-            elif cmd.action == "OVERRIDE":
-                self._override(**cmd.payload, ts_ns=cmd.ts_ns)
-            elif cmd.action == "PARAM_CHANGE":
-                self._param(**cmd.payload, ts_ns=cmd.ts_ns)
-            elif cmd.action == "PLUGIN_TOGGLE":
-                self._plugin(**cmd.payload, ts_ns=cmd.ts_ns)
-        except Exception as exc:  # noqa: BLE001
-            return CommandReceipt(
-                ts_ns=cmd.ts_ns, operator_id=cmd.operator_id,
-                action=cmd.action, target=cmd.target,
-                accepted=False, rejection_reason=str(exc),
-            )
-        from cockpit.audit.operator_actions import OperatorAction  # noqa: PLC0415
-        self._log.append(OperatorAction(
-            ts_ns=cmd.ts_ns, operator_id=cmd.operator_id,
-            action_type=cmd.action, target=cmd.target,
-            payload=cmd.payload, session_id=cmd.session_id,
-        ))
-        return CommandReceipt(
-            ts_ns=cmd.ts_ns, operator_id=cmd.operator_id,
-            action=cmd.action, target=cmd.target,
-            accepted=True, rejection_reason="",
-        )
+def approval_history(limit: int = 50) -> dict[str, Any]:
+    rows = _op.history(limit=limit)
+    return {"count": len(rows), "history": [_serialise(r) for r in rows]}
+
+
+def request_approval(
+    kind: str,
+    subject: str,
+    payload: dict | None,
+    ttl_sec: int,
+    requested_by: str,
+) -> dict[str, Any]:
+    try:
+        ak = _op.ApprovalKind(kind)
+    except ValueError:
+        valid = [k.value for k in _op.ApprovalKind]
+        return {"accepted": False, "reason": f"Unknown kind {kind!r}. Valid: {valid}"}
+    r = _op.request_approval(
+        ak, subject=subject, payload=payload or {},
+        ttl_sec=ttl_sec, requested_by=requested_by,
+    )
+    return {"id": r.request_id, "kind": r.kind.value, "created_utc": r.created_utc}
+
+
+def approve_request(request_id: str, operator_id: str, reason: str = "") -> dict[str, Any]:
+    r = _op.approve(request_id, operator_id=operator_id)
+    return {"id": r.request_id, "state": r.state.value}
+
+
+def deny_request(request_id: str, operator_id: str, reason: str = "") -> dict[str, Any]:
+    r = _op.deny(request_id, operator_id=operator_id, reason=reason)
+    return {"id": r.request_id, "state": r.state.value}
+
+
+def revoke_request(request_id: str, operator_id: str) -> dict[str, Any]:
+    r = _op.revoke(request_id, operator_id=operator_id)
+    return {"id": r.request_id, "state": r.state.value}

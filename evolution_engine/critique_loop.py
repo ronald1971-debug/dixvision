@@ -75,7 +75,7 @@ __all__ = (
 )
 
 
-NEW_PIP_DEPENDENCIES: tuple[str, ...] = ()
+NEW_PIP_DEPENDENCIES: tuple[str, ...] = ("metagpt",)
 
 
 MIN_ROUNDS: Final[int] = 1

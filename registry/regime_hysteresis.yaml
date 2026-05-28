@@ -5,6 +5,9 @@
 # above the previous regime's confidence before a transition fires.
 
 version: "v1"
+persistence_ticks: 3       # default: min bars in regime before transition fires
+confidence_delta: 0.08     # default: confidence margin above previous regime
+
 hysteresis:
   persistence_ticks: 3
   confidence_delta: 0.08

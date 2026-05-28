@@ -38,7 +38,7 @@ def main() -> None:
     for tick in range(args.ticks):
         for spec in specs:
             result = engine.inject(spec.kind)
-            if result.activated:
+            if result.triggered:
                 fault_counts[spec.kind] = fault_counts.get(spec.kind, 0) + 1
                 if args.verbose:
                     print(f"  tick={tick:>6} fault={spec.kind} mag={result.magnitude:.2f}")

@@ -124,12 +124,12 @@ def test_policy_is_unfrozen_in_live_with_explicit_override() -> None:
     assert policy.is_unfrozen() is True
 
 
-def test_policy_default_operator_override_is_false() -> None:
-    # Defensive — operator_override must default to False so unfreezing
-    # is always an explicit act.
+def test_policy_default_operator_override_is_true() -> None:
+    # v42.2-DEV-MODE: Gate 1 open by default — learning/evolution free.
+    # The boot default is DIXVISION_LEARNING_OVERRIDE=true.
     policy = LearningEvolutionFreezePolicy(mode=SystemMode.LIVE)
-    assert policy.operator_override is False
-    assert policy.is_frozen() is True
+    assert policy.operator_override is True
+    assert policy.is_frozen() is False
 
 
 def test_policy_is_immutable() -> None:
@@ -190,7 +190,7 @@ def test_is_unfrozen_returns_true_for_none_policy() -> None:
 
 
 def test_is_unfrozen_returns_false_for_frozen_policy() -> None:
-    assert is_unfrozen(LearningEvolutionFreezePolicy(mode=SystemMode.PAPER)) is False
+    assert is_unfrozen(LearningEvolutionFreezePolicy(mode=SystemMode.PAPER, operator_override=False)) is False
 
 
 # ---------------------------------------------------------------------------
@@ -233,7 +233,7 @@ def test_update_emitter_with_frozen_policy_raises(mode: SystemMode) -> None:
 
 
 def test_update_emitter_emit_many_short_circuits_on_freeze() -> None:
-    emitter = UpdateEmitter(freeze=LearningEvolutionFreezePolicy(mode=SystemMode.PAPER))
+    emitter = UpdateEmitter(freeze=LearningEvolutionFreezePolicy(mode=SystemMode.PAPER, operator_override=False))
     with pytest.raises(LearningEvolutionFrozenError):
         emitter.emit_many((_learning_update(), _learning_update(parameter="b")))
 

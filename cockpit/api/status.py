@@ -1,7 +1,7 @@
-"""Cockpit API — /status endpoint.
+"""Cockpit API — /status payload builder.
 
-Returns system health summary: engine states, active strategies,
-bus lane status, last event timestamps. B1.
+Returns system health summary using live singletons. Called by
+ui/cockpit_routes.py — not a FastAPI router itself.
 """
 
 from __future__ import annotations
@@ -9,55 +9,29 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["SystemStatus", "StatusProvider"]
+from system.autonomy import get_autonomy
+from system.fast_risk_cache import get_risk_cache
+
+__all__ = ["status_payload"]
 
 
-@dataclass(frozen=True, slots=True)
-class EngineStatus:
-    name: str
-    state: str       # "RUNNING" | "PAUSED" | "ERROR" | "OFFLINE"
-    last_event_ns: int
+def status_payload() -> dict[str, Any]:
+    rc = get_risk_cache().get()
+    autonomy_mode = get_autonomy().mode()   # mode() is a method, not a property
 
+    overall = "HALTED"
+    if rc.trading_allowed and not rc.safe_mode:
+        overall = "HEALTHY"
+    elif rc.safe_mode:
+        overall = "DEGRADED"
 
-@dataclass(frozen=True, slots=True)
-class SystemStatus:
-    ts_ns: int
-    overall: str     # "HEALTHY" | "DEGRADED" | "HALTED"
-    engines: tuple[EngineStatus, ...]
-    active_strategies: tuple[str, ...]
-    kill_switch_active: bool
-    safe_mode_active: bool
-
-
-class StatusProvider:
-    """Assembles SystemStatus from injected state readers."""
-
-    def __init__(
-        self,
-        engine_state_reader: Any,
-        strategy_registry: Any,
-        kill_switch: Any,
-    ) -> None:
-        self._engines = engine_state_reader
-        self._strategies = strategy_registry
-        self._kill_switch = kill_switch
-
-    def get_status(self, ts_ns: int) -> SystemStatus:
-        engine_statuses = tuple(
-            EngineStatus(name=e.name, state=e.state, last_event_ns=e.last_event_ns)
-            for e in self._engines.all()
-        )
-        active = tuple(s.id for s in self._strategies.active())
-        ks_active = self._kill_switch.is_active()
-        safe_mode = getattr(self._kill_switch, "safe_mode_active", lambda: False)()
-        degraded = any(e.state == "ERROR" for e in engine_statuses)
-        halted = ks_active or any(e.state == "OFFLINE" for e in engine_statuses)
-        overall = "HALTED" if halted else ("DEGRADED" if degraded else "HEALTHY")
-        return SystemStatus(
-            ts_ns=ts_ns,
-            overall=overall,
-            engines=engine_statuses,
-            active_strategies=active,
-            kill_switch_active=ks_active,
-            safe_mode_active=safe_mode,
-        )
+    return {
+        "overall": overall,
+        "trading_allowed": rc.trading_allowed,
+        "safe_mode": rc.safe_mode,
+        "kill_switch_active": not rc.trading_allowed,
+        "autonomy_mode": autonomy_mode,
+        "risk_version": rc.version_id,
+        "circuit_breaker_drawdown": rc.circuit_breaker_drawdown,
+        "circuit_breaker_loss_pct": rc.circuit_breaker_loss_pct,
+    }

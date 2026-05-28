@@ -4,6 +4,13 @@
 # rejects any key not in this allowlist.
 
 version: "v1"
+allowed_keys:
+  - horizon
+  - conviction_type
+  - memory_ref
+  - regime_assumption
+  - confidence_band
+
 allowlist:
   - key: "horizon"
     type: str

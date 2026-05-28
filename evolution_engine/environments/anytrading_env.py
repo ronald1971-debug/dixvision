@@ -105,7 +105,7 @@ import hashlib
 import math
 from typing import Any, Final
 
-NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ()
+NEW_PIP_DEPENDENCIES: Final[tuple[str, ...]] = ("gym-anytrading", "gymnasium")
 """``gym-anytrading`` is the upstream project we mirror; ``gymnasium``
 is needed only by the optional :func:`gymnasium_anytrading_env_factory`
 factory. The core :class:`DIXAnytradingEnv` class is pure stdlib."""

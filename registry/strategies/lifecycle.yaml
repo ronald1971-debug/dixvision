@@ -3,6 +3,15 @@
 # Valid states: PROPOSED → SHADOW → CANARY → LIVE → RETIRED | ROLLED_BACK
 
 version: "v1"
+states:
+  - PROPOSED
+  - SHADOW
+  - CANARY
+  - LIVE
+  - RETIRED
+  - ROLLED_BACK
+  - REJECTED
+
 lifecycle_states:
   - strategy_id: "microstructure_v1"
     state: "LIVE"

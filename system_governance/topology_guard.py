@@ -35,6 +35,7 @@ _MAX_HISTORY = 500
 _B1_PROTECTED_DOMAINS = frozenset(
     {
         "execution_engine",
+        "intelligence_engine",
         "sensory",
         "indira",
         "dyon",

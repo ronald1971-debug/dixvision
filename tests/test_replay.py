@@ -36,11 +36,11 @@ class TestReplayDeterminism:
 
         fake_event = LedgerEvent(
             event_id="abc123",
-            stream_kind="SYSTEM",
+            event_type="SYSTEM",
             sub_type="BOOT_START",
             source="test",
             payload={"msg": "boot"},
-            ts_ns=1_000_000_000,
+            timestamp_utc="2000-01-01T00:00:01Z",
             sequence=0,
             prev_hash="",
             event_hash="deadbeef01234567",
@@ -61,11 +61,11 @@ class TestReplayDeterminism:
 
         fake_event = LedgerEvent(
             event_id="ev001",
-            stream_kind="GOVERNANCE",
+            event_type="GOVERNANCE",
             sub_type="OPGOV_DECISION",
             source="operator_governance",
             payload={"decision": "approved"},
-            ts_ns=2_000_000_000,
+            timestamp_utc="2000-01-01T00:00:02Z",
             sequence=0,
             prev_hash="",
             event_hash="cafe0001",
@@ -90,11 +90,11 @@ class TestReplayDeterminism:
 
         fake = LedgerEvent(
             event_id="xyz",
-            stream_kind="MARKET",
+            event_type="MARKET",
             sub_type="TICK",
             source="binance",
             payload={"price": "50000"},
-            ts_ns=3_000_000_000,
+            timestamp_utc="2000-01-01T00:00:03Z",
             sequence=1,
             prev_hash="abc",
             event_hash="11223344",

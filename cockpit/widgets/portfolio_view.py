@@ -1,64 +1,40 @@
 """Cockpit widget — portfolio view.
 
-Aggregates current positions, P&L, and allocation for the operator dashboard.
-Read-only. B1.
+Reads live position + P&L state from the execution engine via ui.server.STATE.
+No constructor injection required.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["PositionRow", "PortfolioViewState", "PortfolioViewWidget"]
+__all__ = ["portfolio_view_payload"]
 
 
-@dataclass(frozen=True, slots=True)
-class PositionRow:
-    symbol: str
-    qty: float
-    side: str            # "LONG" | "SHORT" | "FLAT"
-    avg_entry_price: float
-    current_price: float
-    unrealised_pnl_usd: float
-    strategy_id: str
-
-
-@dataclass(frozen=True, slots=True)
-class PortfolioViewState:
-    ts_ns: int
-    positions: tuple[PositionRow, ...]
-    total_unrealised_pnl_usd: float
-    total_realised_pnl_usd: float
-    position_count: int
-
-
-class PortfolioViewWidget:
-    """Read interface for portfolio view rendering."""
-
-    def __init__(self, position_store: Any, pnl_store: Any) -> None:
-        self._positions = position_store
-        self._pnl = pnl_store
-
-    def get_state(self, ts_ns: int) -> PortfolioViewState:
-        raw = self._positions.all()
-        rows: list[PositionRow] = []
-        for p in raw:
+def portfolio_view_payload() -> dict[str, Any]:
+    try:
+        from ui.server import STATE  # noqa: PLC0415
+        # ExecutionEngine exposes positions via .get_positions()
+        positions_raw = STATE.execution.get_positions()
+        rows = []
+        total_unrealised = 0.0
+        for p in positions_raw:
             side = "LONG" if p.qty > 0 else ("SHORT" if p.qty < 0 else "FLAT")
-            rows.append(PositionRow(
-                symbol=p.symbol,
-                qty=p.qty,
-                side=side,
-                avg_entry_price=p.avg_entry_price,
-                current_price=p.current_price,
-                unrealised_pnl_usd=p.unrealised_pnl_usd,
-                strategy_id=p.strategy_id,
-            ))
-        total_unrealised = sum(r.unrealised_pnl_usd for r in rows)
-        total_realised = self._pnl.total_realised_usd()
-        return PortfolioViewState(
-            ts_ns=ts_ns,
-            positions=tuple(rows),
-            total_unrealised_pnl_usd=total_unrealised,
-            total_realised_pnl_usd=total_realised,
-            position_count=len(rows),
-        )
+            rows.append({
+                "symbol": p.symbol,
+                "qty": p.qty,
+                "side": side,
+                "avg_entry_price": p.avg_entry_price,
+                "current_price": getattr(p, "current_price", 0.0),
+                "unrealised_pnl_usd": getattr(p, "unrealised_pnl_usd", 0.0),
+                "strategy_id": getattr(p, "strategy_id", ""),
+            })
+            total_unrealised += getattr(p, "unrealised_pnl_usd", 0.0)
+        return {
+            "positions": rows,
+            "position_count": len(rows),
+            "total_unrealised_pnl_usd": total_unrealised,
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"positions": [], "position_count": 0,
+                "total_unrealised_pnl_usd": 0.0, "error": str(exc)}

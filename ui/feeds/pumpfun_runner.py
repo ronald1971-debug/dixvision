@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import threading
 from collections.abc import Callable
 
@@ -24,13 +25,16 @@ from core.contracts.launches import LaunchEvent
 from ui.feeds.pumpfun_ws import (
     DEFAULT_RECONNECT_DELAY_MAX_S,
     DEFAULT_RECONNECT_DELAY_S,
-    PUMPPORTAL_WS_URL,
     PumpFunLaunchPump,
     PumpFunStatus,
     WSConnect,
 )
 
 LOG = logging.getLogger(__name__)
+
+# No default URL — must be explicitly configured via PUMPFUN_WS_URL env var.
+# pumpportal.fun is a community spec repo, not a hosted service.
+_ENV_URL = os.environ.get("PUMPFUN_WS_URL", "").strip()
 
 
 class PumpFunFeedRunner:
@@ -42,7 +46,7 @@ class PumpFunFeedRunner:
         *,
         clock_ns: Callable[[], int],
         connect: WSConnect | None = None,
-        url: str = PUMPPORTAL_WS_URL,
+        url: str = _ENV_URL,
         reconnect_delay_s: float = DEFAULT_RECONNECT_DELAY_S,
         reconnect_delay_max_s: float = DEFAULT_RECONNECT_DELAY_MAX_S,
     ) -> None:
@@ -79,6 +83,13 @@ class PumpFunFeedRunner:
         return pump.status()
 
     def start(self) -> PumpFunStatus:
+        if not self._url:
+            LOG.info(
+                "pumpfun_ws: no endpoint configured — feed disabled. "
+                "Set PUMPFUN_WS_URL env var to a live Solana launch-event "
+                "WebSocket endpoint to enable."
+            )
+            return self._provisional_status(running=False)
         ready = threading.Event()
         with self._lock:
             if self._thread is not None and self._thread.is_alive():

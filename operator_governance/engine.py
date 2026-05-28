@@ -71,6 +71,8 @@ class OperatorGovernanceEngine:
         self._lock = threading.Lock()
         self._last_status_ts: int = 0
         self._status_interval_ns: int = 60 * 1_000_000_000  # 60 seconds
+        # CONST-02: execution is blocked until operator explicitly enables it
+        self._execution_enabled: bool = False
 
         # Lazy guard references
         self._constitution: OperatorConstitution | None = None
@@ -124,16 +126,31 @@ class OperatorGovernanceEngine:
     # Execution gate
     # ------------------------------------------------------------------
 
+    def enable_execution(self, operator_id: str) -> None:
+        """Operator explicitly enables live execution (CONST-02 gate)."""
+        with self._lock:
+            self._execution_enabled = True
+
+    def disable_execution(self, operator_id: str) -> None:
+        """Operator revokes live execution permission."""
+        with self._lock:
+            self._execution_enabled = False
+
     def is_execution_allowed(self) -> bool:
         """
-        Return True only if no lockout blocks execution.
+        Return True only if the operator has explicitly enabled execution
+        AND no lockout blocks it.
 
-        This is the single gate all execution paths must consult before
-        placing any order. The operator controls this gate entirely.
+        CONST-02: execution is blocked by default until operator enables it.
+        This is the single gate all execution paths must consult.
         """
-        return not self.lockout_guard.is_locked(
-            LockoutScope.EXECUTION
-        ) and not self.lockout_guard.is_locked(LockoutScope.ALL)
+        with self._lock:
+            enabled = self._execution_enabled
+        return (
+            enabled
+            and not self.lockout_guard.is_locked(LockoutScope.EXECUTION)
+            and not self.lockout_guard.is_locked(LockoutScope.ALL)
+        )
 
     def is_learning_allowed(self) -> bool:
         """Return True only if no lockout blocks learning."""

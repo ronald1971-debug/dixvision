@@ -36,6 +36,11 @@ from collections.abc import (
     Callable,
     Mapping,
 )
+
+try:
+    from websockets.exceptions import InvalidStatus as _InvalidStatus
+except ImportError:
+    _InvalidStatus = None  # type: ignore[assignment,misc]
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -159,10 +164,20 @@ WSConnect = Callable[[str], Awaitable[_WSConnection]]
 async def _default_connect(url: str) -> _WSConnection:
     """Default connector — imported lazily so the parser is usable
     without ``websockets`` installed (tests, lint, etc.)."""
+    import os
 
     import websockets  # local import; heavy dependency
 
-    return await websockets.connect(url)  # type: ignore[return-value]
+    api_key = os.environ.get("PUMPPORTAL_API_KEY", "").strip()
+    if api_key and "api-key=" not in url:
+        sep = "&" if "?" in url else "?"
+        url = f"{url}{sep}api-key={api_key}"
+
+    return await websockets.connect(  # type: ignore[return-value]
+        url,
+        origin="https://pumpportal.fun",
+        user_agent_header="Mozilla/5.0 (compatible; DIXVision/42; +https://github.com/dixvision)",
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -217,6 +232,7 @@ class PumpFunLaunchPump:
         self._errors = 0
         self._last_launch_ts_ns: int | None = None
         self._running = False
+        self._consecutive_errors = 0
 
     @property
     def url(self) -> str:
@@ -256,16 +272,43 @@ class PumpFunLaunchPump:
                         self._venue,
                     )
                     delay = self._reconnect_delay_s
+                    self._consecutive_errors = 0
                     async for raw in conn:  # type: ignore[union-attr]
                         if self._stop_event.is_set():
                             break
                         self._handle_frame(raw)
-                except Exception:  # noqa: BLE001 - log + reconnect
+                except Exception as _exc:  # noqa: BLE001 - log + reconnect
                     self._errors += 1
-                    LOG.exception(
-                        "pumpfun_ws: connection failure; reconnect in %.1fs",
-                        delay,
+                    self._consecutive_errors += 1
+                    # 403 = permanent auth failure — retrying won't help.
+                    _http_status = getattr(
+                        getattr(_exc, "response", None), "status_code", None
                     )
+                    if _http_status == 403:
+                        LOG.warning(
+                            "pumpfun_ws: HTTP 403 Forbidden — PumpPortal requires "
+                            "an API key. Set PUMPPORTAL_API_KEY env var and restart "
+                            "to enable this feed. Feed disabled."
+                        )
+                        break
+                    if self._consecutive_errors == 1:
+                        LOG.exception(
+                            "pumpfun_ws: connection failure; reconnect in %.1fs",
+                            delay,
+                        )
+                    elif self._consecutive_errors == 5:
+                        LOG.warning(
+                            "pumpfun_ws: %d consecutive failures; "
+                            "further errors suppressed until reconnected (delay=%.1fs)",
+                            self._consecutive_errors,
+                            delay,
+                        )
+                    else:
+                        LOG.debug(
+                            "pumpfun_ws: connection failure #%d; reconnect in %.1fs",
+                            self._consecutive_errors,
+                            delay,
+                        )
                 finally:
                     if conn is not None:
                         try:
