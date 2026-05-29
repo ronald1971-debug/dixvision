@@ -14,7 +14,7 @@ aggregates across multiple agent types.
 
 from __future__ import annotations
 
-import uuid
+import hashlib
 from dataclasses import dataclass
 from typing import Any
 
@@ -67,7 +67,9 @@ class DebateOrchestrator:
         """
         if not positions:
             return DebateRound(
-                round_id=str(uuid.uuid4()),
+                round_id=hashlib.sha1(
+                    f"empty:{ts_ns}".encode(), usedforsecurity=False
+                ).hexdigest()[:16],
                 ts_ns=ts_ns,
                 positions=(),
                 consensus_direction=_HOLD,
@@ -105,8 +107,11 @@ class DebateOrchestrator:
             if p.direction.upper() != direction
         )
 
+        _pos_sig = ":".join(f"{p.direction}{p.confidence:.4f}" for p in positions)
         return DebateRound(
-            round_id=str(uuid.uuid4()),
+            round_id=hashlib.sha1(
+                f"{ts_ns}:{_pos_sig}".encode(), usedforsecurity=False
+            ).hexdigest()[:16],
             ts_ns=ts_ns,
             positions=tuple(positions),
             consensus_direction=direction,

@@ -40,7 +40,12 @@ export type SystemRoute =
   | "market"
   | "positions"
   | "trading"
-  | "plugins";
+  | "plugins"
+  | "syshealth"
+  | "alerts"
+  | "audit"
+  | "scout"
+  | "strategies";
 
 export type Route = AssetRoute | SystemRoute;
 
@@ -70,6 +75,11 @@ const SYSTEM_ROUTES: readonly SystemRoute[] = [
   "market",
   "positions",
   "trading",
+  "syshealth",
+  "alerts",
+  "audit",
+  "scout",
+  "strategies",
 ];
 
 const ALL_ROUTES: readonly Route[] = [...ASSET_ROUTES, ...SYSTEM_ROUTES];

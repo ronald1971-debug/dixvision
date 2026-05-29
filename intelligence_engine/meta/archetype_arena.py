@@ -10,9 +10,8 @@ StrategySynthesizer use for allocation decisions.
 
 from __future__ import annotations
 
+import hashlib
 import threading
-import time as _time
-import uuid
 from dataclasses import dataclass
 from typing import Any
 
@@ -83,7 +82,7 @@ class ArchetypeArena:
         overall "strength" without live trading data). Callers can
         override scores by calling update_scores() after actual P&L.
         """
-        ts_ns = ts_ns or _time.time_ns()
+        ts_ns = ts_ns if ts_ns is not None else 0
         with self._lock:
             rec_a = self._archetypes.get(a_id)
             rec_b = self._archetypes.get(b_id)
@@ -103,7 +102,9 @@ class ArchetypeArena:
             winner = ""
 
         match = ArenaMatch(
-            match_id=str(uuid.uuid4()),
+            match_id=hashlib.sha1(
+                f"{a_id}:{b_id}:{ts_ns}".encode(), usedforsecurity=False
+            ).hexdigest()[:16],
             ts_ns=ts_ns,
             archetype_a=a_id,
             archetype_b=b_id,

@@ -371,7 +371,8 @@ class AutonomousResearchRuntime:
 
     def _run_research(self, topic: ResearchTopic) -> None:
         """Execute one research run: fetch → score → store → emit."""
-        ts_ns = time.time_ns()
+        from system.time_source import wall_ns as _wall_ns
+        ts_ns = _wall_ns()
 
         # ---- 1. Fetch ----
         pages: dict[str, dict[str, str]] = {}
@@ -477,6 +478,18 @@ class AutonomousResearchRuntime:
                 ts_ns=ts_ns,
             )
             ps.mark_queue_done(topic=topic.topic)
+        except Exception:
+            pass
+        try:
+            from state.event_bus import CognitiveChannel, get_event_bus
+            get_event_bus().publish(CognitiveChannel.RESEARCH_COMPLETE, {
+                "topic": topic.topic,
+                "status": status,
+                "pages_fetched": len(pages),
+                "confidence": confidence,
+                "trust_score": trust_score,
+                "ts_ns": ts_ns,
+            })
         except Exception:
             pass
 

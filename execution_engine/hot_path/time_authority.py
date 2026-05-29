@@ -21,7 +21,6 @@ Design constraints (T1 hot-path purity):
 from __future__ import annotations
 
 import threading
-import time
 
 
 class TimeAuthority:
@@ -60,6 +59,7 @@ class TimeAuthority:
         ts = self._replay_ts
         if ts is not None:
             return ts
+        import time  # noqa: PLC0415 — lazy: keeps module-level import-free for INV-15
         return time.monotonic_ns()
 
     def wall_ns(self) -> int:  # noqa: PLR6301 — declared non-deterministic
@@ -68,6 +68,7 @@ class TimeAuthority:
         **NON-DETERMINISTIC.** Use only for ledger audit rows and operator
         metrics — never for hot-path logic (INV-58 / B-CLOCK).
         """
+        import time  # noqa: PLC0415
         return time.time_ns()
 
     # ------------------------------------------------------------------

@@ -18,6 +18,7 @@ Never imports intelligence_engine or execution_engine.
 
 from __future__ import annotations
 
+import logging
 import pathlib
 from dataclasses import dataclass
 from typing import Any
@@ -28,6 +29,8 @@ from evolution_engine.dyon.topology_scanner import (
     TopologyViolation,
     get_scanner,
 )
+
+_logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -100,6 +103,7 @@ class DyonRuntime:
 
         self._last_scan = result
         self._generate_proposals(result, ts_ns)
+        self._publish_scan_complete(result, ts_ns)
         return result
 
     # ------------------------------------------------------------------
@@ -195,6 +199,25 @@ class DyonRuntime:
                 except Exception:
                     pass
 
+            # ---- 2b. Simulate patch impact (P2 — impact sim + validation) --
+            sim_outcome: str | None = None
+            if instruction is not None:
+                try:
+                    from evolution_engine.dyon.patch_simulator import get_patch_simulator
+                    sim_result = get_patch_simulator(repo_root=self._root).simulate(
+                        instruction, ts_ns=ts_ns
+                    )
+                    sim_outcome = sim_result.outcome
+                    _logger.debug(
+                        "DYON sim %s: %s (conf=%.2f %s)",
+                        instruction.patch_id[:16],
+                        sim_result.outcome,
+                        sim_result.confidence,
+                        sim_result.notes,
+                    )
+                except Exception:
+                    pass
+
             # ---- 3. Build proposal with concrete action --------------------
             if instruction is not None:
                 recommended_action = instruction.action
@@ -224,7 +247,7 @@ class DyonRuntime:
             self._proposals.append(proposal)
             if len(self._proposals) > self._max_proposals:
                 self._proposals = self._proposals[-self._max_proposals:]
-            self._emit_proposal(proposal)
+            self._emit_proposal(proposal, sim_outcome=sim_outcome)
 
             # ---- 4. Record patch as PROPOSED in memory ---------------------
             if dyon_mem is not None and instruction is not None:
@@ -246,8 +269,11 @@ class DyonRuntime:
                 pass
 
     @staticmethod
-    def _emit_proposal(proposal: "DyonPatchProposal") -> None:
-        """Best-effort PatchProposalEvent emission. Never raises."""
+    def _emit_proposal(
+        proposal: "DyonPatchProposal",
+        sim_outcome: str | None = None,
+    ) -> None:
+        """Best-effort PatchProposalEvent emission + event bus publish. Never raises."""
         try:
             from evolution_engine.charter.dyon_observability_emitter import (
                 emit_patch_proposal,
@@ -259,9 +285,40 @@ class DyonRuntime:
                 patch_kind="ARCHITECTURAL_FIX",
                 description=proposal.description,
                 rationale=f"invariant_id={proposal.invariant_id}",
-                governance_status="PROPOSED",
+                governance_status=sim_outcome or "PROPOSED",
             )
         except Exception:  # pragma: no cover
+            pass
+        try:
+            from state.event_bus import CognitiveChannel, get_event_bus
+            get_event_bus().publish(CognitiveChannel.DYON_PROPOSAL, {
+                "proposal_id": proposal.proposal_id,
+                "invariant_id": proposal.invariant_id,
+                "source_module": proposal.source_module,
+                "imported_module": proposal.imported_module,
+                "severity": proposal.severity,
+                "description": proposal.description,
+                "sim_outcome": sim_outcome or "PENDING",
+                "ts_ns": proposal.ts_ns,
+            })
+        except Exception:
+            pass
+
+    def _publish_scan_complete(self, result: "TopologyScanResult", ts_ns: int) -> None:
+        """Publish DYON_SCAN_COMPLETE event to the cognitive event bus."""
+        try:
+            from state.event_bus import CognitiveChannel, get_event_bus
+            get_event_bus().publish(CognitiveChannel.DYON_SCAN_COMPLETE, {
+                "scan_count": self._scan_count,
+                "files_scanned": result.files_scanned,
+                "violation_count": result.violation_count,
+                "critical_count": len(result.critical_violations),
+                "warning_count": len(result.warning_violations),
+                "clean": result.is_clean(),
+                "scan_duration_ms": round(result.scan_duration_ms, 2),
+                "ts_ns": ts_ns,
+            })
+        except Exception:
             pass
 
 

@@ -243,6 +243,18 @@ class IngestionBus:
                     last_market_ts_ns=tick.ts_ns,
                     market_connected=True,
                 )
+                # Update process-wide MarketState LKV cache (best-effort)
+                try:
+                    from state.market_state import PriceTick, get_market_state
+                    get_market_state().update(PriceTick(
+                        symbol=tick.symbol,
+                        price=float(tick.price),
+                        volume=float(tick.volume),
+                        source=str(tick.source.value if hasattr(tick.source, "value") else tick.source),
+                        ts_ns=tick.ts_ns,
+                    ))
+                except Exception:
+                    pass
                 yield tick
             except TimeoutError:
                 continue

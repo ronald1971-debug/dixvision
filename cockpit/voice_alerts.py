@@ -92,4 +92,15 @@ class VoiceAlertDispatcher:
         return f"{event.severity}: {event.message}"
 
 
-__all__ = ["VoiceAlertDispatcher", "VoiceAlertEvent"]
+_DISPATCHER: VoiceAlertDispatcher | None = None
+
+
+def get_dispatcher(*, min_severity: str = "CRITICAL") -> VoiceAlertDispatcher:
+    """Return the process-wide voice alert dispatcher singleton."""
+    global _DISPATCHER
+    if _DISPATCHER is None:
+        _DISPATCHER = VoiceAlertDispatcher(min_severity=min_severity)
+    return _DISPATCHER
+
+
+__all__ = ["VoiceAlertDispatcher", "VoiceAlertEvent", "get_dispatcher"]

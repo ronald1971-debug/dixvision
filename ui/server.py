@@ -1069,6 +1069,14 @@ class _State:
 
         _start_cognitive_background_tickers()
 
+        # P3 Reality Layer — activate cognitive telemetry (subscribes to event bus;
+        # must run AFTER background tickers are started so singletons are seeded).
+        try:
+            from state.telemetry import get_cognitive_telemetry
+            get_cognitive_telemetry()   # activates on first call
+        except Exception:
+            pass
+
     def _live_freeze_policy(self) -> LearningEvolutionFreezePolicy:
         """Snapshot the live HARDEN-04 freeze policy.
 

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import { Activity, BookOpen, Inbox, Lightbulb, Microscope, Search } from "lucide-react";
 
@@ -101,7 +101,7 @@ const SHADOW: ShadowEval[] = [
 // Tab metadata
 // ---------------------------------------------------------------------------
 
-const TABS: { id: Tab; label: string; icon: typeof Brain; hint: string; live?: boolean }[] = [
+const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }>; hint: string; live?: boolean }[] = [
   { id: "research",     label: "Research",     icon: Search,    hint: "P4",      live: true },
   { id: "thoughts",    label: "Thoughts",     icon: Lightbulb, hint: "P1",      live: true },
   { id: "beliefs",     label: "Beliefs",      icon: Activity,  hint: "LIVE",    live: true },

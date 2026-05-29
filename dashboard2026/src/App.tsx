@@ -12,6 +12,8 @@ import { Sidebar } from "@/components/Sidebar";
 import { ToastHost } from "@/components/ToastHost";
 import { WidgetTogglePanel } from "@/components/WidgetTogglePanel";
 import { AIPage } from "@/pages/AIPage";
+import { AlertsPage } from "@/pages/AlertsPage";
+import { AuditPage } from "@/pages/AuditPage";
 import { ChartingPage } from "@/pages/ChartingPage";
 import { CognitiveChatPage } from "@/pages/CognitiveChatPage";
 import { CredentialsPage } from "@/pages/CredentialsPage";
@@ -25,6 +27,9 @@ import { OrderFlowPage } from "@/pages/OrderFlowPage";
 import { PluginsPage } from "@/pages/PluginsPage";
 import { PositionsPage } from "@/pages/PositionsPage";
 import { RiskPage } from "@/pages/RiskPage";
+import { ScoutPage } from "@/pages/ScoutPage";
+import { StrategiesPage } from "@/pages/StrategiesPage";
+import { SystemHealthPage } from "@/pages/SystemHealthPage";
 import { TestingPage } from "@/pages/TestingPage";
 import { TradingPage } from "@/pages/TradingPage";
 import { DexPage } from "@/pages/asset/DexPage";
@@ -84,6 +89,16 @@ function renderRoute(route: Route) {
       return <TradingPage />;
     case "plugins":
       return <PluginsPage />;
+    case "syshealth":
+      return <SystemHealthPage />;
+    case "alerts":
+      return <AlertsPage />;
+    case "audit":
+      return <AuditPage />;
+    case "scout":
+      return <ScoutPage />;
+    case "strategies":
+      return <StrategiesPage />;
   }
 }
 

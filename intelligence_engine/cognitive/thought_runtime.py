@@ -196,6 +196,18 @@ class ThoughtRuntime:
         }
 
     # ------------------------------------------------------------------
+    # Parameter update from LearningPersistence
+    # ------------------------------------------------------------------
+
+    def set_confidence_baseline(self, value: float) -> None:
+        """Update the default confidence applied to autonomous thoughts.
+
+        Called by LearningPersistence when the slow-loop learner proposes
+        a new value.  Clamped to [0.10, 0.99] as a safety rail.
+        """
+        self._confidence_baseline = max(0.10, min(0.99, value))
+
+    # ------------------------------------------------------------------
     # Restore (boot-time continuity)
     # ------------------------------------------------------------------
 
@@ -239,7 +251,7 @@ class ThoughtRuntime:
 
     @staticmethod
     def _emit(thought: Thought) -> None:
-        """Best-effort ThoughtStreamEvent emission. Never raises."""
+        """Best-effort ThoughtStreamEvent emission + event bus publish. Never raises."""
         try:
             from intelligence_engine.cognitive.observability_emitter import (
                 emit_thought_stream,
@@ -253,6 +265,16 @@ class ThoughtRuntime:
                 conclusion=thought.conclusion,
             )
         except Exception:  # pragma: no cover
+            pass
+        try:
+            from state.event_bus import CognitiveChannel, get_event_bus
+            get_event_bus().publish(CognitiveChannel.INDIRA_THOUGHT, {
+                "thought_id": thought.thought_id,
+                "step": thought.step,
+                "confidence": thought.confidence,
+                "ts_ns": thought.ts_ns,
+            })
+        except Exception:
             pass
 
 

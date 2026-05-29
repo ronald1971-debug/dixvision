@@ -69,6 +69,14 @@ _REPLAY_PATH_PREFIXES: tuple[str, ...] = (
     "state.ledger",
 )
 
+# INV-15 exemptions: canonical clock chokepoints that legitimately wrap time.
+# Mirrors authority_lint.py B_CLOCK_ALLOWED_PATH_PARTS — any module listed
+# here IS the time source abstraction layer and must import time directly.
+_INV15_EXEMPT_MODULES: tuple[str, ...] = (
+    "execution_engine.hot_path.time_authority",
+    "system.time_source",
+)
+
 _NON_DETERMINISTIC_STDLIB: tuple[str, ...] = (
     "time",
     "datetime",
@@ -281,6 +289,8 @@ def _check_inv15(
 ) -> TopologyViolation | None:
     """INV-15: non-deterministic stdlib imports in replay-eligible paths."""
     if not _starts_with_any(importer, _REPLAY_PATH_PREFIXES):
+        return None
+    if _starts_with_any(importer, _INV15_EXEMPT_MODULES):
         return None
     # Only flag top-level non-deterministic modules (not submodules that may be safe)
     if _starts_with_any(target, _NON_DETERMINISTIC_STDLIB):

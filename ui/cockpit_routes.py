@@ -942,6 +942,182 @@ def build_cockpit_router() -> "APIRouter":  # type: ignore[name-defined]
         ]
         return JSONResponse({"trades": trades, "source": "sample", "ts_ms": now_ms})
 
+    # ----------------------------------------------------------- voice alerts
+
+    @router.get("/api/voice-alerts")
+    async def voice_alerts_status() -> JSONResponse:
+        from cockpit.voice_alerts import get_dispatcher
+        d = get_dispatcher()
+        return JSONResponse({
+            "min_severity": d._min_severity,
+            "dispatched_count": len(d.dispatched_alerts),
+            "history": [
+                {
+                    "output_path": r.output_path,
+                    "duration_seconds": r.duration_seconds,
+                    "model_used": r.model_used,
+                }
+                for r in d.dispatched_alerts[-20:]
+            ],
+        })
+
+    class _VoiceAlertIn(BaseModel):
+        severity: str
+        message: str
+        governance_mode: str = "UNKNOWN"
+
+    @router.post("/api/voice-alerts/dispatch")
+    async def voice_alerts_dispatch(body: "_VoiceAlertIn") -> JSONResponse:  # type: ignore[name-defined]
+        from cockpit.voice_alerts import VoiceAlertEvent, get_dispatcher
+        event = VoiceAlertEvent(
+            severity=body.severity,
+            message=body.message,
+            governance_mode=body.governance_mode,
+        )
+        result = get_dispatcher().dispatch(event)
+        if result is None:
+            return JSONResponse({"dispatched": False,
+                                 "reason": f"severity below threshold ({get_dispatcher()._min_severity})"})
+        return JSONResponse({"dispatched": True, "output_path": result.output_path,
+                             "duration_seconds": result.duration_seconds})
+
+    # -------------------------------------------------------- audit: actions
+
+    @router.get("/api/audit/actions")
+    async def audit_actions(limit: int = 50) -> JSONResponse:
+        from security import operator as _op_module
+        rows = _op_module.history(limit=limit)
+        return JSONResponse({
+            "actions": [
+                {
+                    "id": r.request_id,
+                    "ts_utc": r.created_utc,
+                    "kind": r.kind.value,
+                    "subject": r.subject,
+                    "state": r.state.value,
+                    "approvers": list(r.approvers),
+                }
+                for r in rows
+            ]
+        })
+
+    # -------------------------------------------------------- audit: overrides
+
+    @router.get("/api/audit/overrides")
+    async def audit_overrides(limit: int = 50) -> JSONResponse:
+        import time as _time
+        now_ms = int(_time.time() * 1000)
+        try:
+            from state.ledger.bridge import LedgerBridge
+            bridge = LedgerBridge()
+            entries = bridge.tail(limit=limit * 2)
+            overrides = []
+            for e in entries:
+                if any(kw in str(e.kind).upper() for kw in ("OVERRIDE", "PARAM", "SLIDER", "RISK")):
+                    p = e.payload if isinstance(e.payload, dict) else {}
+                    overrides.append({
+                        "id": f"{e.chain[:3]}-{e.seq}",
+                        "ts_utc": e.ts_utc,
+                        "kind": e.kind,
+                        "parameter": p.get("parameter", p.get("slider", "")),
+                        "old_value": p.get("old_value", ""),
+                        "new_value": p.get("new_value", p.get("value", "")),
+                        "operator_id": p.get("operator_id", ""),
+                        "rationale": p.get("rationale", p.get("reason", "")),
+                    })
+            return JSONResponse({"overrides": overrides[:limit], "source": "ledger",
+                                 "ts_ms": now_ms})
+        except Exception:
+            return JSONResponse({"overrides": [], "source": "unavailable", "ts_ms": now_ms})
+
+    # ---------------------------------------------------------------- syshealth
+
+    @router.get("/api/syshealth")
+    async def syshealth() -> JSONResponse:
+        from cockpit.widgets.system_health import system_health_payload
+        return JSONResponse(system_health_payload())
+
+    # ------------------------------------------------------------------ alerts
+
+    @router.get("/api/alerts")
+    async def alerts(limit: int = 50) -> JSONResponse:
+        from cockpit.widgets.alert_center import alert_center_payload
+        return JSONResponse(alert_center_payload(limit=limit))
+
+    # --------------------------------------------------------------- risk view
+
+    @router.get("/api/risk/view")
+    async def risk_view() -> JSONResponse:
+        from cockpit.widgets.risk_view import risk_view_payload
+        return JSONResponse(risk_view_payload())
+
+    # ----------------------------------------------------------- risk sliders
+
+    @router.get("/api/risk/sliders")
+    async def risk_sliders_get() -> JSONResponse:
+        from cockpit.widgets.master_sliders import master_sliders_payload
+        return JSONResponse(master_sliders_payload())
+
+    class _SliderIn(BaseModel):
+        slider: str
+        value: float
+        operator_id: str = "operator"
+
+    @router.post("/api/risk/sliders")
+    async def risk_sliders_set(body: "_SliderIn") -> JSONResponse:  # type: ignore[name-defined]
+        from cockpit.widgets.master_sliders import set_slider
+        result = set_slider(body.slider, body.value, body.operator_id)
+        if not result.get("accepted"):
+            raise HTTPException(status_code=400, detail=result.get("reason", "rejected"))
+        return JSONResponse(result)
+
+    # --------------------------------------------------------------- kill switch
+
+    @router.get("/api/kill-switch")
+    async def kill_switch_get() -> JSONResponse:
+        from cockpit.widgets.kill_switch import kill_switch_state
+        return JSONResponse(kill_switch_state())
+
+    class _KillSwitchIn(BaseModel):
+        operator_id: str = "operator"
+        reason: str = ""
+
+    @router.post("/api/kill-switch/activate")
+    async def kill_switch_activate(body: "_KillSwitchIn") -> JSONResponse:  # type: ignore[name-defined]
+        from cockpit.widgets.kill_switch import activate_kill_switch
+        return JSONResponse(activate_kill_switch(body.operator_id, body.reason))
+
+    @router.post("/api/kill-switch/deactivate")
+    async def kill_switch_deactivate(body: "_KillSwitchIn") -> JSONResponse:  # type: ignore[name-defined]
+        from cockpit.widgets.kill_switch import deactivate_kill_switch
+        return JSONResponse(deactivate_kill_switch(body.operator_id))
+
+    # -------------------------------------------------------- governance panel
+
+    @router.get("/api/governance/panel")
+    async def governance_panel() -> JSONResponse:
+        from cockpit.widgets.governance_panel import governance_panel_payload
+        return JSONResponse(governance_panel_payload())
+
+    # --------------------------------------------------------- decision trace
+
+    @router.get("/api/audit/decisions")
+    async def audit_decisions(strategy_id: str = "", limit: int = 20) -> JSONResponse:
+        from cockpit.widgets.decision_trace import decision_trace_payload
+        return JSONResponse(
+            decision_trace_payload(
+                strategy_id=strategy_id or None,
+                limit=limit,
+            )
+        )
+
+    # ---------------------------------------------------------- portfolio view
+
+    @router.get("/api/portfolio")
+    async def portfolio() -> JSONResponse:
+        from cockpit.widgets.portfolio_view import portfolio_view_payload
+        return JSONResponse(portfolio_view_payload())
+
     # Warm-start cockpit singletons so the first request doesn't block.
     get_writer()
     bootstrap_all_providers()

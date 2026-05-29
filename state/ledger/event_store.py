@@ -120,12 +120,13 @@ class EventStore:
     def append(
         self, event_type: str, sub_type: str, source: str, payload: dict[str, Any]
     ) -> LedgerEvent:
-        import uuid
+        import hashlib
 
         with self._lock:
             ts = now()
+            _seed = f"{event_type}:{sub_type}:{source}:{ts.sequence}".encode()
             event = LedgerEvent(
-                event_id=str(uuid.uuid4()),
+                event_id=hashlib.sha1(_seed, usedforsecurity=False).hexdigest()[:16],
                 event_type=event_type,
                 sub_type=sub_type,
                 source=source,

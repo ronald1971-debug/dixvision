@@ -122,6 +122,7 @@ class LongHorizonMemory:
                 self._insights[ins.subject] = ins
 
         self._persist(ts_ns)
+        self._publish_insights(new_insights)
 
         if new_insights:
             _logger.info(
@@ -130,6 +131,25 @@ class LongHorizonMemory:
                 self._consolidate_count,
             )
         return new_insights
+
+    def _publish_insights(self, insights: list[Insight]) -> None:
+        """Publish each new insight as an INDIRA_INSIGHT event on the bus."""
+        if not insights:
+            return
+        try:
+            from state.event_bus import CognitiveChannel, get_event_bus
+            bus = get_event_bus()
+            for ins in insights:
+                bus.publish(CognitiveChannel.INDIRA_INSIGHT, {
+                    "insight_id": ins.insight_id,
+                    "subject": ins.subject,
+                    "body": ins.body,
+                    "confidence": ins.confidence,
+                    "evidence_count": ins.evidence_count,
+                    "ts_ns": ins.ts_ns,
+                })
+        except Exception:
+            pass
 
     def active_insights(self, *, ts_ns: int) -> list[Insight]:
         """Return all non-expired insights, newest first."""
@@ -287,44 +307,10 @@ class LongHorizonMemory:
             return None
 
     def _extract_system_stress(self, ts_ns: int) -> Insight | None:
-        """Read DyonMemory's persistent violations as a system stress signal."""
-        try:
-            from evolution_engine.dyon.dyon_memory import get_dyon_memory  # type: ignore[import]
-            mem = get_dyon_memory()
-            persistent = mem.persistent_violations()
-            total_violations = sum(r.count for r in mem._violations.values())  # noqa: SLF001
-            structural_count = len(persistent)
-
-            if structural_count == 0 and total_violations == 0:
-                body = "No architectural violations detected. System topology is clean."
-                confidence = 0.90
-            elif structural_count == 0:
-                body = (
-                    f"{total_violations} transient architectural violation(s) observed; "
-                    f"none have become structural yet."
-                )
-                confidence = 0.70
-            else:
-                top = sorted(persistent, key=lambda r: -r.count)[:3]
-                top_desc = ", ".join(
-                    f"{r.source_module} ({r.count}×)" for r in top
-                )
-                body = (
-                    f"{structural_count} structural violation(s) persist in DYON memory. "
-                    f"Top offenders: {top_desc}."
-                )
-                confidence = max(0.40, 0.80 - 0.05 * structural_count)
-
-            return self._make_insight(
-                subject="SYSTEM_STRESS",
-                body=body,
-                confidence=confidence,
-                evidence_count=structural_count + total_violations,
-                ts_ns=ts_ns,
-            )
-        except Exception as exc:
-            _logger.debug("LongHorizonMemory._extract_system_stress error: %s", exc)
-            return None
+        # evolution_engine.dyon is an offline engine — L3 prohibits reading
+        # its memory from the runtime.  System stress is reported as clean
+        # until a state-contract bridge is wired in a future wave.
+        return None
 
     def _extract_research_synthesis(self, ts_ns: int) -> Insight | None:
         """Synthesise the most recent completed research topics into a belief."""

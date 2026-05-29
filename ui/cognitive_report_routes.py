@@ -202,6 +202,28 @@ def build_cognitive_report_router() -> APIRouter:
         }
 
     # ------------------------------------------------------------------
+    # DYON — memory snapshot (violation recurrence + patch outcomes)
+    # ------------------------------------------------------------------
+
+    @router.get("/dyon/memory")
+    def dyon_memory(top_n: int = 20) -> dict[str, Any]:
+        """DYON self-improvement memory: violation recurrence + patch outcomes.
+
+        Returns the DyonMemory snapshot including:
+          - total_violation_keys: distinct violations ever seen
+          - persistent_violation_count: violations seen >= 3 times
+          - patch_outcomes_recorded: count of all patch outcome records
+          - top_persistent: the most-recurrent violations (up to top_n)
+          - sim_outcomes_approved/rejected/deferred: simulation result breakdown
+        """
+        try:
+            from evolution_engine.dyon.dyon_memory import get_dyon_memory
+            snap = get_dyon_memory().snapshot(top_n=max(1, min(top_n, 100)))
+            return {"ts_iso": utc_now().isoformat(), **snap}
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ------------------------------------------------------------------
     # Unified cognitive snapshot — orchestrator + memory health
     # ------------------------------------------------------------------
 
@@ -253,7 +275,97 @@ def build_cognitive_report_router() -> APIRouter:
         except Exception as exc:
             out["research"] = {"error": str(exc)}
 
+        try:
+            from state.event_bus import get_event_bus
+            out["event_bus"] = get_event_bus().snapshot()
+        except Exception as exc:
+            out["event_bus"] = {"error": str(exc)}
+
         return out
+
+    # ------------------------------------------------------------------
+    # Telemetry — live cognition traces (P3 Reality Layer)
+    # ------------------------------------------------------------------
+
+    @router.get("/telemetry/summary")
+    def telemetry_summary() -> dict[str, Any]:
+        """Per-component telemetry summary: throughput + latency percentiles.
+
+        Covers: indira (thoughts), dyon (scans + proposals),
+        research (completions), long_horizon (insights).
+        """
+        try:
+            from state.telemetry import get_cognitive_telemetry
+            return get_cognitive_telemetry().summary()
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ------------------------------------------------------------------
+    # Trader intelligence — archetype arena leaderboard
+    # ------------------------------------------------------------------
+
+    @router.get("/indira/archetypes")
+    def indira_archetypes() -> dict[str, Any]:
+        """Trader archetype arena leaderboard — dominant trading style in current regime.
+
+        Returns:
+          - top_archetype: current leader by win rate
+          - top_win_rate: fraction of arena matches won
+          - leaderboard: all archetypes sorted by win rate
+          - arena: match count, archetype count, seeded flag
+        """
+        try:
+            from intelligence_engine.cognitive.trader_intelligence_runtime import (
+                get_trader_intelligence_runtime,
+            )
+            snap = get_trader_intelligence_runtime().snapshot()
+            return {"ts_iso": utc_now().isoformat(), **snap}
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ------------------------------------------------------------------
+    # Risk — live risk state (P3 Reality Layer)
+    # ------------------------------------------------------------------
+
+    @router.get("/risk/state")
+    def risk_state() -> dict[str, Any]:
+        """Live RiskTracker snapshot: positions, P&L, drawdown, kill status.
+
+        Returns the full RiskTracker.snapshot() including:
+          - halted (bool): whether a kill condition is active
+          - breach_reason: which limit was breached (empty if OK)
+          - realized_pnl, peak_equity, drawdown_pct, total_notional
+          - open_positions: per-symbol qty + last price
+          - limits: configured max_drawdown_pct, max_exposure_notional, max_position_qty
+        """
+        try:
+            from governance_engine.risk_engine.risk_tracker import get_risk_tracker
+            return {"ts_iso": utc_now().isoformat(), **get_risk_tracker().snapshot()}
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @router.get("/telemetry/spans")
+    def telemetry_spans(
+        limit: int = 100,
+        component: str | None = None,
+    ) -> dict[str, Any]:
+        """Recent telemetry spans, newest-first.
+
+        Query params:
+            limit     — max spans to return (default 100, max 500)
+            component — filter to one component (indira|dyon|research|long_horizon)
+        """
+        try:
+            from state.telemetry import get_cognitive_telemetry
+            n = max(1, min(limit, 500))
+            spans = get_cognitive_telemetry().recent_spans(limit=n, component=component)
+            return {
+                "count": len(spans),
+                "component_filter": component,
+                "spans": [s.to_dict() for s in spans],
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
 
     return router
 
@@ -278,9 +390,8 @@ def _dyon_topology_snapshot() -> dict[str, Any]:
         # No cached scan — run one now so the first request is useful
         from evolution_engine.dyon.topology_scanner import get_scanner
         import pathlib
-        from system.time_source import utc_now as _now
-        import time
-        ts_ns = int(time.time_ns())
+        from system.time_source import utc_now as _now, wall_ns as _wall_ns
+        ts_ns = _wall_ns()
         result = get_scanner().scan_and_emit(pathlib.Path("."), ts_ns=ts_ns)
         from evolution_engine.dyon.dyon_runtime import _scan_to_dict
         return _scan_to_dict(result)

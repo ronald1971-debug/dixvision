@@ -214,6 +214,9 @@ _COGNITIVE_ROUTES: frozenset[RouteKey] = frozenset(
         ("POST", "/api/cognitive/research/enqueue"),
         ("GET", "/api/cognitive/research/status"),
         ("GET", "/api/cognitive/research/results"),
+        # thought-runtime telemetry spans
+        ("GET", "/api/cognitive/telemetry/summary"),
+        ("GET", "/api/cognitive/telemetry/spans"),
     }
 )
 
@@ -347,6 +350,22 @@ _COCKPIT_ROUTES: frozenset[RouteKey] = frozenset(
         ("GET", "/api/research/earnings_rag"),
         ("GET", "/api/research/news/multilingual"),
         ("GET", "/api/research/decisions"),
+        # cockpit widget surfaces (merged from cockpit/ into dashboard2026)
+        ("GET", "/api/syshealth"),
+        ("GET", "/api/alerts"),
+        ("GET", "/api/risk/view"),
+        ("GET", "/api/risk/sliders"),
+        ("POST", "/api/risk/sliders"),
+        ("GET", "/api/kill-switch"),
+        ("POST", "/api/kill-switch/activate"),
+        ("POST", "/api/kill-switch/deactivate"),
+        ("GET", "/api/governance/panel"),
+        ("GET", "/api/audit/decisions"),
+        ("GET", "/api/audit/actions"),
+        ("GET", "/api/audit/overrides"),
+        ("GET", "/api/portfolio"),
+        ("GET", "/api/voice-alerts"),
+        ("POST", "/api/voice-alerts/dispatch"),
     }
 )
 

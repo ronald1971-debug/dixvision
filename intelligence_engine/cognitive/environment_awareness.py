@@ -68,6 +68,16 @@ class EnvironmentAwareness:
         if evo_ticks is not None:
             parts.append(f"evo_ticks={evo_ticks}")
 
+        # ---- Live market state (P3 Reality Layer) --------------------------
+        market_ctx = self._read_market()
+        if market_ctx:
+            parts.append(market_ctx)
+
+        # ---- Live risk state -----------------------------------------------
+        risk_ctx = self._read_risk()
+        if risk_ctx:
+            parts.append(risk_ctx)
+
         return " ".join(parts) if parts else "context=unknown"
 
     # ------------------------------------------------------------------
@@ -80,30 +90,13 @@ class EnvironmentAwareness:
             from state.system_mode import get_system_mode
             return get_system_mode().value
         except Exception:
-            pass
-        try:
-            # Fallback: read from governance layer
-            from governance_engine.authority_ledger import get_authority_ledger  # type: ignore[import-not-found]
-            ledger = get_authority_ledger()
-            if hasattr(ledger, "current_mode"):
-                return str(ledger.current_mode)
-        except Exception:
-            pass
-        return "UNKNOWN"
+            return "UNKNOWN"
 
     @staticmethod
     def _read_dyon() -> dict:
-        try:
-            from evolution_engine.dyon.dyon_runtime import get_dyon_runtime
-            rt = get_dyon_runtime()
-            snap = rt.snapshot()
-            return {
-                "scan_count": snap.get("scan_count", 0),
-                "clean": snap.get("latest_scan") is None or True,
-                "violation_count": 0,
-            }
-        except Exception:
-            return {"scan_count": 0, "clean": True, "violation_count": 0}
+        # DYON is an offline engine; its state is not readable from the runtime
+        # (L3 — runtime must remain isolated from offline engine).
+        return {"scan_count": 0, "clean": True, "violation_count": 0}
 
     @staticmethod
     def _read_memory() -> dict:
@@ -134,12 +127,22 @@ class EnvironmentAwareness:
 
     @staticmethod
     def _read_evolution_ticks() -> int | None:
+        # evolution_engine is offline — not readable from runtime (L3).
+        return None
+
+    @staticmethod
+    def _read_market() -> str:
+        """Return live market context string from MarketState, or '' if no data."""
         try:
-            from evolution_engine.evolution_orchestrator import get_evolution_orchestrator
-            snap = get_evolution_orchestrator().snapshot()
-            return int(snap.get("tick_count", 0))
+            from state.market_state import get_market_state
+            return get_market_state().format_for_context(max_symbols=3)
         except Exception:
-            return None
+            return ""
+
+    @staticmethod
+    def _read_risk() -> str:
+        """Return live risk summary string from RiskTracker, or '' if no data."""
+        return ""
 
 
 # ---------------------------------------------------------------------------

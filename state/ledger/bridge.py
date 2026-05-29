@@ -43,6 +43,30 @@ from pathlib import Path
 from typing import Any
 
 
+def _ns_to_utc_iso(ts_ns: int) -> str:
+    """Convert epoch-nanosecond to ISO-8601 UTC string.
+
+    Pure integer arithmetic — no ``datetime`` or ``time`` import so
+    this path stays replay-deterministic (INV-15).
+    Uses the proleptic Gregorian civil calendar (Richards, 2013).
+    """
+    s = ts_ns // 1_000_000_000
+    s, sec = divmod(s, 60)
+    s, minute = divmod(s, 60)
+    day_total, hour = divmod(s, 24)
+    # Shift epoch to proleptic Gregorian Mar-1 year-0 reference
+    z = day_total + 719468
+    era = z // 146097 if z >= 0 else (z - 146096) // 146097
+    doe = z - era * 146097
+    yoe = (doe - doe // 1460 + doe // 36524 - doe // 146096) // 365
+    doy = doe - (365 * yoe + yoe // 4 - yoe // 100)
+    mp = (5 * doy + 2) // 153
+    dy = doy - (153 * mp + 2) // 5 + 1
+    mo = mp + (3 if mp < 10 else -9)
+    yr = yoe + era * 400 + (1 if mo <= 2 else 0)
+    return f"{yr:04d}-{mo:02d}-{dy:02d}T{hour:02d}:{minute:02d}:{sec:02d}Z"
+
+
 @dataclass(frozen=True, slots=True)
 class BridgedEntry:
     """Normalised view of one entry from either ledger chain.
@@ -84,9 +108,8 @@ def _authority_entries(
         out: list[BridgedEntry] = []
         for r in rows:
             import json as _json
-            from datetime import UTC, datetime
 
-            ts_utc = datetime.fromtimestamp(int(r["ts_ns"]) / 1e9, tz=UTC).isoformat()
+            ts_utc = _ns_to_utc_iso(int(r["ts_ns"]))
             try:
                 payload = _json.loads(r["payload"])
             except Exception:

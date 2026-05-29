@@ -41,6 +41,9 @@ class IndiraRuntime:
         # Best-effort: if the event store isn't ready yet (early import),
         # we start with an empty history and restore on the first tick.
         self._restore_from_ledger()
+        # Activate DYON→INDIRA event bus coupling.  Best-effort — if the bus
+        # is not yet available the bridge retries silently on next access.
+        self._activate_dyon_bridge()
 
     # ------------------------------------------------------------------
     # Primary tick — drives the full cognitive pipeline
@@ -78,6 +81,10 @@ class IndiraRuntime:
         self._try_debate_hook(ts_ns)
         self._try_memory_hook(ts_ns)
         self._try_backtesting_hook(ts_ns)
+        # Slow-loop parameter evolution every 20 ticks — persists learned
+        # confidence_baseline and other free parameters across restarts.
+        if self._tick_seq % 20 == 0:
+            self._try_learning_hook(ts_ns)
         # Reflective synthesis every 10 ticks — INDIRA looks back at her
         # own reasoning stream and emits a meta-thought.
         if self._tick_seq % 10 == 0:
@@ -86,6 +93,10 @@ class IndiraRuntime:
         # that persist across restarts and shape future thought context.
         if self._tick_seq % 50 == 0:
             self._try_long_horizon_hook(ts_ns)
+        # Trader archetype arena evaluation every 100 ticks — updates the
+        # dominant trading archetype injected into INDIRA's context.
+        if self._tick_seq % 100 == 0:
+            self._try_trader_intelligence_hook(ts_ns)
         return thought
 
     # ------------------------------------------------------------------
@@ -102,6 +113,20 @@ class IndiraRuntime:
             )
             lhm = get_long_horizon_memory()
             snap["long_horizon"] = lhm.snapshot()
+        except Exception:
+            pass
+        try:
+            from intelligence_engine.learning.learning_persistence import (
+                get_learning_persistence,
+            )
+            snap["learning"] = get_learning_persistence().snapshot()
+        except Exception:
+            pass
+        try:
+            from intelligence_engine.cognitive.trader_intelligence_runtime import (
+                get_trader_intelligence_runtime,
+            )
+            snap["trader_intelligence"] = get_trader_intelligence_runtime().snapshot()
         except Exception:
             pass
         return snap
@@ -200,6 +225,15 @@ class IndiraRuntime:
                 parts.append(lhm_ctx)
         except Exception:
             pass
+        try:
+            from intelligence_engine.cognitive.trader_intelligence_runtime import (
+                get_trader_intelligence_runtime,
+            )
+            ti_ctx = get_trader_intelligence_runtime().format_for_context()
+            if ti_ctx:
+                parts.append(ti_ctx)
+        except Exception:
+            pass
         return " ".join(parts) if parts else None
 
     def _try_reflection_hook(self, ts_ns: int) -> None:
@@ -229,6 +263,44 @@ class IndiraRuntime:
         except Exception:
             pass
 
+    def _try_learning_hook(self, ts_ns: int) -> None:
+        """Drive the slow-loop learner and propagate learned confidence_baseline.
+
+        Also flushes DYON→INDIRA feedback from the event bus bridge so
+        architectural health signals reach the learner before each tick.
+        """
+        # Flush DYON signals first so they are included in this tick.
+        try:
+            from intelligence_engine.cognitive.dyon_signal_bridge import (
+                get_dyon_signal_bridge,
+            )
+            get_dyon_signal_bridge().flush(ts_ns=ts_ns)
+        except Exception:
+            pass
+        try:
+            from intelligence_engine.learning.learning_persistence import (
+                get_learning_persistence,
+            )
+            lp = get_learning_persistence()
+            snap = lp.tick(ts_ns=ts_ns)
+            # Propagate the learned confidence_baseline into ThoughtRuntime.
+            new_baseline = snap.values.get("confidence_baseline")
+            if new_baseline is not None and not snap.frozen:
+                self._thought.set_confidence_baseline(new_baseline)
+        except Exception:
+            pass
+
+    @staticmethod
+    def _activate_dyon_bridge() -> None:
+        """Activate the DYON→INDIRA event bus bridge (best-effort)."""
+        try:
+            from intelligence_engine.cognitive.dyon_signal_bridge import (
+                get_dyon_signal_bridge,
+            )
+            get_dyon_signal_bridge()   # activates on first access
+        except Exception:
+            pass
+
     def _try_long_horizon_hook(self, ts_ns: int) -> None:
         """Consolidate long-horizon memory — extract insights across the full ledger."""
         try:
@@ -236,6 +308,16 @@ class IndiraRuntime:
                 get_long_horizon_memory,
             )
             get_long_horizon_memory().consolidate(ts_ns=ts_ns)
+        except Exception:
+            pass
+
+    def _try_trader_intelligence_hook(self, ts_ns: int) -> None:
+        """Run a trader archetype arena round and update the dominant archetype."""
+        try:
+            from intelligence_engine.cognitive.trader_intelligence_runtime import (
+                get_trader_intelligence_runtime,
+            )
+            get_trader_intelligence_runtime().tick(ts_ns=ts_ns)
         except Exception:
             pass
 

@@ -94,7 +94,7 @@ def build_cognitive_research_router() -> APIRouter:
             get_research_runtime,
         )
         from intelligence_engine.research.browser_research_service import ResearchTaskType
-        import time
+        from system.time_source import wall_ns as _wall_ns
 
         try:
             task_type = ResearchTaskType(body.task_type)
@@ -107,7 +107,7 @@ def build_cognitive_research_router() -> APIRouter:
             target_urls=tuple(body.target_urls),
             max_pages=body.max_pages,
             priority=body.priority,
-            ts_ns=time.time_ns(),
+            ts_ns=_wall_ns(),
         )
         runtime = get_research_runtime()
         depth = runtime.enqueue(topic)

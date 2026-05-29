@@ -14,8 +14,6 @@ from __future__ import annotations
 
 import hashlib
 import threading
-import time as _time
-import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -64,7 +62,7 @@ class StrategySynthesizer:
           - Negative mean → contraction (-5%)
           - Neutral → no adjustment
         """
-        ts_ns = request.ts_ns or _time.time_ns()
+        ts_ns = request.ts_ns
         history = request.performance_history
         mean_pnl = sum(history) / len(history) if history else 0.0
 
@@ -82,7 +80,11 @@ class StrategySynthesizer:
         # Estimate Sharpe from performance history (simple proxy)
         expected_sharpe = _estimate_sharpe(history)
 
-        strategy_id = f"{request.archetype_id}-synth-{uuid.uuid4().hex[:8]}"
+        _seed = f"{request.archetype_id}:{ts_ns}:{self._synthesis_count}".encode()
+        strategy_id = (
+            f"{request.archetype_id}-synth-"
+            f"{hashlib.sha1(_seed, usedforsecurity=False).hexdigest()[:8]}"
+        )
 
         with self._lock:
             self._synthesis_count += 1
