@@ -272,6 +272,33 @@ class IntelligenceEngine(RuntimeEngine):
                 )
                 self._last_regime = new_regime
                 self._last_regime_confidence = new_regime_conf
+                # Emit causal chain tracing the reasoning behind the transition.
+                try:
+                    from intelligence_engine.cognitive.observability_emitter import (
+                        emit_causal_chain,
+                    )
+                    emit_causal_chain(
+                        ts_ns=ts_ns,
+                        hypothesis=(
+                            f"Market regime shifted to {new_regime} "
+                            f"(confidence {new_regime_conf:.2f})"
+                        ),
+                        causes=(
+                            f"prior_regime={self._last_regime if self._last_regime != new_regime else 'UNKNOWN'}",
+                            f"decision_side={decision.side.value}",
+                            f"composite_confidence={new_conf:.3f}",
+                            f"signal_window={len(self._signal_window)}",
+                        ),
+                        effects=(
+                            f"committed_regime={new_regime}",
+                            f"position_bias={decision.side.value}",
+                            f"size_fraction={decision.size_fraction:.3f}",
+                        ),
+                        confidence=new_regime_conf,
+                        evidence_count=len(self._signal_window),
+                    )
+                except Exception:  # pragma: no cover
+                    pass
         # Emit a market-grounded ThoughtRuntime tick so INDIRA's inner
         # reasoning loop reflects the live meta-controller decision.
         try:

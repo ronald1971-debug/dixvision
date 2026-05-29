@@ -143,6 +143,15 @@ export function ModeRibbon() {
     },
     onSuccess: (_data, targetMode) => {
       setFeedback({ tone: "ok", text: `→ ${targetMode}` });
+      // Optimistic cache write: flip current_mode immediately so the
+      // newly-active chip becomes disabled before the next 2 s poll fires.
+      // Without this, a second click before the poll refetch hits FSM_NO_OP
+      // because governance already holds the target mode.
+      queryClient.setQueryData(
+        ["dashboard", "mode"],
+        (old: Awaited<ReturnType<typeof fetchMode>> | undefined) =>
+          old ? { ...old, current_mode: targetMode } : old,
+      );
       void queryClient.invalidateQueries({ queryKey: ["dashboard", "mode"] });
     },
     onError: (err: unknown) => {

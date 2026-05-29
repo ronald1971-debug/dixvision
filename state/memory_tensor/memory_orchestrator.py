@@ -21,6 +21,9 @@ from typing import Any
 
 from state.memory_tensor.contracts import Episode, MemoryQuery, MemoryResult
 
+_EMBED_DIM = 64
+_MAX_EPISODES = 10_000
+
 
 class MemoryOrchestrator:
     """Coordinates all memory stores behind a single interface.
@@ -45,14 +48,16 @@ class MemoryOrchestrator:
     def episodic(self) -> Any:
         if self._episodic is None:
             from state.memory_tensor.episodic import EpisodicMemoryStore
-            self._episodic = EpisodicMemoryStore()
+            self._episodic = EpisodicMemoryStore(dim=_EMBED_DIM, max_size=_MAX_EPISODES)
+            self._restore_episodes("episodic", self._episodic)
         return self._episodic
 
     @property
     def semantic(self) -> Any:
         if self._semantic is None:
             from state.memory_tensor.semantic import SemanticMemoryStore
-            self._semantic = SemanticMemoryStore(dim=64, max_size=10_000)
+            self._semantic = SemanticMemoryStore(dim=_EMBED_DIM, max_size=_MAX_EPISODES)
+            self._restore_episodes("semantic", self._semantic)
         return self._semantic
 
     @property
@@ -77,18 +82,60 @@ class MemoryOrchestrator:
         return self._regret
 
     # ------------------------------------------------------------------
+    # Persistence helpers
+    # ------------------------------------------------------------------
+
+    def _restore_episodes(self, kind: str, store: Any) -> None:
+        """Reload episodes for *kind* from SQLite into *store*. Best-effort."""
+        try:
+            from state.cognition_persistence import get_cognition_persistence_store
+            rows = get_cognition_persistence_store().load_episodes(kind, limit=_MAX_EPISODES)
+            for row in rows:
+                try:
+                    ep = Episode(
+                        ts_ns=int(row["ts_ns"]),
+                        episode_id=str(row["episode_id"]),
+                        embedding=tuple(float(x) for x in row.get("embedding", [])),
+                        payload={str(k): str(v) for k, v in row.get("payload", {}).items()},
+                    )
+                    if ep.episode_id not in store and ep.dim == _EMBED_DIM:
+                        store.add(ep)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    def _persist_episode(self, kind: str, episode: Episode) -> None:
+        """Write one episode to SQLite. Best-effort."""
+        try:
+            from state.cognition_persistence import get_cognition_persistence_store
+            get_cognition_persistence_store().save_episode(
+                store_kind=kind,
+                episode_id=episode.episode_id,
+                ts_ns=episode.ts_ns,
+                data={
+                    "embedding": list(episode.embedding),
+                    "payload": dict(episode.payload),
+                },
+            )
+        except Exception:
+            pass
+
+    # ------------------------------------------------------------------
     # Unified write interface
     # ------------------------------------------------------------------
 
     def write_episode(self, episode: Episode) -> None:
         try:
             self.episodic.add(episode)
+            self._persist_episode("episodic", episode)
         except Exception:
             pass
 
     def write_semantic(self, episode: Episode) -> None:
         try:
             self.semantic.add(episode)
+            self._persist_episode("semantic", episode)
         except Exception:
             pass
 
@@ -166,12 +213,18 @@ class MemoryOrchestrator:
     # ------------------------------------------------------------------
 
     def snapshot(self) -> dict[str, Any]:
-        return {
+        out: dict[str, Any] = {
             "episodic_size": len(self._episodic) if self._episodic else 0,
             "semantic_size": len(self._semantic) if self._semantic else 0,
             "procedural_size": len(self._procedural) if self._procedural else 0,
             "consolidate_seq": self._consolidate_seq,
         }
+        try:
+            from state.cognition_persistence import get_cognition_persistence_store
+            out["persistence"] = get_cognition_persistence_store().snapshot()
+        except Exception:
+            pass
+        return out
 
 
 # ---------------------------------------------------------------------------

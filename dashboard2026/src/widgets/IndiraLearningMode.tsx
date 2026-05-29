@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
-import { Brain, BookOpen, Inbox, Lightbulb, Microscope, Search, Sparkles } from "lucide-react";
+import { Activity, BookOpen, Inbox, Lightbulb, Microscope, Search } from "lucide-react";
 
 import {
+  fetchIndiraBeliefs,
   fetchIndiraThoughts,
   fetchResearchResults,
   fetchResearchStatus,
@@ -22,7 +23,7 @@ type Tab =
   | "thoughts"
   | "philosophies"
   | "feed"
-  | "proposals"
+  | "beliefs"
   | "shadow";
 
 // ---------------------------------------------------------------------------
@@ -45,14 +46,6 @@ interface FeedRow {
   side: "BUY" | "SELL" | "CLOSE";
   size_pct: number;
   ts_iso: string;
-}
-
-interface ProposalRow {
-  id: string;
-  strategy: string;
-  components: string;
-  composite_score: number;
-  status: "QUEUED" | "SHADOW" | "PROMOTED" | "REJECTED";
 }
 
 interface ShadowEval {
@@ -99,12 +92,6 @@ const FEED: FeedRow[] = [
   { id: "f-003", trader: "@rune_macro", symbol: "EUR/USD", side: "CLOSE", size_pct: 0.0, ts_iso: "2026-04-21T20:02Z" },
 ];
 
-const PROPOSALS: ProposalRow[] = [
-  { id: "prop-104", strategy: "vwap_reversion_v3", components: "Trigger:vwap_band · Filter:atr_floor · Sizer:kelly_clamped", composite_score: 0.78, status: "SHADOW" },
-  { id: "prop-105", strategy: "funding_flip_v2", components: "Trigger:funding_inversion · Filter:oi_delta · Exit:tp_ladder", composite_score: 0.71, status: "QUEUED" },
-  { id: "prop-103", strategy: "macro_regime_overlay_v1", components: "Filter:fred_regime · Trigger:cpi_surprise · Sizer:vol_target", composite_score: 0.66, status: "REJECTED" },
-];
-
 const SHADOW: ShadowEval[] = [
   { id: "s-001", strategy: "vwap_reversion_v3", sharpe: 1.34, max_drawdown_pct: 3.1, fill_rate: 0.97, news_attribution: 0.62, samples: 612, gate_pass: true },
   { id: "s-002", strategy: "funding_flip_v2", sharpe: 0.82, max_drawdown_pct: 4.7, fill_rate: 0.94, news_attribution: 0.41, samples: 380, gate_pass: false },
@@ -117,9 +104,9 @@ const SHADOW: ShadowEval[] = [
 const TABS: { id: Tab; label: string; icon: typeof Brain; hint: string; live?: boolean }[] = [
   { id: "research",     label: "Research",     icon: Search,    hint: "P4",      live: true },
   { id: "thoughts",    label: "Thoughts",     icon: Lightbulb, hint: "P1",      live: true },
+  { id: "beliefs",     label: "Beliefs",      icon: Activity,  hint: "LIVE",    live: true },
   { id: "philosophies", label: "Philosophies", icon: BookOpen,  hint: "PR #95" },
   { id: "feed",        label: "Trader feed",  icon: Inbox,     hint: "PR #96" },
-  { id: "proposals",   label: "Proposals",    icon: Sparkles,  hint: "PR #98" },
   { id: "shadow",      label: "Shadow eval",  icon: Microscope, hint: "PR #114" },
 ];
 
@@ -134,9 +121,9 @@ export function IndiraLearningMode() {
     switch (tab) {
       case "research":    return <ResearchPanel />;
       case "thoughts":    return <ThoughtsPanel />;
+      case "beliefs":     return <BeliefsPanel />;
       case "philosophies": return <PhilosophiesTable rows={PHILOSOPHIES} />;
       case "feed":        return <FeedTable rows={FEED} />;
-      case "proposals":   return <ProposalsTable rows={PROPOSALS} />;
       case "shadow":      return <ShadowTable rows={SHADOW} />;
     }
   }, [tab]);
@@ -449,6 +436,82 @@ function ThoughtsPanel() {
 }
 
 // ---------------------------------------------------------------------------
+// Beliefs tab — live from /api/cognitive/indira/beliefs
+// ---------------------------------------------------------------------------
+
+function BeliefsPanel() {
+  const { data, isError, isLoading } = useQuery({
+    queryKey: ["cognitive", "indira", "beliefs"],
+    queryFn: ({ signal }) => fetchIndiraBeliefs(30, signal),
+    refetchInterval: 10_000,
+  });
+
+  if (isLoading)
+    return <p className="px-3 py-4 text-[11px] text-slate-600">Loading beliefs…</p>;
+  if (isError)
+    return <p className="px-3 py-4 text-[11px] text-rose-400">Failed to load belief stream.</p>;
+
+  const beliefs = data?.beliefs ?? [];
+
+  if (beliefs.length === 0)
+    return (
+      <p className="px-3 py-4 text-[11px] text-slate-600">
+        No belief transitions yet — waiting for the first regime shift.
+      </p>
+    );
+
+  return (
+    <div className="flex flex-col divide-y divide-border/40">
+      {beliefs.map((b, i) => {
+        const p = b.payload ?? {};
+        const delta =
+          typeof p.new_value === "number" && typeof p.old_value === "number"
+            ? p.new_value - p.old_value
+            : null;
+        return (
+          <div key={i} className="px-3 py-2">
+            <div className="flex items-baseline justify-between">
+              <span className="font-mono text-[10px] uppercase text-violet-400">
+                {typeof p.subject === "string" ? p.subject : "BELIEF"}
+              </span>
+              {delta !== null && (
+                <span
+                  className={`font-mono text-[10px] ${delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}
+                >
+                  Δ {delta >= 0 ? "+" : ""}{delta.toFixed(3)}
+                </span>
+              )}
+            </div>
+            <div className="mt-0.5 flex gap-3 text-[11px] text-slate-400">
+              {typeof p.old_value === "number" && (
+                <span>
+                  <span className="text-slate-600">from </span>
+                  <span className="font-mono">{p.old_value.toFixed(3)}</span>
+                </span>
+              )}
+              {typeof p.new_value === "number" && (
+                <span>
+                  <span className="text-slate-600">to </span>
+                  <span className="font-mono text-slate-200">{p.new_value.toFixed(3)}</span>
+                </span>
+              )}
+              {typeof p.confidence === "number" && (
+                <span className="ml-auto font-mono text-[10px] text-slate-500">
+                  conf {p.confidence.toFixed(2)}
+                </span>
+              )}
+            </div>
+            {typeof p.driver === "string" && p.driver && (
+              <p className="mt-0.5 font-mono text-[10px] text-slate-600">{p.driver}</p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Static tab body components
 // ---------------------------------------------------------------------------
 
@@ -501,33 +564,6 @@ function FeedTable({ rows }: { rows: FeedRow[] }) {
             </td>
             <td className="px-3 py-1.5 text-right font-mono text-slate-300">{r.size_pct.toFixed(2)}</td>
             <td className="px-3 py-1.5 font-mono text-slate-500">{r.ts_iso}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-function ProposalsTable({ rows }: { rows: ProposalRow[] }) {
-  return (
-    <table className="w-full table-fixed text-left text-[11px]">
-      <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-wider text-slate-500">
-        <tr>
-          <th className="w-1/5 px-3 py-1.5">Strategy</th>
-          <th className="w-2/5 px-3 py-1.5">Components</th>
-          <th className="w-1/6 px-3 py-1.5 text-right">Composite</th>
-          <th className="w-1/5 px-3 py-1.5">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r) => (
-          <tr key={r.id} className="border-t border-border/60">
-            <td className="px-3 py-1.5 font-mono text-accent">{r.strategy}</td>
-            <td className="px-3 py-1.5 text-slate-300">{r.components}</td>
-            <td className="px-3 py-1.5 text-right font-mono text-slate-300">{r.composite_score.toFixed(2)}</td>
-            <td className={`px-3 py-1.5 font-mono uppercase ${r.status === "PROMOTED" ? "text-emerald-400" : r.status === "SHADOW" ? "text-amber-400" : r.status === "REJECTED" ? "text-rose-400" : "text-slate-400"}`}>
-              {r.status}
-            </td>
           </tr>
         ))}
       </tbody>

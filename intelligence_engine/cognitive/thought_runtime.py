@@ -196,6 +196,44 @@ class ThoughtRuntime:
         }
 
     # ------------------------------------------------------------------
+    # Restore (boot-time continuity)
+    # ------------------------------------------------------------------
+
+    def restore(self, thoughts: list[Thought]) -> int:
+        """Populate the history buffer from previously-persisted thoughts.
+
+        Provides cognitive continuity across restarts: the ring buffer is
+        seeded with the last N thoughts from the ledger so INDIRA does not
+        start each process with a blank mental state.
+
+        Does NOT re-emit — these thoughts already reached the ledger before
+        the process restarted.
+
+        Returns the number of thoughts loaded.
+        """
+        if not thoughts:
+            return 0
+        # Sort oldest-first so the deque tail holds the most recent thought.
+        ordered = sorted(thoughts, key=lambda t: t.ts_ns)
+        for t in ordered:
+            self._history.append(t)
+        last = ordered[-1]
+        # Advance tick counter past the restored sequence so new IDs don't
+        # collide with restored ones.
+        try:
+            restored_tick = int(last.thought_id.split("_")[2])
+            self._tick_count = max(self._tick_count, restored_tick)
+        except (IndexError, ValueError):
+            self._tick_count = max(self._tick_count, len(ordered))
+        # Restore cycle position so the next tick continues the reflection
+        # cycle from where cognition left off, not from step 0.
+        step_names = [s for s, _, _ in _REFLECTION_CYCLE]
+        if last.step in step_names:
+            idx = step_names.index(last.step)
+            self._cycle_index = (idx + 1) % len(_REFLECTION_CYCLE)
+        return len(ordered)
+
+    # ------------------------------------------------------------------
     # Emit
     # ------------------------------------------------------------------
 

@@ -276,7 +276,19 @@ class AutonomousResearchRuntime:
             # Evict lowest-priority topics if over capacity
             while len(self._queue) > self._max_queue:
                 self._queue.pop()  # highest index = lowest priority (sorted)
-            return len(self._queue)
+            depth = len(self._queue)
+        # Persist new task so it survives restart (best-effort)
+        try:
+            from state.cognition_persistence import get_cognition_persistence_store
+            get_cognition_persistence_store().enqueue_research(
+                topic=topic.topic,
+                task_type=topic.task_type.value,
+                priority=topic.priority,
+                ts_ns=topic.ts_ns,
+            )
+        except Exception:
+            pass
+        return depth
 
     def queue_depth(self) -> int:
         with self._lock:
@@ -296,10 +308,44 @@ class AutonomousResearchRuntime:
             if self._running:
                 return
             self._running = True
+        # Reload any tasks that were pending when the process last stopped.
+        self._restore_queue_from_persistence()
         self._thread = threading.Thread(
             target=self._loop, daemon=True, name="indira-research"
         )
         self._thread.start()
+
+    def _restore_queue_from_persistence(self) -> None:
+        """Re-enqueue PENDING tasks from the SQLite persistence store."""
+        try:
+            from state.cognition_persistence import get_cognition_persistence_store
+            rows = get_cognition_persistence_store().load_pending_queue()
+            for row in rows:
+                try:
+                    task_type_str = row.get("task_type", "MARKET_ANALYSIS")
+                    # Map string → ResearchTaskType enum
+                    try:
+                        task_type = ResearchTaskType(task_type_str)
+                    except ValueError:
+                        task_type = ResearchTaskType.MARKET_ANALYSIS
+                    rt = ResearchTopic(
+                        topic=row["topic"],
+                        task_type=task_type,
+                        target_urls=(),
+                        max_pages=3,
+                        priority=int(row.get("priority", 5)),
+                        ts_ns=int(row.get("ts_ns", 0)),
+                    )
+                    with self._lock:
+                        if not any(t.topic == rt.topic for t in self._queue):
+                            self._queue.append(rt)
+                except Exception:
+                    pass
+            if self._queue:
+                with self._lock:
+                    self._queue.sort(key=lambda t: (t.priority, t.ts_ns))
+        except Exception:
+            pass
 
     def stop(self) -> None:
         """Signal the background loop to stop (best-effort)."""
@@ -399,10 +445,11 @@ class AutonomousResearchRuntime:
         )
 
         # ---- 6. Record snapshot ----
+        status = "COMPLETED" if pages else "FAILED"
         snap = ResearchSnapshot(
             topic=topic.topic,
             task_type=topic.task_type.value,
-            status="COMPLETED" if pages else "FAILED",
+            status=status,
             pages_fetched=len(pages),
             confidence=confidence,
             trust_score=trust_score,
@@ -414,6 +461,24 @@ class AutonomousResearchRuntime:
             self._total_runs += 1
             if pages:
                 self._total_ok += 1
+
+        # ---- 7. Persist result and mark queue item done ----
+        try:
+            from state.cognition_persistence import get_cognition_persistence_store
+            ps = get_cognition_persistence_store()
+            ps.save_research_result(
+                topic=topic.topic,
+                task_type=topic.task_type.value,
+                status=status,
+                pages_fetched=len(pages),
+                confidence=confidence,
+                trust_score=trust_score,
+                sources=list(pages.keys()),
+                ts_ns=ts_ns,
+            )
+            ps.mark_queue_done(topic=topic.topic)
+        except Exception:
+            pass
 
     def _store_memory(
         self,

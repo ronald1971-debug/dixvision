@@ -1,9 +1,11 @@
 """INDIRA Runtime — unified cognitive entry point (CONSOLIDATION PHASE).
 
 Single façade over all INDIRA cognitive subsystems:
-    ThoughtRuntime   — always-on reasoning loop (primary driver)
-    DebateGraph      — LLM-backed multi-agent deliberation (optional)
-    MemoryOrchestrator — episodic / semantic / regret memory (optional)
+    ThoughtRuntime      — always-on reasoning loop (primary driver)
+    ReflectionEngine    — meta-thought synthesis from historical thoughts
+    EnvironmentAwareness — live system state context injection
+    DebateGraph         — LLM-backed multi-agent deliberation (optional)
+    MemoryOrchestrator  — episodic / semantic / regret memory (optional)
 
 Boot wires to this class only. Underlying fragments remain as
 implementation details; nothing outside this module needs to know about
@@ -34,6 +36,11 @@ class IndiraRuntime:
 
     def __init__(self, *, thought_runtime: ThoughtRuntime | None = None) -> None:
         self._thought = thought_runtime or get_thought_runtime()
+        self._tick_seq: int = 0
+        # Seed the ring buffer with thoughts from the previous process run.
+        # Best-effort: if the event store isn't ready yet (early import),
+        # we start with an empty history and restore on the first tick.
+        self._restore_from_ledger()
 
     # ------------------------------------------------------------------
     # Primary tick — drives the full cognitive pipeline
@@ -55,6 +62,13 @@ class IndiraRuntime:
         Returns:
             The :class:`Thought` produced by the reasoning loop.
         """
+        self._tick_seq += 1
+
+        # On autonomous ticks (no market override), build context from
+        # live system state so ThoughtRuntime reasons about real conditions.
+        if context_override is None:
+            context_override = self._try_environment_context(ts_ns)
+
         thought = self._thought.tick(
             ts_ns=ts_ns,
             context_override=context_override,
@@ -64,6 +78,14 @@ class IndiraRuntime:
         self._try_debate_hook(ts_ns)
         self._try_memory_hook(ts_ns)
         self._try_backtesting_hook(ts_ns)
+        # Reflective synthesis every 10 ticks — INDIRA looks back at her
+        # own reasoning stream and emits a meta-thought.
+        if self._tick_seq % 10 == 0:
+            self._try_reflection_hook(ts_ns)
+        # Long-horizon pattern extraction every 50 ticks — produces Insights
+        # that persist across restarts and shape future thought context.
+        if self._tick_seq % 50 == 0:
+            self._try_long_horizon_hook(ts_ns)
         return thought
 
     # ------------------------------------------------------------------
@@ -74,6 +96,14 @@ class IndiraRuntime:
         """JSON-serialisable snapshot of INDIRA's current cognitive state."""
         snap = self._thought.snapshot(limit)
         snap["runtime"] = "IndiraRuntime"
+        try:
+            from intelligence_engine.cognitive.long_horizon_memory import (
+                get_long_horizon_memory,
+            )
+            lhm = get_long_horizon_memory()
+            snap["long_horizon"] = lhm.snapshot()
+        except Exception:
+            pass
         return snap
 
     def recent(self, limit: int = 20) -> list[Thought]:
@@ -84,8 +114,104 @@ class IndiraRuntime:
         return self._thought
 
     # ------------------------------------------------------------------
+    # Boot-time cognitive continuity
+    # ------------------------------------------------------------------
+
+    def _restore_from_ledger(self, limit: int = 200) -> int:
+        """Read the most recent thoughts from the ledger and seed the buffer.
+
+        Called once at construction so INDIRA remembers her last conclusions
+        across process restarts.  Returns the number of thoughts loaded.
+        Never raises.
+        """
+        try:
+            import json as _json
+            from state.ledger.event_store import get_event_store
+            store = get_event_store()
+            # Overfetch by 3× because INDIRA emits non-thought events too;
+            # they share the same event_type/source bucket.
+            rows = store.query(
+                event_type="INTELLIGENCE",
+                source="INDIRA",
+                limit=limit * 3,
+            )
+            thoughts: list[Thought] = []
+            for row in rows:
+                if row.get("sub_type") != "THOUGHT_STREAM":
+                    continue
+                raw = row.get("payload", "{}")
+                p = _json.loads(raw) if isinstance(raw, str) else raw
+                if not isinstance(p, dict):
+                    continue
+                thought_id = str(p.get("thought_id", ""))
+                if not thought_id:
+                    continue
+                # ts_ns is encoded in the thought_id:
+                # "indira_thought_{tick_count}_{ts_ns}"
+                try:
+                    ts_ns = int(thought_id.rsplit("_", 1)[-1])
+                except (ValueError, IndexError):
+                    ts_ns = 0
+                try:
+                    thoughts.append(Thought(
+                        thought_id=thought_id,
+                        ts_ns=ts_ns,
+                        step=str(p.get("reasoning_step", "self_reflection")),
+                        context=str(p.get("context", "")),
+                        conclusion=str(p.get("conclusion", "")),
+                        confidence=float(p.get("confidence", 0.65)),
+                    ))
+                except (ValueError, TypeError):
+                    continue
+                if len(thoughts) >= limit:
+                    break
+            loaded = self._thought.restore(thoughts)
+            if loaded:
+                import logging
+                logging.getLogger(__name__).info(
+                    "IndiraRuntime: restored %d thoughts from ledger", loaded
+                )
+            return loaded
+        except Exception:
+            return 0
+
+    # ------------------------------------------------------------------
     # Optional extension hooks (best-effort, never raise)
     # ------------------------------------------------------------------
+
+    def _try_environment_context(self, ts_ns: int) -> str | None:
+        """Return a live context string from EnvironmentAwareness + long-horizon insights."""
+        parts: list[str] = []
+        try:
+            from intelligence_engine.cognitive.environment_awareness import (
+                get_environment_awareness,
+            )
+            env = get_environment_awareness().build_context(ts_ns=ts_ns)
+            if env:
+                parts.append(env)
+        except Exception:
+            pass
+        try:
+            from intelligence_engine.cognitive.long_horizon_memory import (
+                get_long_horizon_memory,
+            )
+            lhm_ctx = get_long_horizon_memory().format_for_context(ts_ns=ts_ns, limit=2)
+            if lhm_ctx:
+                parts.append(lhm_ctx)
+        except Exception:
+            pass
+        return " ".join(parts) if parts else None
+
+    def _try_reflection_hook(self, ts_ns: int) -> None:
+        """Synthesise a meta-thought from recent thought history."""
+        try:
+            from intelligence_engine.cognitive.reflection_engine import (
+                get_reflection_engine,
+            )
+            thoughts = list(self._thought.recent(20))
+            get_reflection_engine().reflect(thoughts, ts_ns=ts_ns)
+        except Exception:
+            pass
 
     def _try_debate_hook(self, ts_ns: int) -> None:
         try:
@@ -100,6 +226,16 @@ class IndiraRuntime:
         try:
             from state.memory_tensor.memory_orchestrator import get_memory_orchestrator
             get_memory_orchestrator().consolidate(ts_ns=ts_ns)
+        except Exception:
+            pass
+
+    def _try_long_horizon_hook(self, ts_ns: int) -> None:
+        """Consolidate long-horizon memory — extract insights across the full ledger."""
+        try:
+            from intelligence_engine.cognitive.long_horizon_memory import (
+                get_long_horizon_memory,
+            )
+            get_long_horizon_memory().consolidate(ts_ns=ts_ns)
         except Exception:
             pass
 

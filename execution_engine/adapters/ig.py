@@ -116,8 +116,12 @@ class IGAdapter(BaseAdapter):
             logger.info("IGAdapter connected account=%s", self._account_id)
             return True
         except Exception as exc:
-            self._record_error("connect_failed", str(exc))
+            self._record_error()
             self._status = AdapterStatus.ERROR
+            logger.error(
+                "IGAdapter.connect: failed. adapter_id=%s error=%s: %s",
+                self._config.adapter_id, type(exc).__name__, str(exc)[:256],
+            )
             return False
 
     async def disconnect(self) -> None:
@@ -141,22 +145,55 @@ class IGAdapter(BaseAdapter):
             self._x_security_token = ""
             self._status = AdapterStatus.DISCONNECTED
 
-    async def submit_order(self, intent: Any) -> FillReport | None:
-        if not self._cst:
-            self._record_error("submit_order", "not_connected")
-            return None
-        t0 = time_source.wall_ns()
+    async def submit_order(
+        self,
+        symbol: str,
+        side: str,
+        order_type: str,
+        quantity: float,
+        price: float | None = None,
+        *,
+        intent_id: str = "",
+        params: dict[str, Any] | None = None,
+    ) -> FillReport:
+        """Submit an order to IG Markets.
+
+        IG uses 'epic' as the instrument identifier; DIX symbols like
+        'EUR/USD' are auto-converted to IG epic format 'CS.D.EURUSD.CFD.IP'
+        if not already in epic format. Operators can pass the raw IG epic
+        via ``params={"epic": "CS.D.EURUSD.CFD.IP"}``.
+
+        Raises:
+            RuntimeError: If not connected or the API call fails.
+        """
+        self._require_connected()
+        t0_ns = time_source.wall_ns()
+
+        direction = "BUY" if side.upper() == "BUY" else "SELL"
+        ig_order_type = order_type.upper() if order_type.upper() in ("MARKET", "LIMIT") else "MARKET"
+
+        epic = (params or {}).get("epic") or symbol
+        order_body: dict[str, Any] = {
+            "epic": epic,
+            "direction": direction,
+            "size": str(quantity),
+            "orderType": ig_order_type,
+            "currencyCode": "USD",
+            "forceOpen": False,
+            "guaranteedStop": False,
+        }
+        if ig_order_type == "LIMIT":
+            if price is None:
+                raise ValueError("IGAdapter.submit_order: price required for LIMIT orders")
+            order_body["level"] = str(price)
+
+        if params:
+            for k, v in params.items():
+                if k != "epic":
+                    order_body[k] = v
+
         try:
-            direction = "BUY" if getattr(intent, "side", "BUY").upper() == "BUY" else "SELL"
-            payload = json.dumps({
-                "epic": getattr(intent, "symbol", ""),
-                "direction": direction,
-                "size": str(getattr(intent, "qty", 1)),
-                "orderType": "MARKET",
-                "currencyCode": "USD",
-                "forceOpen": False,
-                "guaranteedStop": False,
-            }).encode()
+            payload = json.dumps(order_body).encode()
             req = urllib.request.Request(
                 f"{self._base_url}/positions/otc",
                 data=payload,
@@ -171,31 +208,66 @@ class IGAdapter(BaseAdapter):
             )
             with urllib.request.urlopen(req, timeout=10) as resp:
                 body = json.loads(resp.read())
-            latency_ms = (time_source.wall_ns() - t0) / 1e6
-            fill = FillReport(
-                adapter_id=self.config.adapter_id,
-                intent_id=getattr(intent, "intent_id", ""),
-                exchange_order_id=body.get("dealReference", ""),
-                symbol=getattr(intent, "symbol", ""),
+
+            latency_ms = (time_source.wall_ns() - t0_ns) / 1_000_000.0
+            deal_ref = str(body.get("dealReference", ""))
+
+            # IG returns dealReference on submit; confirm endpoint gives fill price.
+            # Use mark-price fallback if confirm is unavailable.
+            fill_price = price or 0.0
+            try:
+                confirm = self._confirm_deal(deal_ref)
+                fill_price = float(confirm.get("level", fill_price) or fill_price)
+            except Exception:  # noqa: BLE001
+                pass
+
+            self._record_fill()
+            logger.debug(
+                "IGAdapter.submit_order: filled. adapter_id=%s deal_ref=%s "
+                "epic=%s direction=%s qty=%.6g price=%.6g latency_ms=%.2f",
+                self._config.adapter_id, deal_ref, epic, direction,
+                quantity, fill_price, latency_ms,
+            )
+            return FillReport(
+                adapter_id=self._config.adapter_id,
+                intent_id=intent_id,
+                exchange_order_id=deal_ref,
+                symbol=symbol,
                 side=direction,
-                filled_qty=float(getattr(intent, "qty", 0)),
-                filled_price=0.0,
+                filled_qty=quantity,
+                filled_price=fill_price,
                 fee=0.0,
                 fee_currency="USD",
                 latency_ms=latency_ms,
-                ts_ns=time_source.wall_ns(),
+                partial=False,
+                remaining_qty=0.0,
             )
-            self._record_fill(fill)
-            return fill
-        except Exception as exc:
-            self._record_error("submit_order", str(exc))
-            return None
+        except Exception as exc:  # noqa: BLE001
+            self._record_error()
+            logger.error(
+                "IGAdapter.submit_order: failed. adapter_id=%s symbol=%s error=%s: %s",
+                self._config.adapter_id, symbol, type(exc).__name__, str(exc)[:256],
+            )
+            raise RuntimeError(
+                f"IGAdapter.submit_order failed: {type(exc).__name__}: {exc}"
+            ) from exc
 
-    async def cancel_order(self, order_id: str) -> bool:
-        if not self._cst:
-            return False
+    async def cancel_order(self, exchange_order_id: str, symbol: str) -> bool:
+        """Cancel a pending IG order by deal ID.
+
+        Args:
+            exchange_order_id: IG deal ID to cancel.
+            symbol: Instrument (used for logging only).
+
+        Returns:
+            ``True`` if successfully cancelled.
+
+        Raises:
+            RuntimeError: If not connected or the API call fails.
+        """
+        self._require_connected()
         try:
-            payload = json.dumps({"dealId": order_id}).encode()
+            payload = json.dumps({"dealId": exchange_order_id}).encode()
             req = urllib.request.Request(
                 f"{self._base_url}/positions/otc",
                 data=payload,
@@ -205,18 +277,36 @@ class IGAdapter(BaseAdapter):
                     "CST": self._cst,
                     "X-SECURITY-TOKEN": self._x_security_token,
                     "_method": "DELETE",
+                    "Version": "1",
                 },
                 method="POST",
             )
             urllib.request.urlopen(req, timeout=10)
+            logger.info(
+                "IGAdapter.cancel_order: cancelled. adapter_id=%s order_id=%s symbol=%s",
+                self._config.adapter_id, exchange_order_id, symbol,
+            )
             return True
-        except Exception as exc:
-            self._record_error("cancel_order", str(exc))
-            return False
+        except Exception as exc:  # noqa: BLE001
+            self._record_error()
+            logger.error(
+                "IGAdapter.cancel_order: failed. adapter_id=%s order_id=%s error=%s: %s",
+                self._config.adapter_id, exchange_order_id, type(exc).__name__, str(exc)[:256],
+            )
+            raise RuntimeError(
+                f"IGAdapter.cancel_order failed: {type(exc).__name__}: {exc}"
+            ) from exc
 
     async def get_balances(self) -> dict[str, float]:
-        if not self._cst:
-            return {}
+        """Return available balances keyed by IG account ID.
+
+        Returns:
+            Mapping of accountId → available balance.
+
+        Raises:
+            RuntimeError: If not connected or the API call fails.
+        """
+        self._require_connected()
         try:
             req = urllib.request.Request(
                 f"{self._base_url}/accounts",
@@ -231,24 +321,59 @@ class IGAdapter(BaseAdapter):
                 body = json.loads(resp.read())
             balances: dict[str, float] = {}
             for acct in body.get("accounts", []):
-                balances[acct.get("accountId", "unknown")] = float(
-                    acct.get("balance", {}).get("available", 0.0)
+                account_id = str(acct.get("accountId", "unknown"))
+                available = float(
+                    acct.get("balance", {}).get("available", 0.0) or 0.0
                 )
+                if available > 0.0:
+                    balances[account_id] = available
             return balances
-        except Exception as exc:
-            self._record_error("get_balances", str(exc))
-            return {}
+        except Exception as exc:  # noqa: BLE001
+            self._record_error()
+            logger.error(
+                "IGAdapter.get_balances: failed. adapter_id=%s error=%s: %s",
+                self._config.adapter_id, type(exc).__name__, str(exc)[:256],
+            )
+            raise RuntimeError(
+                f"IGAdapter.get_balances failed: {type(exc).__name__}: {exc}"
+            ) from exc
 
-    def health(self) -> AdapterHealth:
-        connected = self._status == AdapterStatus.CONNECTED and bool(self._cst)
+    async def health_check(self) -> AdapterHealth:
+        """Return current adapter health, optionally re-checking the session."""
         return AdapterHealth(
-            adapter_id=self.config.adapter_id,
+            adapter_id=self._config.adapter_id,
             status=self._status,
-            score=1.0 if connected else 0.0,
-            last_error=self._last_error,
-            fill_count=self._fill_count,
-            error_count=self._error_count,
+            last_heartbeat_ns=self._last_heartbeat_ns,
+            latency_p50_ms=0.0,
+            latency_p99_ms=0.0,
+            error_count_1m=self._error_count,
+            fill_count_session=self._fill_count,
         )
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _require_connected(self) -> None:
+        if self._status is not AdapterStatus.CONNECTED or not self._cst:
+            raise RuntimeError(
+                f"IGAdapter is not connected (status={self._status.value}). "
+                "Call connect() first."
+            )
+
+    def _confirm_deal(self, deal_reference: str) -> dict[str, Any]:
+        """Fetch the deal confirmation for a submitted order."""
+        req = urllib.request.Request(
+            f"{self._base_url}/confirms/{urllib.parse.quote(deal_reference)}",
+            headers={
+                **_VERSION_HEADERS,
+                "X-IG-API-KEY": self._api_key,
+                "CST": self._cst,
+                "X-SECURITY-TOKEN": self._x_security_token,
+            },
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return json.loads(resp.read())
 
 
 __all__ = ["IGAdapter"]

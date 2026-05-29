@@ -149,29 +149,101 @@ class DyonRuntime:
         return _scan_to_dict(scan)
 
     # ------------------------------------------------------------------
-    # Proposal generation
+    # Proposal generation — with memory + concrete patch instructions
     # ------------------------------------------------------------------
 
     def _generate_proposals(self, result: TopologyScanResult, ts_ns: int) -> None:
-        """Convert scan violations into DyonPatchProposals and emit them."""
+        """Convert scan violations into DyonPatchProposals with concrete instructions.
+
+        Each violation is:
+        1. Recorded in DyonMemory (recurrence tracking, persistence).
+        2. Fed through PatchGenerator to produce a concrete file-level fix.
+        3. Packaged as a DyonPatchProposal with the concrete action embedded.
+        4. Emitted as a PatchProposalEvent to the cognitive observability ledger.
+        5. Persisted to DyonMemory every scan batch.
+        """
+        try:
+            from evolution_engine.dyon.patch_generator import get_patch_generator
+            from evolution_engine.dyon.dyon_memory import get_dyon_memory
+            patch_gen = get_patch_generator(repo_root=self._root)
+            dyon_mem = get_dyon_memory()
+        except Exception:
+            patch_gen = None
+            dyon_mem = None
+
         for i, v in enumerate(result.violations):
+            # ---- 1. Remember the violation ---------------------------------
+            recurrence = 0
+            if dyon_mem is not None:
+                try:
+                    rec = dyon_mem.remember_violation(
+                        invariant_id=v.invariant_id,
+                        source_module=v.source_module,
+                        imported_module=v.imported_module,
+                        severity=v.severity,
+                        ts_ns=ts_ns,
+                    )
+                    recurrence = rec.count
+                except Exception:
+                    pass
+
+            # ---- 2. Generate concrete patch instruction --------------------
+            instruction = None
+            if patch_gen is not None:
+                try:
+                    instruction = patch_gen.generate(v, ts_ns=ts_ns)
+                except Exception:
+                    pass
+
+            # ---- 3. Build proposal with concrete action --------------------
+            if instruction is not None:
+                recommended_action = instruction.action
+                proposal_id = instruction.patch_id
+            else:
+                recommended_action = (
+                    f"Remove direct import of '{v.imported_module}' "
+                    f"from '{v.source_module}'; route through core.contracts."
+                )
+                proposal_id = f"dyon_patch_{ts_ns}_{i}"
+
+            # Escalate recurrent violations in the description
+            recurrence_note = (
+                f" [recurrence #{recurrence}]" if recurrence > 1 else ""
+            )
+
             proposal = DyonPatchProposal(
-                proposal_id=f"dyon_patch_{ts_ns}_{i}",
+                proposal_id=proposal_id,
                 ts_ns=ts_ns,
                 invariant_id=v.invariant_id,
                 source_module=v.source_module,
                 imported_module=v.imported_module,
                 severity=v.severity,
-                description=v.description,
-                recommended_action=(
-                    f"Remove direct import of '{v.imported_module}' "
-                    f"from '{v.source_module}'; route through core.contracts."
-                ),
+                description=v.description + recurrence_note,
+                recommended_action=recommended_action,
             )
             self._proposals.append(proposal)
             if len(self._proposals) > self._max_proposals:
                 self._proposals = self._proposals[-self._max_proposals:]
             self._emit_proposal(proposal)
+
+            # ---- 4. Record patch as PROPOSED in memory ---------------------
+            if dyon_mem is not None and instruction is not None:
+                try:
+                    dyon_mem.record_patch_outcome(
+                        patch_id=instruction.patch_id,
+                        violation_key=f"{v.invariant_id}:{v.source_module}",
+                        outcome="PROPOSED",
+                        ts_ns=ts_ns,
+                    )
+                except Exception:
+                    pass
+
+        # ---- 5. Persist violation memory after each scan batch -------------
+        if dyon_mem is not None and result.violations:
+            try:
+                dyon_mem.persist(ts_ns=ts_ns)
+            except Exception:
+                pass
 
     @staticmethod
     def _emit_proposal(proposal: "DyonPatchProposal") -> None:

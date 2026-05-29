@@ -35,7 +35,10 @@ from execution_engine.adapters._live_base import (
     AdapterStatus,
     LiveAdapterBase,
 )
+from execution_engine.adapters.alpaca import AlpacaAdapter
+from execution_engine.adapters.binance import BinanceAdapter
 from execution_engine.adapters.hummingbot import HummingbotAdapter
+from execution_engine.adapters.ibkr import IBKRAdapter
 from execution_engine.adapters.pumpfun import PumpFunAdapter
 from system_engine.credentials.storage import resolve_env
 
@@ -79,14 +82,46 @@ def default_registry() -> AdapterRegistry:
     """
     global _DEFAULT
     if _DEFAULT is None:
+        env = resolve_env()
         reg = AdapterRegistry()
+
+        # ---- Hummingbot (CEX + DEX gateway, covers ~100 connectors) ------
         reg.add(HummingbotAdapter(connector="paper"))
+        hb_gateway_url = env.get("DIX_HUMMINGBOT_GATEWAY_URL") or None
+        hb_wallet = env.get("DIX_HUMMINGBOT_WALLET") or None
+        if hb_gateway_url or hb_wallet:
+            reg.add(HummingbotAdapter(
+                connector="binance",
+                gateway_url=hb_gateway_url,
+                wallet_address=hb_wallet,
+            ))
+
+        # ---- Binance spot (ccxt, sandbox by default) ----------------------
+        reg.add(BinanceAdapter(
+            api_key=env.get("DIX_BINANCE_API_KEY") or None,
+            api_secret=env.get("DIX_BINANCE_API_SECRET") or None,
+            sandbox=True,
+        ))
+
+        # ---- Alpaca Markets (US equities + crypto, paper by default) ------
+        reg.add(AlpacaAdapter(
+            api_key=env.get("DIX_ALPACA_API_KEY") or "",
+            secret_key=env.get("DIX_ALPACA_SECRET_KEY") or "",
+            paper=True,
+        ))
+
+        # ---- Interactive Brokers (paper TWS port 7497) --------------------
+        reg.add(IBKRAdapter(
+            host=env.get("DIX_IBKR_HOST") or "127.0.0.1",
+            port=int(env.get("DIX_IBKR_PORT") or 7497),
+            client_id=int(env.get("DIX_IBKR_CLIENT_ID") or 1),
+            paper=True,
+        ))
+
+        # ---- PumpFun (Solana meme token DEX) ------------------------------
         reg.add(PumpFunAdapter())
-        # UniswapX needs eth-account for EIP-712 signing. That dep lives in
-        # the optional ``[evm]`` / ``[dev]`` extras so the base launcher can
-        # boot without it. Skip the adapter cleanly if eth-account is not
-        # installed; the operator can install it on demand to surface the
-        # adapter in the dashboard registry.
+
+        # ---- UniswapX (EVM, optional dep eth-account) ---------------------
         try:
             from execution_engine.adapters.uniswapx import UniswapXAdapter
         except ImportError as exc:  # pragma: no cover - exercised by hotfix test
@@ -98,13 +133,7 @@ def default_registry() -> AdapterRegistry:
             )
         else:
             # C-1 / P1-4 — read EVM credentials through the canonical
-            # ``resolve_env`` shim (os.environ > .env > None) so a
-            # freshly-saved ``.env`` line is visible without a server
-            # restart, and so the dashboard credential view reflects
-            # exactly what the adapter sees. Both keys are optional;
-            # ``UniswapXAdapter.connect`` already handles ``None`` by
-            # staying in DISCONNECTED scaffold mode.
-            env = resolve_env()
+            # ``resolve_env`` shim (os.environ > .env > None).
             rpc_url = env.get("DIX_EVM_RPC_URL") or None
             private_key_path = env.get("DIX_EVM_PRIVATE_KEY_PATH") or None
             reg.add(
@@ -113,6 +142,7 @@ def default_registry() -> AdapterRegistry:
                     private_key_path=private_key_path,
                 )
             )
+
         _DEFAULT = reg
     return _DEFAULT
 
