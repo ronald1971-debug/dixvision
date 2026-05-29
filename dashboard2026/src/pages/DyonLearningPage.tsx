@@ -1,6 +1,7 @@
 import { CognitiveHealthStrip } from "@/components/CognitiveHealthStrip";
 import { DyonArchitectureStream } from "@/widgets/DyonArchitectureStream";
 import { DyonLearningMode } from "@/widgets/DyonLearningMode";
+import { DyonWorkspace } from "@/widgets/DyonWorkspace";
 import { WidgetSlot } from "@/components/WidgetSlot";
 
 export function DyonLearningPage() {
@@ -12,17 +13,22 @@ export function DyonLearningPage() {
             Dyon · Engineering Intelligence
           </h1>
           <p className="text-[12px] text-slate-500">
-            hazard journal / patch proposals / sandbox / promotions ·
-            topology / drift / anomalies / repair stream — governance-gated
+            repository graph · drift monitor · dead code · mutation queue · sandbox ·
+            governance approval · patch validation — live engineering workspace
           </p>
         </div>
         <CognitiveHealthStrip />
       </header>
-      <section className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-2">
-        <WidgetSlot widgetKey="dyon:DyonLearningMode" className="min-h-[400px]">
+      {/* Primary: 8-panel engineering workspace */}
+      <WidgetSlot widgetKey="dyon:Workspace" className="min-h-0 flex-1">
+        <DyonWorkspace />
+      </WidgetSlot>
+      {/* Secondary: hazard journal + architecture stream */}
+      <section className="grid h-64 shrink-0 grid-cols-1 gap-3 xl:grid-cols-2">
+        <WidgetSlot widgetKey="dyon:DyonLearningMode" className="h-full">
           <DyonLearningMode />
         </WidgetSlot>
-        <WidgetSlot widgetKey="dyon:ArchitectureStream" className="min-h-[400px]">
+        <WidgetSlot widgetKey="dyon:ArchitectureStream" className="h-full">
           <DyonArchitectureStream />
         </WidgetSlot>
       </section>

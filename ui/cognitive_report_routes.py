@@ -349,12 +349,7 @@ def build_cognitive_report_router() -> APIRouter:
         limit: int = 100,
         component: str | None = None,
     ) -> dict[str, Any]:
-        """Recent telemetry spans, newest-first.
-
-        Query params:
-            limit     — max spans to return (default 100, max 500)
-            component — filter to one component (indira|dyon|research|long_horizon)
-        """
+        """Recent telemetry spans, newest-first."""
         try:
             from state.telemetry import get_cognitive_telemetry
             n = max(1, min(limit, 500))
@@ -363,6 +358,304 @@ def build_cognitive_report_router() -> APIRouter:
                 "count": len(spans),
                 "component_filter": component,
                 "spans": [s.to_dict() for s in spans],
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ------------------------------------------------------------------
+    # P1 — CognitiveSpine + CognitionDaemon
+    # ------------------------------------------------------------------
+
+    @router.get("/spine")
+    def cognitive_spine_snapshot() -> dict[str, Any]:
+        """Live CognitiveSpine snapshot — all cognitive subsystems + cadences."""
+        try:
+            from runtime.cognitive_spine import get_cognitive_spine
+            return {"ts_iso": utc_now().isoformat(), **get_cognitive_spine().snapshot()}
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @router.get("/daemon")
+    def cognition_daemon_snapshot() -> dict[str, Any]:
+        """CognitionDaemon liveness — independent cognitive loop health."""
+        try:
+            from runtime.cognition_daemon import get_cognition_daemon
+            return {"ts_iso": utc_now().isoformat(), **get_cognition_daemon().snapshot()}
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ------------------------------------------------------------------
+    # P3 — TraderModelingRuntime
+    # ------------------------------------------------------------------
+
+    @router.get("/trader/modeling")
+    def trader_modeling_snapshot() -> dict[str, Any]:
+        """TraderModelingRuntime — live behavioral profiling from order flow."""
+        try:
+            from trader_modeling.trader_modeling_runtime import get_trader_modeling_runtime
+            return {"ts_iso": utc_now().isoformat(), **get_trader_modeling_runtime().snapshot()}
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ------------------------------------------------------------------
+    # P4 — GovernedEvolutionPipeline
+    # ------------------------------------------------------------------
+
+    @router.get("/evolution/pipeline")
+    def evolution_pipeline_snapshot(limit: int = 20) -> dict[str, Any]:
+        """GovernedEvolutionPipeline — proposal lifecycle state."""
+        try:
+            from evolution_engine.governed_pipeline import get_governed_pipeline
+            n = max(1, min(limit, 100))
+            return {"ts_iso": utc_now().isoformat(), **get_governed_pipeline().snapshot(limit=n)}
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ------------------------------------------------------------------
+    # P5 — SimulationDominanceRuntime
+    # ------------------------------------------------------------------
+
+    @router.get("/simulation/dominance")
+    def simulation_dominance_snapshot() -> dict[str, Any]:
+        """SimulationDominanceRuntime — strategy dominance scoreboard."""
+        try:
+            from simulation.dominance_runtime import get_simulation_dominance_runtime
+            return {
+                "ts_iso": utc_now().isoformat(),
+                **get_simulation_dominance_runtime().snapshot(),
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ------------------------------------------------------------------
+    # Stage 2 — INDIRA ACTIVATION: Consciousness Stream
+    # ------------------------------------------------------------------
+
+    @router.get("/indira/consciousness")
+    def indira_consciousness(limit: int = 50) -> dict[str, Any]:
+        """INDIRA Consciousness Stream — operator-facing narrative of her inner monologue.
+
+        Returns the most recent entries from ConsciousnessStream, newest-first.
+        Each entry has: entry_id, ts_ns, event_kind, narrative, importance, source.
+
+        event_kind values:
+          THOUGHT  — INDIRA's active reasoning step
+          INSIGHT  — long-horizon insight or archetype shift
+          CAUSAL   — active causal hypothesis (chain event)
+          SYSTEM   — DYON violation / scan / proposal
+          RESEARCH — completed research task
+          MARKET   — significant market tick
+          RISK     — risk breach (highest importance)
+        """
+        try:
+            from intelligence_engine.cognitive.consciousness_stream import (
+                get_consciousness_stream,
+            )
+            n = max(1, min(limit, 500))
+            entries = get_consciousness_stream().recent_entries(n)
+            return {
+                "ts_iso": utc_now().isoformat(),
+                "count": len(entries),
+                "entries": [e.to_dict() for e in entries],
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @router.get("/indira/consciousness/summary")
+    def indira_consciousness_summary() -> dict[str, Any]:
+        """ConsciousnessStream snapshot — buffer stats + 10 most recent entries."""
+        try:
+            from intelligence_engine.cognitive.consciousness_stream import (
+                get_consciousness_stream,
+            )
+            return {"ts_iso": utc_now().isoformat(), **get_consciousness_stream().snapshot()}
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ------------------------------------------------------------------
+    # Stage 2 — Causal Reasoning Graph
+    # ------------------------------------------------------------------
+
+    @router.get("/indira/causal")
+    def indira_causal_graph() -> dict[str, Any]:
+        """CausalReasoningGraph — active causal hypotheses with confidence + lifecycle.
+
+        Returns all non-dissolved hypotheses INDIRA is actively tracking.
+        Each hypothesis has: chain_name, causes, effects, observed_causes,
+        observed_effects, confidence, status (FORMING/ACTIVE/CONFIRMED/WEAKENED).
+        """
+        try:
+            from intelligence_engine.cognitive.causal_graph import get_causal_graph
+            return {"ts_iso": utc_now().isoformat(), **get_causal_graph().snapshot()}
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ------------------------------------------------------------------
+    # Stage 2 — Behavioral Cluster Tracker
+    # ------------------------------------------------------------------
+
+    @router.get("/indira/clusters")
+    def indira_behavioral_clusters() -> dict[str, Any]:
+        """BehavioralClusterTracker — live trader behavioral cluster distribution.
+
+        Returns all active clusters grouped by archetype with:
+          dominant: current dominant cluster name
+          clusters: archetype → {size, strength, composite_score, is_dominant}
+        """
+        try:
+            from intelligence_engine.cognitive.behavioral_cluster import (
+                get_behavioral_cluster_tracker,
+            )
+            return {
+                "ts_iso": utc_now().isoformat(),
+                **get_behavioral_cluster_tracker().snapshot(),
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ------------------------------------------------------------------
+    # Stage 2 — Observation Session Manager
+    # ------------------------------------------------------------------
+
+    @router.get("/indira/observations")
+    def indira_observation_sessions() -> dict[str, Any]:
+        """ObservationSessionManager — what INDIRA is actively focused on.
+
+        Returns all active observation sessions with:
+          focus_label: what phenomenon is being observed
+          theme: human-readable description of the observation
+          hypotheses: forming/active/confirmed/rejected sub-hypotheses
+          session_confidence: aggregate confidence
+          tick_age: how long the session has been running
+        """
+        try:
+            from intelligence_engine.cognitive.market_observation_session import (
+                get_observation_session_manager,
+            )
+            return {
+                "ts_iso": utc_now().isoformat(),
+                **get_observation_session_manager().snapshot(),
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    # ==================================================================
+    # Stage 3 — DYON ACTIVATION: Engineering Runtime + Workspace
+    # ==================================================================
+
+    @router.get("/dyon/workspace")
+    def dyon_workspace() -> dict[str, Any]:
+        """Full DYON Workspace snapshot — all 8 operator panels combined.
+
+        Returns a single dict suitable for the DyonWorkspace dashboard widget:
+          dyon_core:          topology scan stats + recent proposals
+          architecture_drift: health score, grade, trend, history series
+          repository:         module count, layer distribution, edge count
+          dead_code:          orphaned/isolated/stub module list
+          mutation_queue:     GovernedEvolutionPipeline stage distribution + proposals
+          violation_memory:   DyonMemory top recurrent violations
+          simulation:         SimulationDominanceRuntime scoreboard
+          latest_report:      Most recent EvolutionReport
+        """
+        try:
+            from evolution_engine.dyon.dyon_engineering_runtime import (
+                get_dyon_engineering_runtime,
+            )
+            return {
+                "ts_iso": utc_now().isoformat(),
+                **get_dyon_engineering_runtime().snapshot(),
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @router.get("/dyon/engineering")
+    def dyon_engineering_snapshot() -> dict[str, Any]:
+        """DyonEngineeringRuntime — unified DYON identity snapshot."""
+        try:
+            from evolution_engine.dyon.dyon_engineering_runtime import (
+                get_dyon_engineering_runtime,
+            )
+            snap = get_dyon_engineering_runtime().snapshot()
+            return {"ts_iso": utc_now().isoformat(), **snap}
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @router.get("/dyon/repo")
+    def dyon_repo_structure() -> dict[str, Any]:
+        """RepoInspector — live repository module graph.
+
+        Returns:
+          total_files: Python file count
+          total_lines: total lines of code
+          layer_distribution: module count per architectural layer (L0–L8)
+          edge_count: total import edges
+          isolated_module_count: modules with no importers
+          top_connected_modules: most-referenced modules
+          scan_duration_ms: last scan time
+        """
+        try:
+            from evolution_engine.dyon.repo_inspector import get_repo_inspector
+            return {
+                "ts_iso": utc_now().isoformat(),
+                **get_repo_inspector().snapshot_dict(),
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @router.get("/dyon/dead-code")
+    def dyon_dead_code() -> dict[str, Any]:
+        """DeadCodeDetector — orphaned, isolated, stub, and empty modules.
+
+        Returns:
+          dead_module_count: total suspect modules
+          by_classification: counts per ORPHANED / ISOLATED / STUB / EMPTY
+          dead_modules: list of detected modules with reason + confidence
+        """
+        try:
+            from evolution_engine.dyon.dead_code_detector import get_dead_code_detector
+            return {
+                "ts_iso": utc_now().isoformat(),
+                **get_dead_code_detector().snapshot(),
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @router.get("/dyon/drift")
+    def dyon_architecture_drift() -> dict[str, Any]:
+        """ArchitectureDriftMonitor — architecture health over time.
+
+        Returns:
+          current: {health_score, trend, grade, spike_detected, scan_count}
+          history_series: list of per-scan health scores (newest last)
+          history_depth: total scans tracked
+        """
+        try:
+            from evolution_engine.dyon.drift_monitor import get_drift_monitor
+            return {
+                "ts_iso": utc_now().isoformat(),
+                **get_drift_monitor().snapshot(),
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @router.get("/dyon/report")
+    def dyon_evolution_report() -> dict[str, Any]:
+        """Latest DYON evolution report — structured architectural health summary.
+
+        Report covers: health_score, architecture_grade, drift_trend,
+        violations_detected/resolved, patches_proposed/promoted/rejected,
+        dead_modules_detected, persistent_violations, top_recommendations.
+        """
+        try:
+            from evolution_engine.dyon.dyon_engineering_runtime import (
+                get_dyon_engineering_runtime,
+            )
+            runtime = get_dyon_engineering_runtime()
+            snap = runtime.snapshot()
+            return {
+                "ts_iso": utc_now().isoformat(),
+                "report": snap.get("latest_report"),
+                "health_narrative": runtime.health_narrative(),
             }
         except Exception as exc:
             return {"error": str(exc)}

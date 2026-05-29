@@ -44,6 +44,8 @@ class IndiraRuntime:
         # Activate DYON→INDIRA event bus coupling.  Best-effort — if the bus
         # is not yet available the bridge retries silently on next access.
         self._activate_dyon_bridge()
+        # Stage 2 — Consciousness activation: subscribe all new cognitive modules.
+        self._activate_consciousness()
 
     # ------------------------------------------------------------------
     # Primary tick — drives the full cognitive pipeline
@@ -81,6 +83,14 @@ class IndiraRuntime:
         self._try_debate_hook(ts_ns)
         self._try_memory_hook(ts_ns)
         self._try_backtesting_hook(ts_ns)
+        # Stage 2 — Observation session tick: advance active sessions with thought context.
+        self._try_observation_session_hook(ts_ns, thought.context)
+        # Stage 2 — Causal graph tick every 5 ticks: feed thought context, advance hypotheses.
+        if self._tick_seq % 5 == 0:
+            self._try_causal_graph_hook(ts_ns, thought.context)
+        # Stage 2 — Behavioral cluster tick every 3 ticks: decay + dominance recompute.
+        if self._tick_seq % 3 == 0:
+            self._try_behavioral_cluster_hook(ts_ns)
         # Slow-loop parameter evolution every 20 ticks — persists learned
         # confidence_baseline and other free parameters across restarts.
         if self._tick_seq % 20 == 0:
@@ -127,6 +137,33 @@ class IndiraRuntime:
                 get_trader_intelligence_runtime,
             )
             snap["trader_intelligence"] = get_trader_intelligence_runtime().snapshot()
+        except Exception:
+            pass
+        # Stage 2 — Consciousness subsystem snapshots
+        try:
+            from intelligence_engine.cognitive.consciousness_stream import (
+                get_consciousness_stream,
+            )
+            snap["consciousness"] = get_consciousness_stream().snapshot()
+        except Exception:
+            pass
+        try:
+            from intelligence_engine.cognitive.causal_graph import get_causal_graph
+            snap["causal_graph"] = get_causal_graph().snapshot()
+        except Exception:
+            pass
+        try:
+            from intelligence_engine.cognitive.behavioral_cluster import (
+                get_behavioral_cluster_tracker,
+            )
+            snap["behavioral_clusters"] = get_behavioral_cluster_tracker().snapshot()
+        except Exception:
+            pass
+        try:
+            from intelligence_engine.cognitive.market_observation_session import (
+                get_observation_session_manager,
+            )
+            snap["observation_sessions"] = get_observation_session_manager().snapshot()
         except Exception:
             pass
         return snap
@@ -234,6 +271,34 @@ class IndiraRuntime:
                 parts.append(ti_ctx)
         except Exception:
             pass
+        # Stage 2 — Inject causal graph top chain into thought context.
+        try:
+            from intelligence_engine.cognitive.causal_graph import get_causal_graph
+            causal_ctx = get_causal_graph().format_for_context()
+            if causal_ctx:
+                parts.append(causal_ctx)
+        except Exception:
+            pass
+        # Stage 2 — Inject dominant behavioral cluster into thought context.
+        try:
+            from intelligence_engine.cognitive.behavioral_cluster import (
+                get_behavioral_cluster_tracker,
+            )
+            cluster_ctx = get_behavioral_cluster_tracker().format_for_context()
+            if cluster_ctx:
+                parts.append(cluster_ctx)
+        except Exception:
+            pass
+        # Stage 2 — Inject active observation session focus into thought context.
+        try:
+            from intelligence_engine.cognitive.market_observation_session import (
+                get_observation_session_manager,
+            )
+            obs_ctx = get_observation_session_manager().format_for_context()
+            if obs_ctx:
+                parts.append(obs_ctx)
+        except Exception:
+            pass
         return " ".join(parts) if parts else None
 
     def _try_reflection_hook(self, ts_ns: int) -> None:
@@ -333,6 +398,65 @@ class IndiraRuntime:
             registry = get_platform_registry()
             registry.probe_cycle(ts_ns=ts_ns)
             registry.research_cycle(ts_ns=ts_ns)
+        except Exception:
+            pass
+
+    # ------------------------------------------------------------------
+    # Stage 2 — INDIRA ACTIVATION hooks
+    # ------------------------------------------------------------------
+
+    def _try_causal_graph_hook(self, ts_ns: int, context: str) -> None:
+        """Feed thought context into the causal reasoning graph and advance hypotheses."""
+        try:
+            from intelligence_engine.cognitive.causal_graph import get_causal_graph
+            graph = get_causal_graph()
+            graph.observe_context(context, ts_ns)
+            graph.tick(ts_ns)
+        except Exception:
+            pass
+
+    def _try_behavioral_cluster_hook(self, ts_ns: int) -> None:
+        """Advance behavioral cluster tracker — decay + dominance recompute."""
+        try:
+            from intelligence_engine.cognitive.behavioral_cluster import (
+                get_behavioral_cluster_tracker,
+            )
+            get_behavioral_cluster_tracker().tick(ts_ns)
+        except Exception:
+            pass
+
+    def _try_observation_session_hook(self, ts_ns: int, thought_context: str) -> None:
+        """Advance all active observation sessions with the latest thought context."""
+        try:
+            from intelligence_engine.cognitive.market_observation_session import (
+                get_observation_session_manager,
+            )
+            get_observation_session_manager().tick(ts_ns, thought_context)
+        except Exception:
+            pass
+
+    @staticmethod
+    def _activate_consciousness() -> None:
+        """Activate all Stage 2 cognitive modules.  Best-effort, never raises."""
+        try:
+            from intelligence_engine.cognitive.consciousness_stream import (
+                get_consciousness_stream,
+            )
+            get_consciousness_stream().activate()
+        except Exception:
+            pass
+        try:
+            from intelligence_engine.cognitive.behavioral_cluster import (
+                get_behavioral_cluster_tracker,
+            )
+            get_behavioral_cluster_tracker().activate()
+        except Exception:
+            pass
+        try:
+            from intelligence_engine.cognitive.market_observation_session import (
+                get_observation_session_manager,
+            )
+            get_observation_session_manager().activate()
         except Exception:
             pass
 

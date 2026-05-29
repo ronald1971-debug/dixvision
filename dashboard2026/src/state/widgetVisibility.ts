@@ -79,15 +79,23 @@ export const WIDGET_REGISTRY: PageDef[] = [
   },
   {
     id: "indira",
-    label: "Indira Learning",
+    label: "Indira",
     group: "System",
-    widgets: [{ key: "indira:IndiraLearningMode", label: "Learning Panel" }],
+    widgets: [
+      { key: "indira:ConsciousnessPanel", label: "Consciousness Panel" },
+      { key: "indira:IndiraLearningMode", label: "Learning Panel" },
+      { key: "indira:CognitiveStream", label: "Cognitive Stream" },
+    ],
   },
   {
     id: "dyon",
-    label: "Dyon Learning",
+    label: "Dyon",
     group: "System",
-    widgets: [{ key: "dyon:DyonLearningMode", label: "Learning Panel" }],
+    widgets: [
+      { key: "dyon:Workspace", label: "Engineering Workspace" },
+      { key: "dyon:DyonLearningMode", label: "Learning Panel" },
+      { key: "dyon:ArchitectureStream", label: "Architecture Stream" },
+    ],
   },
   // ── Analysis ───────────────────────────────────────────────────────────────
   {

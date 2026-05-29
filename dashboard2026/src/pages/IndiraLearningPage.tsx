@@ -1,5 +1,6 @@
 import { CognitiveHealthStrip } from "@/components/CognitiveHealthStrip";
 import { IndiraCognitiveStream } from "@/widgets/IndiraCognitiveStream";
+import { IndiraConsciousnessPanel } from "@/widgets/IndiraConsciousnessPanel";
 import { IndiraLearningMode } from "@/widgets/IndiraLearningMode";
 import { WidgetSlot } from "@/components/WidgetSlot";
 
@@ -12,17 +13,22 @@ export function IndiraLearningPage() {
             Indira · Cognitive Intelligence
           </h1>
           <p className="text-[12px] text-slate-500">
-            philosophy / trader feed / proposals / shadow eval / corpus ·
-            thought / belief / memory / causal stream — governance-gated
+            consciousness stream · causal chains · behavioral clusters · observation sessions ·
+            philosophy / trader feed / proposals — governance-gated
           </p>
         </div>
         <CognitiveHealthStrip />
       </header>
-      <section className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-2">
-        <WidgetSlot widgetKey="indira:IndiraLearningMode" className="min-h-[400px]">
+      {/* Primary: consciousness stream with causal / cluster / session tabs */}
+      <WidgetSlot widgetKey="indira:ConsciousnessPanel" className="min-h-0 flex-1">
+        <IndiraConsciousnessPanel />
+      </WidgetSlot>
+      {/* Secondary: learning mode + SSE cognitive stream */}
+      <section className="grid h-64 shrink-0 grid-cols-1 gap-3 xl:grid-cols-2">
+        <WidgetSlot widgetKey="indira:IndiraLearningMode" className="h-full">
           <IndiraLearningMode />
         </WidgetSlot>
-        <WidgetSlot widgetKey="indira:CognitiveStream" className="min-h-[400px]">
+        <WidgetSlot widgetKey="indira:CognitiveStream" className="h-full">
           <IndiraCognitiveStream />
         </WidgetSlot>
       </section>

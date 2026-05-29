@@ -251,6 +251,7 @@ from ui.cognitive_chat_runtime import (
 from ui.cognitive_governance_routes import build_cognitive_governance_router
 from ui.cognitive_report_routes import build_cognitive_report_router
 from ui.cognitive_research_routes import build_cognitive_research_router
+from ui.cognitive_runtime_routes import build_cognitive_runtime_router
 from ui.cognitive_routes import build_cognitive_router
 from ui.cognitive_stream_routes import build_cognitive_stream_router
 from ui.dashboard_projection_routes import build_projection_router
@@ -1928,7 +1929,24 @@ app.include_router(build_cognitive_report_router())
 # GET  /api/cognitive/research/status   — queue depth + runtime stats
 # GET  /api/cognitive/research/results  — recent completed research
 app.include_router(build_cognitive_research_router())
+# Stage 1 — Unified Cognitive Runtime Kernel surfaces.
+# GET /api/runtime/cognitive/kernel     — UnifiedCognitiveKernel status
+# GET /api/runtime/cognitive/state      — full system state snapshot
+# GET /api/runtime/cognitive/health     — per-subsystem health scores
+# GET /api/runtime/cognitive/telemetry  — event throughput + gauges
+# GET /api/runtime/cognitive/scheduler  — urgency scheduler state
+# GET /api/runtime/cognitive/memory     — memory coordinator counts
+# GET /api/runtime/cognitive/routes     — cross-bus router stats
+# GET /api/runtime/cognitive/governance — governance router stats
+app.include_router(build_cognitive_runtime_router())
 
+# Stage 4 — Unified Cognitive Memory Layer
+from ui.memory_routes import build_memory_router as _build_memory_router
+app.include_router(_build_memory_router())
+
+# Stage 5 — Unified Event Fabric
+from ui.fabric_routes import build_fabric_router as _build_fabric_router
+app.include_router(_build_fabric_router())
 
 # C-2 / P2-4 / R-1 part 4 — operator-management surface (summary /
 # action / audit / source-trust / learning-override / development-mode

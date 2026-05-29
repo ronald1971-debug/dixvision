@@ -68,11 +68,43 @@ import evolution_engine.evolution_orchestrator  # noqa: F401
 import intelligence_engine.cognitive.thought_runtime  # noqa: F401
 import intelligence_engine.cognitive.observability_emitter  # noqa: F401
 import intelligence_engine.cognitive.indira_runtime  # noqa: F401
+import intelligence_engine.cognitive.trader_intelligence_runtime  # noqa: F401
 import intelligence_engine.backtesting  # noqa: F401
 # Consolidated memory orchestration.
 import state.memory_tensor.memory_orchestrator  # noqa: F401
 # Consolidated observability pipeline.
 import observability.pipeline  # noqa: F401
+# Unified cognitive spine (authoritative cognitive tick driver).
+import runtime.cognitive_spine  # noqa: F401
+# Stage 1 — Unified Cognitive Runtime Kernel subsystems
+import runtime.cognition_scheduler  # noqa: F401
+import runtime.memory_coordinator  # noqa: F401
+import runtime.telemetry_aggregator  # noqa: F401
+import runtime.cross_bus_router  # noqa: F401
+import runtime.governance_router  # noqa: F401
+import runtime.unified_kernel  # noqa: F401
+import state.state_sync  # noqa: F401
+# Stage 4 — Unified Cognitive Memory Layer
+import state.memory.contracts         # noqa: F401
+import state.memory.identity          # noqa: F401
+import state.memory.timeline          # noqa: F401
+import state.memory.index             # noqa: F401
+import state.memory.compression       # noqa: F401
+import state.memory.replay            # noqa: F401
+import state.memory.stores.strategy   # noqa: F401
+import state.memory.stores.trader     # noqa: F401
+import state.memory.stores.governance # noqa: F401
+import state.memory.stores.runtime_events  # noqa: F401
+import state.memory.unified           # noqa: F401
+# Stage 5 — Unified Event Fabric
+import runtime.unified_fabric.contracts   # noqa: F401
+import runtime.unified_fabric.authority   # noqa: F401
+import runtime.unified_fabric.tracing     # noqa: F401
+import runtime.unified_fabric.lineage     # noqa: F401
+import runtime.unified_fabric.persistence # noqa: F401
+import runtime.unified_fabric.replay      # noqa: F401
+import runtime.unified_fabric.bridges     # noqa: F401
+import runtime.unified_fabric.unified     # noqa: F401
 
 # ── static imports: system_monitor ────────────────────────────────────
 # ORDERING CONSTRAINT: system_monitor.hazard_bus calls assert_no_adapter_import()

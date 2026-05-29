@@ -217,6 +217,57 @@ _COGNITIVE_ROUTES: frozenset[RouteKey] = frozenset(
         # thought-runtime telemetry spans
         ("GET", "/api/cognitive/telemetry/summary"),
         ("GET", "/api/cognitive/telemetry/spans"),
+        # P3 Reality Layer — risk state + DYON memory + trader archetypes
+        ("GET", "/api/cognitive/risk/state"),
+        ("GET", "/api/cognitive/dyon/memory"),
+        ("GET", "/api/cognitive/indira/archetypes"),
+        # Unified Cognitive Spine + daemon status
+        ("GET", "/api/cognitive/spine"),
+        ("GET", "/api/cognitive/daemon"),
+        # Evolution governed pipeline + simulation dominance surfaces
+        ("GET", "/api/cognitive/evolution/pipeline"),
+        ("GET", "/api/cognitive/simulation/dominance"),
+        # Trader behavioral profiling
+        ("GET", "/api/cognitive/trader/modeling"),
+        # INDIRA extended cognitive surfaces (linter-added)
+        ("GET", "/api/cognitive/indira/consciousness"),
+        ("GET", "/api/cognitive/indira/consciousness/summary"),
+        ("GET", "/api/cognitive/indira/causal"),
+        ("GET", "/api/cognitive/indira/clusters"),
+        ("GET", "/api/cognitive/indira/observations"),
+        # Stage 1 — Unified Cognitive Runtime Kernel
+        ("GET", "/api/runtime/cognitive/kernel"),
+        ("GET", "/api/runtime/cognitive/state"),
+        ("GET", "/api/runtime/cognitive/health"),
+        ("GET", "/api/runtime/cognitive/telemetry"),
+        ("GET", "/api/runtime/cognitive/scheduler"),
+        ("GET", "/api/runtime/cognitive/memory"),
+        ("GET", "/api/runtime/cognitive/routes"),
+        ("GET", "/api/runtime/cognitive/governance"),
+        # Stage 4 — Unified Cognitive Memory Layer
+        ("GET",  "/api/memory/snapshot"),
+        ("GET",  "/api/memory/timeline"),
+        ("GET",  "/api/memory/search"),
+        ("GET",  "/api/memory/identity"),
+        ("GET",  "/api/memory/compression"),
+        ("GET",  "/api/memory/replay/sessions"),
+        ("POST", "/api/memory/replay/start"),
+        ("GET",  "/api/memory/stores/strategy"),
+        ("GET",  "/api/memory/stores/trader"),
+        ("GET",  "/api/memory/stores/governance"),
+        ("GET",  "/api/memory/stores/runtime"),
+        # Stage 5 — Unified Event Fabric
+        ("GET",  "/api/fabric/snapshot"),
+        ("GET",  "/api/fabric/authority"),
+        ("GET",  "/api/fabric/tracing"),
+        ("GET",  "/api/fabric/tracing/{trace_id}"),
+        ("GET",  "/api/fabric/lineage"),
+        ("GET",  "/api/fabric/lineage/{event_id}"),
+        ("GET",  "/api/fabric/persistence"),
+        ("GET",  "/api/fabric/replay"),
+        ("POST", "/api/fabric/replay/start"),
+        ("GET",  "/api/fabric/bridges"),
+        ("GET",  "/api/fabric/events"),
     }
 )
 
