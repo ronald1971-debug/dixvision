@@ -58,6 +58,21 @@ import enforcement.resource_enforcer  # noqa: F401
 # ── static imports: evolution engine ──────────────────────────────────
 import evolution_engine.experimental.transformer_policy  # noqa: F401
 import evolution_engine.strategy_genome.recombination_engine  # noqa: F401
+# Consolidated cognitive runtimes (CONSOLIDATION PHASE).
+# IndiraRuntime: unified INDIRA cognitive entry point.
+# EvolutionOrchestrator: unified DYON + evolution pipeline entry point.
+# Underlying fragments (thought_runtime, dyon_runtime) remain as implementation details.
+import evolution_engine.charter.dyon  # noqa: F401
+import evolution_engine.dyon.dyon_runtime  # noqa: F401
+import evolution_engine.evolution_orchestrator  # noqa: F401
+import intelligence_engine.cognitive.thought_runtime  # noqa: F401
+import intelligence_engine.cognitive.observability_emitter  # noqa: F401
+import intelligence_engine.cognitive.indira_runtime  # noqa: F401
+import intelligence_engine.backtesting  # noqa: F401
+# Consolidated memory orchestration.
+import state.memory_tensor.memory_orchestrator  # noqa: F401
+# Consolidated observability pipeline.
+import observability.pipeline  # noqa: F401
 
 # ── static imports: system_monitor ────────────────────────────────────
 # ORDERING CONSTRAINT: system_monitor.hazard_bus calls assert_no_adapter_import()

@@ -249,6 +249,8 @@ from ui.cognitive_chat_runtime import (
     build_runtime as build_cognitive_chat_runtime,
 )
 from ui.cognitive_governance_routes import build_cognitive_governance_router
+from ui.cognitive_report_routes import build_cognitive_report_router
+from ui.cognitive_research_routes import build_cognitive_research_router
 from ui.cognitive_routes import build_cognitive_router
 from ui.cognitive_stream_routes import build_cognitive_stream_router
 from ui.dashboard_projection_routes import build_projection_router
@@ -493,7 +495,7 @@ class _State:
             "DIXVISION_DEVELOPMENT_MODE", "true"
         ).strip().lower() in {"1", "true", "yes", "on"}
         self.trading_allowed: bool = os.environ.get(
-            "DIXVISION_TRADING_ALLOWED", "false"
+            "DIXVISION_TRADING_ALLOWED", "true"
         ).strip().lower() in {"1", "true", "yes", "on"}
         # ``mode=None`` here is intentional: the FSM is constructed in
         # ``_build_governance_tier`` which runs *after* this section,
@@ -634,11 +636,23 @@ class _State:
             ledger_writer=self.ledger_writer,
             store=self.signal_trust_promotions,
         )
+        # OPERATOR-AUTHORITY — read DIXVISION_BOOT_MODE to allow the operator
+        # to start the system in LIVE mode directly without stepping through
+        # the FSM ladder manually. Default is LIVE (operator has granted authority).
+        # Set DIXVISION_BOOT_MODE=PAPER or DIXVISION_BOOT_MODE=SAFE to restrict.
+        _boot_mode_str = os.environ.get("DIXVISION_BOOT_MODE", "LIVE").strip().upper()
+        try:
+            from core.contracts.governance import SystemMode as _SM  # noqa: PLC0415
+            _boot_initial_mode = _SM[_boot_mode_str]
+        except (KeyError, ImportError):
+            from core.contracts.governance import SystemMode as _SM  # noqa: PLC0415
+            _boot_initial_mode = _SM.SAFE
         self.governance = GovernanceEngine(
             ledger=ledger,
             strategy_registry=self.strategy_registry,
             exposure_store=self.exposure_store,
             signal_trust_registry=self.signal_trust_registry,
+            initial_mode=_boot_initial_mode,
         )
         # Hardening-S1 item 4-ext -- bind the SHA-256 of every
         # canonical policy YAML to the authority ledger at boot. The
@@ -1001,6 +1015,59 @@ class _State:
             evidence_builder=self._structural_evidence_builder,
             cognitive_gate=lambda: _get_cogov().gate_mutation().allowed,
         )
+        # Autonomous cognitive background tickers — COGNITIVE ACTIVATION PHASE.
+        #
+        # Thread 1 (evolution-orchestrator): drives EvolutionOrchestrator.tick()
+        #   every 10 s.  With DyonRuntime.scan_interval=50 a full topology scan
+        #   fires ~every 8 min.  The EvolutionOrchestrator also drives
+        #   StructuralLoop and CritiqueLoop when they are later registered.
+        #
+        # Thread 2 (indira-cognitive-loop): drives IndiraRuntime.tick() every
+        #   30 s so INDIRA's thought stream, memory consolidation, and
+        #   backtesting-platform discovery run autonomously even when no market
+        #   data arrives.
+        def _start_cognitive_background_tickers() -> None:
+            import time as _time
+
+            from evolution_engine.dyon.dyon_runtime import get_dyon_runtime as _get_dyon
+            from evolution_engine.evolution_orchestrator import get_evolution_orchestrator
+
+            _evo = get_evolution_orchestrator()
+            # Pre-seed DyonRuntime with REPO_ROOT so scans cover the real codebase.
+            _get_dyon(repo_root=REPO_ROOT)
+            # Register the StructuralEvolutionLoop so the orchestrator drives it.
+            _evo.register_structural_loop(self.structural_evolution_loop)
+
+            def _evo_ticker() -> None:
+                while True:
+                    _time.sleep(10)
+                    try:
+                        _evo.tick(ts_ns=int(_time.time_ns()))
+                    except Exception:
+                        pass
+
+            threading.Thread(
+                target=_evo_ticker, daemon=True, name="evolution-orchestrator"
+            ).start()
+
+            def _indira_ticker() -> None:
+                import time as _t2
+                _time.sleep(5)  # stagger start so evolution thread initialises first
+                while True:
+                    try:
+                        from intelligence_engine.cognitive.indira_runtime import (
+                            get_indira_runtime,
+                        )
+                        get_indira_runtime().tick(ts_ns=int(_t2.time_ns()))
+                    except Exception:
+                        pass
+                    _time.sleep(30)
+
+            threading.Thread(
+                target=_indira_ticker, daemon=True, name="indira-cognitive-loop"
+            ).start()
+
+        _start_cognitive_background_tickers()
 
     def _live_freeze_policy(self) -> LearningEvolutionFreezePolicy:
         """Snapshot the live HARDEN-04 freeze policy.
@@ -1189,6 +1256,8 @@ class _State:
 
         # Sync initial mode from governance FSM → kernel
         current_mode = self.governance.state_transitions.current_mode()
+        if self.trading_allowed:
+            self.system_kernel.set_execution_blocked(False)
         self.system_kernel.transition_mode(current_mode, reason="boot_sync")
 
         # Sync initial freeze state
@@ -1839,6 +1908,18 @@ app.include_router(build_cognitive_governance_router())
 # GET /api/cognitive/stream   — SSE (channel "indira" | "dyon")
 # GET /api/cognitive/snapshot — JSON snapshot for initial load
 app.include_router(build_cognitive_stream_router())
+# P1/P2 — INDIRA thought runtime + DYON engineering intelligence report surfaces.
+# GET /api/cognitive/report            — unified cognitive state report
+# GET /api/cognitive/indira/thoughts   — recent INDIRA thought events
+# GET /api/cognitive/indira/beliefs    — recent INDIRA belief evolution events
+# GET /api/cognitive/dyon/topology     — latest DYON topology scan
+# GET /api/cognitive/dyon/proposals    — recent DYON patch proposals
+app.include_router(build_cognitive_report_router())
+# P4 — INDIRA autonomous research queue surface.
+# POST /api/cognitive/research/enqueue  — submit research topic
+# GET  /api/cognitive/research/status   — queue depth + runtime stats
+# GET  /api/cognitive/research/results  — recent completed research
+app.include_router(build_cognitive_research_router())
 
 
 # C-2 / P2-4 / R-1 part 4 — operator-management surface (summary /

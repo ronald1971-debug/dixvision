@@ -26,11 +26,17 @@ _URL_RE = re.compile(
 )
 
 # Eagerly import every charter module so each voice registers itself.
+# Import order matters: later imports overwrite the registry for the same Voice.
+# evolution_engine.charter.dyon is DYON's authoritative engineering identity and
+# must be imported LAST so it wins the Voice.DYON slot over the legacy
+# system_monitor.charter (which registered a simpler monitoring-only charter).
 from cockpit import charter as _cockpit_charter  # noqa: F401, E402
 import cognitive_governance.charter as _cogov_charter  # noqa: F401, E402
 from governance import charter as _gov_charter  # noqa: F401, E402
 from mind import charter as _mind_charter  # noqa: F401, E402
-from system_monitor import charter as _dyon_charter  # noqa: F401, E402
+import system_monitor.charter as _sysmon_charter  # noqa: F401, E402 — legacy DYON stub
+import intelligence_engine.charter.indira as _indira_charter  # noqa: F401, E402 — authoritative INDIRA identity
+import evolution_engine.charter.dyon as _dyon_charter  # noqa: F401, E402 — authoritative DYON identity (overwrites sysmon stub)
 
 _INDIRA_KEYWORDS = (
     "trade",

@@ -122,7 +122,8 @@ def run_startup_sequence(*, skip_feeds: bool = False, skip_plugins: bool = False
 
     result.total_duration_ms = (time_source.now_ns() - start_ns) / 1_000_000
     if result.success:
-        result.final_mode = "PAPER"
+        import os as _os
+        result.final_mode = _os.environ.get("DIXVISION_BOOT_MODE", "LIVE").strip().upper()
 
     logger.info(
         "Boot complete: %s in %.1fms (%d/%d steps OK)",
@@ -148,35 +149,152 @@ def _init_clock() -> None:
 
 
 def _load_authority() -> None:
-    pass  # Loaded lazily by server
+    """Verify governance constitution and operator authority are loadable."""
+    from core.contracts.governance_constitution import (
+        LIVE_PRIORITY_STACK,
+        DEV_PRIORITY_STACK,
+        GovernancePriority,
+    )
+    # Operator Sovereignty must be P2 in every phase (executive directive)
+    live_op = LIVE_PRIORITY_STACK.get(GovernancePriority.P2_OPERATOR)
+    dev_op = DEV_PRIORITY_STACK.get(GovernancePriority.P2_OPERATOR)
+    if live_op != 2:
+        raise RuntimeError(
+            f"LIVE_PRIORITY_STACK: Operator must be rank 2, got {live_op} — "
+            "governance constitution violates executive directive"
+        )
+    if dev_op != 2:
+        raise RuntimeError(
+            f"DEV_PRIORITY_STACK: Operator must be rank 2, got {dev_op} — "
+            "governance constitution violates executive directive"
+        )
+    # Registry files must be parseable
+    import pathlib
+    import yaml
+    registry_root = pathlib.Path(__file__).parents[2] / "registry"
+    for name in ("governance_constitution.yaml", "engines.yaml", "modes.yaml"):
+        path = registry_root / name
+        if not path.exists():
+            raise FileNotFoundError(f"Missing registry file: {path}")
+        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+        if raw is None:
+            raise ValueError(f"Empty registry file: {path}")
+    logger.info("Authority: governance constitution OK, registry files OK")
 
 
 def _boot_governance() -> None:
-    pass  # Lazily initialized
+    """Verify governance engine and charter registrations are loadable."""
+    from governance_engine import GovernanceEngine  # noqa: F401 — import validates
+    from core.charter import all_charters, Voice
+    # Force INDIRA and DYON charter registration by importing their modules
+    import intelligence_engine.charter.indira  # noqa: F401
+    import evolution_engine.charter.dyon  # noqa: F401
+    # all_charters() is keyed by Voice enum; check both identities present
+    charters = all_charters()
+    if Voice.INDIRA not in charters:
+        raise RuntimeError("INDIRA charter is not registered — cognitive identity missing")
+    if Voice.DYON not in charters:
+        raise RuntimeError("DYON charter is not registered — engineering identity missing")
+    logger.info(
+        "Governance: GovernanceEngine importable, charters registered: %s",
+        [c.value for c in charters],
+    )
 
 
 def _boot_intelligence() -> None:
-    pass  # Lazily initialized
+    """Verify INDIRA intelligence engine and cognitive observability surface."""
+    from intelligence_engine import IntelligenceEngine  # noqa: F401
+    from intelligence_engine.cognitive.observability_emitter import (
+        emit_thought_stream,
+        emit_belief_evolution,
+        emit_memory_formation,
+        emit_confidence_shift,
+        emit_archetype_evolution,
+        emit_research_discovery,
+    )
+    # Verify meta-controller hot-path is importable
+    from intelligence_engine.meta_controller import MetaControllerHotPath  # noqa: F401
+    from intelligence_engine.meta_controller.perception.regime_router import (
+        step_regime_router,
+    )  # noqa: F401
+    # Verify memory stores
+    from state.memory_tensor.episodic import EpisodicMemoryStore  # noqa: F401
+    from state.memory_tensor.semantic import SemanticMemoryStore  # noqa: F401
+    logger.info(
+        "Intelligence: IntelligenceEngine + cognitive observability surface OK"
+    )
 
 
 def _boot_execution() -> None:
-    pass  # Lazily initialized
+    """Verify execution engine adapters and kill-switch gate are importable."""
+    from execution_engine import ExecutionEngine  # noqa: F401
+    # Verify the execution engine's core contracts
+    from core.contracts.execution import ExecutionIntent  # noqa: F401
+    from core.contracts.events import Side  # noqa: F401
+    logger.info("Execution: ExecutionEngine importable")
 
 
 def _boot_learning() -> None:
-    pass  # Lazily initialized
+    """Verify learning and evolution engines, evolution loop, topology scanner."""
+    from learning_engine import LearningEngine  # noqa: F401
+    from evolution_engine import EvolutionEngine  # noqa: F401
+    from evolution_engine.loops.structural_loop import StructuralEvolutionLoop  # noqa: F401
+    from evolution_engine.dyon.topology_scanner import DyonTopologyScanner  # noqa: F401
+    from evolution_engine.charter.dyon_observability_emitter import (
+        emit_patch_proposal,
+        emit_topology_drift,
+        emit_architectural_drift,
+    )  # noqa: F401
+    logger.info(
+        "Learning/Evolution: LearningEngine + EvolutionEngine + "
+        "StructuralEvolutionLoop + DyonTopologyScanner OK"
+    )
 
 
 def _boot_system() -> None:
-    pass  # Lazily initialized
+    """Verify system engine and ledger are accessible; emit BOOT_START event."""
+    from system_engine import SystemEngine  # noqa: F401
+    from state.ledger.event_store import get_event_store, append_event
+    # Confirm ledger is writable — emit BOOT_START
+    ts_ns = time_source.now_ns()
+    import os as _os
+    append_event(
+        event_type="SYSTEM",
+        sub_type="BOOT_START",
+        source="SYSTEM",
+        payload={
+            "ts_ns": ts_ns,
+            "phase": "COGNITIVE_ACTIVATION",
+            "mode": _os.environ.get("DIXVISION_BOOT_MODE", "LIVE").strip().upper(),
+        },
+    )
+    logger.info("System: SystemEngine importable, BOOT_START emitted to ledger")
 
 
 def _register_plugins() -> None:
-    pass  # Handled by plugin registry
+    """Validate plugin registry is parseable."""
+    import pathlib
+    import yaml
+    path = pathlib.Path(__file__).parents[2] / "registry" / "plugins.yaml"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing plugins registry: {path}")
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    plugins = raw.get("plugins", []) if isinstance(raw, dict) else []
+    logger.info("Plugins: registry OK (%d plugins declared)", len(plugins))
 
 
 def _start_feeds() -> None:
-    pass  # Handled by feed runners
+    """Validate feed configuration is parseable (actual start handled by harness)."""
+    import pathlib
+    import yaml
+    path = pathlib.Path(__file__).parents[2] / "registry" / "integrations.yaml"
+    if not path.exists():
+        logger.info("Feeds: no integrations.yaml — skipping feed config validation")
+        return
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if raw is None:
+        raise ValueError("integrations.yaml is empty")
+    logger.info("Feeds: integrations.yaml OK")
 
 
 __all__ = [

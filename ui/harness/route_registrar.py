@@ -204,6 +204,16 @@ _COGNITIVE_ROUTES: frozenset[RouteKey] = frozenset(
         # COGNITIVE ACTIVATION PHASE — real-time stream projection for INDIRA + DYON
         ("GET", "/api/cognitive/stream"),
         ("GET", "/api/cognitive/snapshot"),
+        # P1/P2 — INDIRA thought runtime + DYON engineering report surfaces
+        ("GET", "/api/cognitive/report"),
+        ("GET", "/api/cognitive/indira/thoughts"),
+        ("GET", "/api/cognitive/indira/beliefs"),
+        ("GET", "/api/cognitive/dyon/topology"),
+        ("GET", "/api/cognitive/dyon/proposals"),
+        # P4 — autonomous research queue (topic ingestion + status + results)
+        ("POST", "/api/cognitive/research/enqueue"),
+        ("GET", "/api/cognitive/research/status"),
+        ("GET", "/api/cognitive/research/results"),
     }
 )
 

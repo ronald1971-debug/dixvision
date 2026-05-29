@@ -50,6 +50,9 @@ class RuntimeBootstrap:
         "_lifecycle_mgr",
         "_propagator",
         "_kernel",
+        "_indira_runtime",
+        "_evolution_orchestrator",
+        "_cogov",
     )
 
     def __init__(self, tick_interval_ms: float = 100.0) -> None:
@@ -65,6 +68,9 @@ class RuntimeBootstrap:
         self._lifecycle_mgr: Any = None
         self._propagator: Any = None
         self._kernel: Any = None
+        self._indira_runtime: Any = None
+        self._evolution_orchestrator: Any = None
+        self._cogov: Any = None
 
     def attach(self, app: Any, state: Any) -> None:
         """Attach runtime kernel to FastAPI app lifecycle.
@@ -200,6 +206,62 @@ class RuntimeBootstrap:
             report.total_checks,
         )
 
+        # Wire consolidated cognitive runtimes (CONSOLIDATION PHASE).
+        # IndiraRuntime: unified INDIRA cognitive entry point (wraps ThoughtRuntime).
+        # EvolutionOrchestrator: unified evolution entry point (wraps DyonRuntime + pipeline).
+        # CognitiveGovernanceEngine: integrity guard emission.
+        # All are best-effort: failures here must never block boot.
+        try:
+            from intelligence_engine.cognitive.indira_runtime import get_indira_runtime
+            self._indira_runtime = get_indira_runtime()
+            logger.info("Cognitive: IndiraRuntime wired (unified INDIRA)")
+        except Exception as _exc:
+            logger.warning("Cognitive: IndiraRuntime unavailable — %s", _exc)
+
+        try:
+            from evolution_engine.evolution_orchestrator import get_evolution_orchestrator
+            self._evolution_orchestrator = get_evolution_orchestrator()
+            logger.info("Cognitive: EvolutionOrchestrator wired (unified DYON + pipeline)")
+        except Exception as _exc:
+            logger.warning("Cognitive: EvolutionOrchestrator unavailable — %s", _exc)
+
+        try:
+            from cognitive_governance.engine import get_cognitive_governance
+            self._cogov = get_cognitive_governance()
+            logger.info("Cognitive: CognitiveGovernanceEngine wired (P0)")
+        except Exception as _exc:
+            logger.warning("Cognitive: CognitiveGovernanceEngine unavailable — %s", _exc)
+
+        # OPERATOR-AUTHORITY — start AutonomousResearchRuntime daemon so INDIRA
+        # researches backtesting platforms and market intelligence continuously.
+        try:
+            from intelligence_engine.research.autonomous_research_runtime import (
+                get_research_runtime,
+            )
+            from intelligence_engine.research.browser_research_service import (
+                ResearchTaskType,
+            )
+            from intelligence_engine.research.autonomous_research_runtime import ResearchTopic
+            import time as _time
+            _research_rt = get_research_runtime()
+            _research_rt.start()
+            # Seed with initial discovery topics so the daemon has work on boot.
+            _now_ns = int(_time.time_ns())
+            for _topic in (
+                "backtesting platform API free algorithmic trading",
+                "crypto trading bot autonomous backtesting 2024",
+                "market microstructure research papers 2024",
+            ):
+                _research_rt.enqueue(ResearchTopic(
+                    topic=_topic,
+                    task_type=ResearchTaskType.MARKET_ANALYSIS,
+                    priority=6,
+                    ts_ns=_now_ns,
+                ))
+            logger.info("Cognitive: AutonomousResearchRuntime started (LIVE authority)")
+        except Exception as _exc:
+            logger.warning("Cognitive: AutonomousResearchRuntime unavailable — %s", _exc)
+
         # Start background tick loop
         self._running = True
         self._kernel_task = asyncio.create_task(self._tick_loop())
@@ -230,6 +292,32 @@ class RuntimeBootstrap:
                 # Phase 4: Health check (every 50 ticks)
                 if tick_count % 50 == 0 and self._readiness:
                     self._readiness.assess()
+
+                # Phase 5: INDIRA unified cognitive runtime — every 30 ticks (~3s).
+                # IndiraRuntime drives ThoughtRuntime + memory consolidation hooks.
+                if tick_count % 30 == 0 and self._indira_runtime:
+                    try:
+                        self._indira_runtime.tick(ts_ns=tick_start)
+                    except Exception:
+                        pass
+
+                # Phase 6: Evolution orchestrator — every tick.
+                # EvolutionOrchestrator drives DyonRuntime (self-throttled at 50)
+                # + StructuralLoop and CritiqueLoop if registered.
+                if self._evolution_orchestrator:
+                    try:
+                        self._evolution_orchestrator.tick(ts_ns=tick_start)
+                    except Exception:
+                        pass
+
+                # Phase 7: Cognitive governance integrity status emission.
+                # CognitiveGovernanceEngine.emit_status() self-rate-limits to once
+                # per 60 seconds; calling every tick costs only a time comparison.
+                if self._cogov:
+                    try:
+                        self._cogov.emit_status()
+                    except Exception:
+                        pass
 
                 tick_count += 1
                 elapsed_ms = (time_source.now_ns() - tick_start) / 1_000_000
@@ -307,6 +395,14 @@ class RuntimeBootstrap:
     @property
     def kernel(self) -> Any:
         return self._kernel
+
+    @property
+    def indira_runtime(self) -> Any:
+        return self._indira_runtime
+
+    @property
+    def evolution_orchestrator(self) -> Any:
+        return self._evolution_orchestrator
 
 
 def _get_authority_store(state: Any) -> Any:

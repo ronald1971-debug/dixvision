@@ -272,6 +272,28 @@ class IntelligenceEngine(RuntimeEngine):
                 )
                 self._last_regime = new_regime
                 self._last_regime_confidence = new_regime_conf
+        # Emit a market-grounded ThoughtRuntime tick so INDIRA's inner
+        # reasoning loop reflects the live meta-controller decision.
+        try:
+            from intelligence_engine.cognitive.thought_runtime import get_thought_runtime
+            regime_str = self._last_regime
+            get_thought_runtime().tick(
+                ts_ns=ts_ns,
+                context_override=(
+                    f"regime={regime_str} "
+                    f"confidence={new_conf:.3f} "
+                    f"side={decision.side.value} "
+                    f"size={decision.size_fraction:.3f} "
+                    f"window={len(self._signal_window)}"
+                ),
+                conclusion_override=(
+                    f"Decision confirmed: {decision.side.value} "
+                    f"confidence={new_conf:.3f} regime={regime_str}"
+                ),
+                confidence_override=new_conf,
+            )
+        except Exception:  # pragma: no cover
+            pass
 
     def process(self, event: Event) -> Sequence[Event]:
         # Bus-side passthrough; SignalEvents flow on the canonical bus.

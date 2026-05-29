@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { fetchMode } from "@/api/dashboard";
-import { postOperatorUnlock } from "@/api/operator";
+import { postOperatorMode, postOperatorUnlock } from "@/api/operator";
 
 /**
  * 7-state Mode FSM ribbon — the single most important indicator on
@@ -92,6 +92,17 @@ const TONE_ACTIVE: Record<Tone, string> = {
   alert: "bg-orange-500 border-orange-300 text-bg",
 };
 
+// Forward-only ladder for cascade support (LOCKED and SAFE not cascade targets).
+const FORWARD_CHAIN = ["SAFE", "PAPER", "CANARY", "LIVE", "AUTO"] as const;
+type ForwardMode = (typeof FORWARD_CHAIN)[number];
+
+function getStepsTo(from: string, to: string): string[] {
+  const fromIdx = FORWARD_CHAIN.indexOf(from as ForwardMode);
+  const toIdx = FORWARD_CHAIN.indexOf(to as ForwardMode);
+  if (fromIdx === -1 || toIdx === -1 || toIdx <= fromIdx) return [to];
+  return Array.from(FORWARD_CHAIN.slice(fromIdx + 1, toIdx + 1));
+}
+
 export function ModeRibbon() {
   const queryClient = useQueryClient();
   const [feedback, setFeedback] = useState<{
@@ -103,6 +114,41 @@ export function ModeRibbon() {
     queryKey: ["dashboard", "mode"],
     queryFn: ({ signal }) => fetchMode(signal),
     refetchInterval: 2_000,
+  });
+
+  const modeMutation = useMutation({
+    mutationFn: async (targetMode: string) => {
+      const steps = getStepsTo(currentMode ?? "", targetMode);
+      for (const step of steps) {
+        const resp = await postOperatorMode({
+          target_mode: step,
+          reason: `operator dashboard: transition to ${targetMode}`,
+          requestor: "operator",
+          operator_authorized: true,
+          consent_operator_id: "operator",
+          consent_policy_hash: "dashboard",
+          consent_nonce: String(Date.now()),
+          consent_ts_ns: Date.now() * 1_000_000,
+        });
+        if (!resp.approved) {
+          const reason =
+            resp.decision &&
+            typeof resp.decision === "object" &&
+            typeof (resp.decision as { reason?: unknown }).reason === "string"
+              ? (resp.decision as { reason: string }).reason
+              : resp.summary ?? `transition to ${step} refused`;
+          throw new Error(reason);
+        }
+      }
+    },
+    onSuccess: (_data, targetMode) => {
+      setFeedback({ tone: "ok", text: `→ ${targetMode}` });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard", "mode"] });
+    },
+    onError: (err: unknown) => {
+      const text = err instanceof Error ? err.message : "mode transition failed";
+      setFeedback({ tone: "danger", text });
+    },
   });
 
   const unlockMutation = useMutation({
@@ -146,6 +192,14 @@ export function ModeRibbon() {
   const currentMode = data?.current_mode ?? null;
   const isLocked = data?.is_locked ?? false;
   const legalTargets = new Set(data?.legal_targets ?? []);
+  const isBusy = modeMutation.isPending || unlockMutation.isPending;
+
+  const isForwardReachable = (chipName: string): boolean => {
+    if (currentMode === null || currentMode === "LOCKED") return false;
+    const fromIdx = FORWARD_CHAIN.indexOf(currentMode as ForwardMode);
+    const toIdx = FORWARD_CHAIN.indexOf(chipName as ForwardMode);
+    return fromIdx !== -1 && toIdx > fromIdx;
+  };
 
   return (
     <div
@@ -158,6 +212,7 @@ export function ModeRibbon() {
         {CHIPS.map((chip) => {
           const isActive = currentMode === chip.name;
           const isLegalTarget = legalTargets.has(chip.name);
+          const isReachable = chip.name !== "LOCKED" && !isActive && (isLegalTarget || isForwardReachable(chip.name));
           const baseClass =
             "rounded border px-2 py-1 leading-none transition-colors duration-150";
           let cls: string;
@@ -165,22 +220,41 @@ export function ModeRibbon() {
             cls = `${baseClass} ${TONE_BG.neutral} opacity-50`;
           } else if (isActive) {
             cls = `${baseClass} ${TONE_ACTIVE[chip.tone]} shadow-sm`;
-          } else if (isLegalTarget) {
-            cls = `${baseClass} ${TONE_BG[chip.tone]}`;
+          } else if (isReachable) {
+            cls = `${baseClass} ${TONE_BG[chip.tone]} cursor-pointer hover:opacity-90 active:scale-95`;
           } else {
-            cls = `${baseClass} ${TONE_BG.neutral} opacity-60`;
+            cls = `${baseClass} ${TONE_BG.neutral} opacity-40`;
+          }
+          if (chip.name === "LOCKED") {
+            return (
+              <span
+                key={chip.name}
+                className={cls}
+                title={chip.tooltip}
+                data-active={isActive ? "true" : "false"}
+              >
+                {chip.name}
+                {isActive ? " · 🔒" : ""}
+              </span>
+            );
           }
           return (
-            <span
+            <button
               key={chip.name}
+              type="button"
               className={cls}
               title={chip.tooltip}
+              disabled={!isReachable || isBusy}
               data-active={isActive ? "true" : "false"}
               data-legal-target={isLegalTarget ? "true" : "false"}
+              onClick={() => {
+                if (!isReachable || isBusy) return;
+                setFeedback(null);
+                modeMutation.mutate(chip.name);
+              }}
             >
               {chip.name}
-              {isActive && isLocked ? " · 🔒" : ""}
-            </span>
+            </button>
           );
         })}
         {isLocked && (

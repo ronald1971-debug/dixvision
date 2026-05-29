@@ -165,7 +165,16 @@ async def _default_connect(url: str) -> _WSConnection:
 
     import websockets  # local import; heavy dependency
 
-    return await websockets.connect(url)  # type: ignore[return-value]
+    # Binance sends server-side pings every ~3 min; the websockets library
+    # auto-replies with pongs.  Disabling client-side pings avoids spurious
+    # "keepalive ping timeout" closes that happen when Binance ignores our
+    # client pings under congestion.
+    return await websockets.connect(  # type: ignore[return-value]
+        url,
+        ping_interval=None,
+        open_timeout=10,
+        close_timeout=5,
+    )
 
 
 @dataclass(frozen=True, slots=True)

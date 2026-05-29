@@ -1,6 +1,13 @@
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, FlaskConical, GitMerge, Wrench } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { AlertTriangle, FlaskConical, GitMerge, Wrench } from "lucide-react";
+import {
+  fetchDyonProposals,
+  fetchDyonTopology,
+  type PatchProposalRecord,
+  type TopologyViolation,
+} from "@/api/cognitive";
 
 /**
  * Dyon Learning Mode panel — surfaces what Dyon is *currently
@@ -12,33 +19,14 @@ import { AlertTriangle, FlaskConical, GitMerge, Wrench } from "lucide-react";
  *   - PR #65  patch pipeline orchestrator + ledger surface (INV-66)
  *   - PR #114 UpdateValidator + UpdateApplier (closed learning loop)
  *
- * Operator can:
- *   - Browse hazard journal (HAZ-01..12) — what fired, when, severity
- *   - Inspect patch proposals queue — what Dyon wants to change
- *   - Review sandbox runs — coverage / regression / lint results
- *   - See promotion ledger — what landed on main vs reverted
- *
- * Every promotion goes through the operator-approval edge — this
- * widget shows the queue but never side-steps the gate.
+ * Hazard journal and Patch proposals tabs are live (polling backend).
+ * Sandbox runs and Promotions tabs show historical seed data.
  */
 type Tab = "hazards" | "patches" | "sandbox" | "promotions";
 
-interface HazardRow {
-  id: string;
-  code: string;
-  severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
-  message: string;
-  ts_iso: string;
-  acknowledged: boolean;
-}
-
-interface PatchProposal {
-  id: string;
-  hazard_code: string;
-  module: string;
-  diff_summary: string;
-  status: "QUEUED" | "SANDBOX" | "AWAITING_APPROVAL" | "MERGED" | "REVERTED";
-}
+// ---------------------------------------------------------------------------
+// Static seed data — sandbox / promotions (no backend yet)
+// ---------------------------------------------------------------------------
 
 interface SandboxRun {
   id: string;
@@ -56,65 +44,6 @@ interface PromotionRow {
   reason: string;
   ts_iso: string;
 }
-
-const HAZARDS: HazardRow[] = [
-  {
-    id: "h-001",
-    code: "HAZ-LATENCY-P99",
-    severity: "MEDIUM",
-    message: "Order ack p99 = 142ms (target ≤ 100ms) on Binance perp leg",
-    ts_iso: "2026-04-21T20:14Z",
-    acknowledged: false,
-  },
-  {
-    id: "h-002",
-    code: "HAZ-NEWS-SHOCK",
-    severity: "HIGH",
-    message: "CoinDesk burst (>5 items / 60s) — auto-throttle engaged",
-    ts_iso: "2026-04-21T19:58Z",
-    acknowledged: true,
-  },
-  {
-    id: "h-003",
-    code: "HAZ-MEMORY",
-    severity: "LOW",
-    message: "ledger hot-ring 73% full — compaction triggered",
-    ts_iso: "2026-04-21T19:42Z",
-    acknowledged: true,
-  },
-  {
-    id: "h-004",
-    code: "HAZ-DRIFT-MODEL",
-    severity: "HIGH",
-    message: "drift composite = 0.61 (warn 0.50, fail 0.75)",
-    ts_iso: "2026-04-21T19:30Z",
-    acknowledged: false,
-  },
-];
-
-const PATCHES: PatchProposal[] = [
-  {
-    id: "patch-118",
-    hazard_code: "HAZ-LATENCY-P99",
-    module: "execution_engine/hot_path",
-    diff_summary: "switch order_ack callback to ring_buffer (-23ms p99)",
-    status: "AWAITING_APPROVAL",
-  },
-  {
-    id: "patch-119",
-    hazard_code: "HAZ-DRIFT-MODEL",
-    module: "intelligence_engine/regime_router",
-    diff_summary: "tighten hysteresis band (0.6 → 0.45) for vol regimes",
-    status: "SANDBOX",
-  },
-  {
-    id: "patch-120",
-    hazard_code: "HAZ-MEMORY",
-    module: "core/ledger/hot_ring",
-    diff_summary: "raise compaction trigger from 70% → 85%",
-    status: "QUEUED",
-  },
-];
 
 const SANDBOX: SandboxRun[] = [
   {
@@ -152,27 +81,68 @@ const PROMOTIONS: PromotionRow[] = [
   },
 ];
 
-const TABS: { id: Tab; label: string; icon: typeof Wrench; hint: string }[] = [
-  { id: "hazards", label: "Hazard journal", icon: AlertTriangle, hint: "PR #32" },
-  { id: "patches", label: "Patch proposals", icon: Wrench, hint: "PR #65" },
+// ---------------------------------------------------------------------------
+// Tab config
+// ---------------------------------------------------------------------------
+
+const TABS: {
+  id: Tab;
+  label: string;
+  icon: typeof Wrench;
+  hint: string;
+  live?: boolean;
+}[] = [
+  { id: "hazards", label: "Hazard journal", icon: AlertTriangle, hint: "LIVE", live: true },
+  { id: "patches", label: "Patch proposals", icon: Wrench, hint: "LIVE", live: true },
   { id: "sandbox", label: "Sandbox runs", icon: FlaskConical, hint: "PR #33" },
   { id: "promotions", label: "Promotions", icon: GitMerge, hint: "PR #114" },
 ];
 
+// ---------------------------------------------------------------------------
+// Root component
+// ---------------------------------------------------------------------------
+
 export function DyonLearningMode() {
   const [tab, setTab] = useState<Tab>("hazards");
+
+  const topoQuery = useQuery({
+    queryKey: ["cognitive", "dyon", "topology"],
+    queryFn: ({ signal }) => fetchDyonTopology(signal),
+    refetchInterval: 30_000,
+  });
+
+  const proposalsQuery = useQuery({
+    queryKey: ["cognitive", "dyon", "proposals"],
+    queryFn: ({ signal }) => fetchDyonProposals(50, signal),
+    refetchInterval: 30_000,
+  });
+
   const body = useMemo(() => {
     switch (tab) {
       case "hazards":
-        return <HazardsTable rows={HAZARDS} />;
+        return (
+          <HazardsPanel
+            violations={topoQuery.data?.violations ?? []}
+            filesScanned={topoQuery.data?.files_scanned}
+            clean={topoQuery.data?.clean}
+            isLoading={topoQuery.isLoading}
+            isError={topoQuery.isError}
+          />
+        );
       case "patches":
-        return <PatchesTable rows={PATCHES} />;
+        return (
+          <PatchesPanel
+            proposals={proposalsQuery.data?.proposals ?? []}
+            isLoading={proposalsQuery.isLoading}
+            isError={proposalsQuery.isError}
+          />
+        );
       case "sandbox":
         return <SandboxTable rows={SANDBOX} />;
       case "promotions":
         return <PromotionsTable rows={PROMOTIONS} />;
     }
-  }, [tab]);
+  }, [tab, topoQuery, proposalsQuery]);
 
   return (
     <div className="flex h-full flex-col rounded border border-border bg-surface text-sm">
@@ -213,7 +183,11 @@ export function DyonLearningMode() {
             >
               <Icon className="h-3 w-3" />
               {t.label}
-              <span className="text-[9px] text-slate-600">{t.hint}</span>
+              {t.live ? (
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" title="live" />
+              ) : (
+                <span className="text-[9px] text-slate-600">{t.hint}</span>
+              )}
             </button>
           );
         })}
@@ -223,48 +197,173 @@ export function DyonLearningMode() {
   );
 }
 
-function severityClass(severity: HazardRow["severity"]): string {
-  switch (severity) {
-    case "CRITICAL":
-      return "text-rose-500";
-    case "HIGH":
-      return "text-rose-400";
-    case "MEDIUM":
-      return "text-amber-400";
-    case "LOW":
-      return "text-slate-400";
+// ---------------------------------------------------------------------------
+// Hazards panel (live — topology violations)
+// ---------------------------------------------------------------------------
+
+function topoSeverityClass(sev: string): string {
+  return sev === "CRITICAL" ? "text-rose-500" : "text-amber-400";
+}
+
+function HazardsPanel({
+  violations,
+  filesScanned,
+  clean,
+  isLoading,
+  isError,
+}: {
+  violations: TopologyViolation[];
+  filesScanned?: number;
+  clean?: boolean;
+  isLoading: boolean;
+  isError: boolean;
+}) {
+  if (isLoading) {
+    return (
+      <div className="flex h-24 items-center justify-center font-mono text-[11px] text-slate-500">
+        scanning topology…
+      </div>
+    );
   }
+  if (isError) {
+    return (
+      <div className="flex h-24 items-center justify-center font-mono text-[11px] text-rose-400">
+        topology scan unavailable
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex items-center gap-3 border-b border-border/40 px-3 py-1.5 text-[10px] text-slate-500">
+        {filesScanned !== undefined && <span>{filesScanned} files scanned</span>}
+        {clean !== undefined && (
+          <span className={clean ? "text-emerald-400" : "text-rose-400"}>
+            {clean ? "✓ clean" : `${violations.length} violation${violations.length !== 1 ? "s" : ""}`}
+          </span>
+        )}
+      </div>
+      {violations.length === 0 ? (
+        <div className="flex h-20 items-center justify-center font-mono text-[11px] text-emerald-400">
+          no invariant violations
+        </div>
+      ) : (
+        <table className="w-full table-fixed text-left text-[11px]">
+          <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-wider text-slate-500">
+            <tr>
+              <th className="w-1/6 px-3 py-1.5">Invariant</th>
+              <th className="w-1/12 px-3 py-1.5">Sev</th>
+              <th className="w-1/5 px-3 py-1.5">Source</th>
+              <th className="w-1/5 px-3 py-1.5">Imported</th>
+              <th className="w-[3rem] px-3 py-1.5 text-right">Line</th>
+              <th className="px-3 py-1.5">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {violations.map((v, i) => (
+              <tr key={`${v.invariant_id}-${i}`} className="border-t border-border/60">
+                <td className="px-3 py-1.5 font-mono text-accent">
+                  {v.invariant_id}
+                </td>
+                <td className={`px-3 py-1.5 font-mono uppercase ${topoSeverityClass(v.severity)}`}>
+                  {v.severity}
+                </td>
+                <td className="truncate px-3 py-1.5 font-mono text-slate-300">
+                  {v.source_module}
+                </td>
+                <td className="truncate px-3 py-1.5 font-mono text-slate-400">
+                  {v.imported_module}
+                </td>
+                <td className="px-3 py-1.5 text-right font-mono text-slate-500">
+                  {v.line}
+                </td>
+                <td className="px-3 py-1.5 text-slate-300">{v.description}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </>
+  );
 }
 
-function HazardsTable({ rows }: { rows: HazardRow[] }) {
+// ---------------------------------------------------------------------------
+// Patches panel (live — DYON proposals)
+// ---------------------------------------------------------------------------
+
+function proposalSeverityClass(sev?: string): string {
+  if (!sev) return "text-slate-400";
+  const u = sev.toUpperCase();
+  return u === "CRITICAL"
+    ? "text-rose-500"
+    : u === "WARNING"
+      ? "text-amber-400"
+      : "text-slate-400";
+}
+
+function PatchesPanel({
+  proposals,
+  isLoading,
+  isError,
+}: {
+  proposals: PatchProposalRecord[];
+  isLoading: boolean;
+  isError: boolean;
+}) {
+  if (isLoading) {
+    return (
+      <div className="flex h-24 items-center justify-center font-mono text-[11px] text-slate-500">
+        loading proposals…
+      </div>
+    );
+  }
+  if (isError) {
+    return (
+      <div className="flex h-24 items-center justify-center font-mono text-[11px] text-rose-400">
+        proposals unavailable
+      </div>
+    );
+  }
+  if (proposals.length === 0) {
+    return (
+      <div className="flex h-20 items-center justify-center font-mono text-[11px] text-slate-500">
+        no patch proposals queued
+      </div>
+    );
+  }
+
   return (
     <table className="w-full table-fixed text-left text-[11px]">
       <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-wider text-slate-500">
         <tr>
-          <th className="w-1/5 px-3 py-1.5">Code</th>
+          <th className="w-1/8 px-3 py-1.5">Proposal</th>
+          <th className="w-1/8 px-3 py-1.5">Invariant</th>
           <th className="w-1/12 px-3 py-1.5">Sev</th>
-          <th className="w-2/5 px-3 py-1.5">Message</th>
-          <th className="w-1/6 px-3 py-1.5">When</th>
-          <th className="w-1/12 px-3 py-1.5">Ack</th>
+          <th className="w-1/5 px-3 py-1.5">Source</th>
+          <th className="w-1/4 px-3 py-1.5">Description</th>
+          <th className="px-3 py-1.5">Action</th>
         </tr>
       </thead>
       <tbody>
-        {rows.map((r) => (
-          <tr key={r.id} className="border-t border-border/60">
-            <td className="px-3 py-1.5 font-mono text-accent">{r.code}</td>
-            <td
-              className={`px-3 py-1.5 font-mono uppercase ${severityClass(r.severity)}`}
-            >
-              {r.severity}
+        {proposals.map((p, i) => (
+          <tr key={p.proposal_id ?? i} className="border-t border-border/60">
+            <td className="truncate px-3 py-1.5 font-mono text-accent">
+              {p.proposal_id ? p.proposal_id.slice(0, 12) : "—"}
             </td>
-            <td className="px-3 py-1.5 text-slate-300">{r.message}</td>
-            <td className="px-3 py-1.5 font-mono text-slate-500">{r.ts_iso}</td>
-            <td
-              className={`px-3 py-1.5 font-mono uppercase ${
-                r.acknowledged ? "text-emerald-400" : "text-rose-400"
-              }`}
-            >
-              {r.acknowledged ? "yes" : "no"}
+            <td className="truncate px-3 py-1.5 font-mono text-slate-400">
+              {p.invariant_id ?? "—"}
+            </td>
+            <td className={`px-3 py-1.5 font-mono uppercase ${proposalSeverityClass(p.severity)}`}>
+              {p.severity ?? "—"}
+            </td>
+            <td className="truncate px-3 py-1.5 font-mono text-slate-300">
+              {p.source_module ?? "—"}
+            </td>
+            <td className="truncate px-3 py-1.5 text-slate-300">
+              {p.description ?? "—"}
+            </td>
+            <td className="px-3 py-1.5 text-slate-400">
+              {p.recommended_action ?? "—"}
             </td>
           </tr>
         ))}
@@ -273,48 +372,9 @@ function HazardsTable({ rows }: { rows: HazardRow[] }) {
   );
 }
 
-function PatchesTable({ rows }: { rows: PatchProposal[] }) {
-  return (
-    <table className="w-full table-fixed text-left text-[11px]">
-      <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-wider text-slate-500">
-        <tr>
-          <th className="w-1/12 px-3 py-1.5">Patch</th>
-          <th className="w-1/6 px-3 py-1.5">Hazard</th>
-          <th className="w-1/4 px-3 py-1.5">Module</th>
-          <th className="w-1/3 px-3 py-1.5">Diff</th>
-          <th className="w-1/6 px-3 py-1.5">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r) => (
-          <tr key={r.id} className="border-t border-border/60">
-            <td className="px-3 py-1.5 font-mono text-accent">{r.id}</td>
-            <td className="px-3 py-1.5 font-mono text-slate-400">
-              {r.hazard_code}
-            </td>
-            <td className="px-3 py-1.5 font-mono text-slate-300">
-              {r.module}
-            </td>
-            <td className="px-3 py-1.5 text-slate-300">{r.diff_summary}</td>
-            <td
-              className={`px-3 py-1.5 font-mono uppercase ${
-                r.status === "MERGED"
-                  ? "text-emerald-400"
-                  : r.status === "AWAITING_APPROVAL"
-                    ? "text-amber-400"
-                    : r.status === "REVERTED"
-                      ? "text-rose-400"
-                      : "text-slate-400"
-              }`}
-            >
-              {r.status}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
+// ---------------------------------------------------------------------------
+// Static panels — Sandbox / Promotions
+// ---------------------------------------------------------------------------
 
 function SandboxTable({ rows }: { rows: SandboxRun[] }) {
   return (
@@ -333,9 +393,7 @@ function SandboxTable({ rows }: { rows: SandboxRun[] }) {
         {rows.map((r) => (
           <tr key={r.id} className="border-t border-border/60">
             <td className="px-3 py-1.5 font-mono text-accent">{r.id}</td>
-            <td className="px-3 py-1.5 font-mono text-slate-400">
-              {r.patch_id}
-            </td>
+            <td className="px-3 py-1.5 font-mono text-slate-400">{r.patch_id}</td>
             <td
               className={`px-3 py-1.5 text-right font-mono ${
                 r.coverage_delta >= 0 ? "text-emerald-400" : "text-rose-400"
@@ -383,9 +441,7 @@ function PromotionsTable({ rows }: { rows: PromotionRow[] }) {
         {rows.map((r) => (
           <tr key={r.id} className="border-t border-border/60">
             <td className="px-3 py-1.5 font-mono text-accent">{r.id}</td>
-            <td className="px-3 py-1.5 font-mono text-slate-400">
-              {r.patch_id}
-            </td>
+            <td className="px-3 py-1.5 font-mono text-slate-400">{r.patch_id}</td>
             <td
               className={`px-3 py-1.5 font-mono uppercase ${
                 r.result === "MERGED" ? "text-emerald-400" : "text-rose-400"
