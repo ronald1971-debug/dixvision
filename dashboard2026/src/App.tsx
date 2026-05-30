@@ -18,6 +18,10 @@ import { ChartingPage } from "@/pages/ChartingPage";
 import { CognitiveChatPage } from "@/pages/CognitiveChatPage";
 import { CredentialsPage } from "@/pages/CredentialsPage";
 import { DyonLearningPage } from "@/pages/DyonLearningPage";
+import { FabricPage } from "@/pages/FabricPage";
+import { MemoryPage } from "@/pages/MemoryPage";
+import { SimulationPage } from "@/pages/SimulationPage";
+import { ObservatoryPage } from "@/pages/ObservatoryPage";
 import { GovernancePage } from "@/pages/GovernancePage";
 import { IndiraLearningPage } from "@/pages/IndiraLearningPage";
 import { MarketContextPage } from "@/pages/MarketContextPage";
@@ -67,6 +71,8 @@ function renderRoute(route: Route) {
       return <IndiraLearningPage />;
     case "dyon":
       return <DyonLearningPage />;
+    case "observatory":
+      return <ObservatoryPage />;
     case "testing":
       return <TestingPage />;
     case "onchain":
@@ -99,6 +105,12 @@ function renderRoute(route: Route) {
       return <ScoutPage />;
     case "strategies":
       return <StrategiesPage />;
+    case "memory":
+      return <MemoryPage />;
+    case "fabric":
+      return <FabricPage />;
+    case "simulation":
+      return <SimulationPage />;
   }
 }
 

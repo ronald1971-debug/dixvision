@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import { fetchOperatorSummary, postOperatorKill } from "@/api/operator";
+import {
+  fetchOperatorSummary,
+  fetchTradingAllowed,
+  postOperatorKill,
+  postTradingAllowed,
+} from "@/api/operator";
 import { AdapterStatusGrid } from "@/components/AdapterStatusGrid";
 import { EngineBucketBadge } from "@/components/EngineBucketBadge";
 import { HotkeyConfigurator } from "@/components/HotkeyConfigurator";
@@ -114,6 +119,9 @@ export function OperatorPage() {
           </WidgetSlot>
           <WidgetSlot widgetKey="operator:DecisionCountCard">
             <DecisionCountCard count={data.decision_chain_count} />
+          </WidgetSlot>
+          <WidgetSlot widgetKey="operator:TradingGate">
+            <TradingGateCard />
           </WidgetSlot>
           <WidgetSlot widgetKey="operator:KillCard">
             <KillCard
@@ -354,6 +362,173 @@ function KillCard({
               }
             >
               [{row.ts}] {row.approved ? "OK" : "DENY"} — {row.summary}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+const CONFIRM_PHRASE = "ENABLE LIVE TRADING";
+
+function TradingGateCard() {
+  const queryClient = useQueryClient();
+  const [confirmText, setConfirmText] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [auditLog, setAuditLog] = useState<
+    Array<{ ts: string; enabled: boolean }>
+  >([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data, isPending } = useQuery({
+    queryKey: ["operator", "trading-allowed"],
+    queryFn: ({ signal }) => fetchTradingAllowed(signal),
+    refetchInterval: 5_000,
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: (enabled: boolean) => postTradingAllowed(enabled),
+    onSuccess: (resp) => {
+      setAuditLog((rows) => [
+        { ts: new Date().toLocaleTimeString(), enabled: resp.trading_allowed },
+        ...rows.slice(0, 9),
+      ]);
+      setShowConfirm(false);
+      setConfirmText("");
+      queryClient.invalidateQueries({ queryKey: ["operator", "trading-allowed"] });
+    },
+  });
+
+  const isLive = data?.trading_allowed ?? false;
+
+  const handleToggle = () => {
+    if (isLive) {
+      // Turning OFF is always safe — no confirmation required
+      toggleMutation.mutate(false);
+    } else {
+      setShowConfirm(true);
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  };
+
+  const handleConfirm = () => {
+    if (confirmText.trim().toUpperCase() === CONFIRM_PHRASE) {
+      toggleMutation.mutate(true);
+    }
+  };
+
+  const handleCancel = () => {
+    setShowConfirm(false);
+    setConfirmText("");
+  };
+
+  return (
+    <div
+      className={`rounded border p-4 transition-colors ${
+        isLive
+          ? "border-amber-500/60 bg-amber-950/20"
+          : "border-emerald-800/40 bg-emerald-950/10"
+      }`}
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Execution gate
+        </h2>
+        <span
+          className={`rounded px-2 py-0.5 text-xs font-bold ${
+            isLive
+              ? "bg-amber-500/20 text-amber-300"
+              : "bg-emerald-900/40 text-emerald-400"
+          }`}
+        >
+          {isPending ? "…" : isLive ? "LIVE TRADING ENABLED" : "PAPER ONLY"}
+        </span>
+      </div>
+
+      <p className="mb-4 text-xs text-slate-400">
+        {isLive
+          ? "Live capital deployment is active. Orders sent to real venues and real funds are at risk. Flip this gate off to return to paper-only mode instantly."
+          : "System is in paper-only mode. No real capital is deployed. All orders are simulated. Flip this gate to enable live trading — requires typed confirmation."}
+      </p>
+
+      {/* Main toggle button */}
+      {!showConfirm && (
+        <button
+          type="button"
+          onClick={handleToggle}
+          disabled={isPending || toggleMutation.isPending}
+          className={`rounded px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+            isLive
+              ? "bg-emerald-700 text-white hover:bg-emerald-600"
+              : "bg-amber-700 text-white hover:bg-amber-600"
+          }`}
+        >
+          {toggleMutation.isPending
+            ? "Updating…"
+            : isLive
+              ? "Disable live trading"
+              : "Enable live trading…"}
+        </button>
+      )}
+
+      {/* Two-step confirmation — only shown when flipping to LIVE */}
+      {showConfirm && (
+        <div className="rounded border border-amber-600/50 bg-amber-950/30 p-3">
+          <p className="mb-2 text-xs font-semibold text-amber-300">
+            Type <span className="font-mono">{CONFIRM_PHRASE}</span> to confirm
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleConfirm();
+                if (e.key === "Escape") handleCancel();
+              }}
+              placeholder={CONFIRM_PHRASE}
+              className="w-64 rounded border border-amber-700/60 bg-slate-900 px-2 py-1 font-mono text-xs text-amber-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-600"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={
+                confirmText.trim().toUpperCase() !== CONFIRM_PHRASE ||
+                toggleMutation.isPending
+              }
+              className="rounded bg-amber-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-amber-500 disabled:opacity-40"
+            >
+              Confirm
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-300 transition hover:bg-slate-600"
+            >
+              Cancel
+            </button>
+          </div>
+          {toggleMutation.isError && (
+            <p className="mt-2 text-xs text-red-400">
+              {(toggleMutation.error as Error).message}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Audit log */}
+      {auditLog.length > 0 && (
+        <ul className="mt-3 space-y-0.5 border-t border-slate-700/60 pt-2">
+          {auditLog.map((row, i) => (
+            <li key={i} className="font-mono text-[10px] text-slate-400">
+              [{row.ts}]{" "}
+              <span className={row.enabled ? "text-amber-300" : "text-emerald-400"}>
+                {row.enabled ? "LIVE TRADING ENABLED" : "PAPER ONLY"}
+              </span>
             </li>
           ))}
         </ul>

@@ -87,6 +87,39 @@ export async function postOperatorUnlock(
  * full consent envelope; other forward edges accept just
  * `target_mode + reason`.
  */
+export interface TradingAllowedResponse {
+  trading_allowed: boolean;
+  development_enabled: boolean;
+  mode: string | null;
+}
+
+export async function fetchTradingAllowed(
+  signal?: AbortSignal,
+): Promise<TradingAllowedResponse> {
+  const res = await fetch(`${BASE}/api/operator/trading-allowed`, {
+    signal,
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) {
+    throw new Error(`GET /api/operator/trading-allowed failed: ${res.status}`);
+  }
+  return (await res.json()) as TradingAllowedResponse;
+}
+
+export async function postTradingAllowed(
+  enabled: boolean,
+): Promise<TradingAllowedResponse> {
+  const res = await fetch(`${BASE}/api/operator/trading-allowed`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ enabled }),
+  });
+  if (!res.ok) {
+    throw new Error(`POST /api/operator/trading-allowed failed: ${res.status}`);
+  }
+  return (await res.json()) as TradingAllowedResponse;
+}
+
 export async function postOperatorMode(
   body: OperatorModeRequest,
 ): Promise<OperatorActionResponse> {

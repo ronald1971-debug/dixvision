@@ -59,7 +59,7 @@ class CognitionDaemon:
         "_state",
         "_spine_task",
         "_heartbeat_task",
-        "_spine",
+        "_kernel",
         "_tick_seq",
     )
 

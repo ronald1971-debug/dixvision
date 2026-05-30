@@ -104,6 +104,25 @@ _GOVERNANCE_ROUTES: frozenset[RouteKey] = frozenset(
         ("GET", "/api/governance/drift"),
         ("GET", "/api/governance/sources"),
         ("GET", "/api/governance/hazards"),
+        # Governance hardening surface
+        ("GET",  "/api/governance/hardening/snapshot"),
+        ("GET",  "/api/governance/hardening/invariants"),
+        ("GET",  "/api/governance/hardening/audit"),
+        ("GET",  "/api/governance/hardening/audit/recent"),
+        ("GET",  "/api/governance/hardening/audit/stats"),
+        ("GET",  "/api/governance/hardening/audit/symbol/{symbol}"),
+        ("GET",  "/api/governance/hardening/firewall"),
+        ("GET",  "/api/governance/hardening/firewall/quarantine/{proposal_id}"),
+        ("POST", "/api/governance/hardening/firewall/signoff/{proposal_id}"),
+        ("GET",  "/api/governance/hardening/trust"),
+        ("POST", "/api/governance/hardening/trust/erode"),
+        ("GET",  "/api/governance/hardening/isolation"),
+        ("GET",  "/api/governance/hardening/isolation/violations"),
+        ("GET",  "/api/governance/hardening/policy_lock"),
+        ("POST", "/api/governance/hardening/policy_lock/lock"),
+        ("POST", "/api/governance/hardening/policy_lock/unlock"),
+        ("GET",  "/api/governance/hardening/replay"),
+        ("POST", "/api/governance/hardening/replay/snapshot"),
     }
 )
 
@@ -244,6 +263,13 @@ _COGNITIVE_ROUTES: frozenset[RouteKey] = frozenset(
         ("GET", "/api/runtime/cognitive/memory"),
         ("GET", "/api/runtime/cognitive/routes"),
         ("GET", "/api/runtime/cognitive/governance"),
+        # Stage 2/3 — DYON extended engineering surfaces (workspace, drift, dead-code, repo, report)
+        ("GET", "/api/cognitive/dyon/workspace"),
+        ("GET", "/api/cognitive/dyon/engineering"),
+        ("GET", "/api/cognitive/dyon/dead-code"),
+        ("GET", "/api/cognitive/dyon/drift"),
+        ("GET", "/api/cognitive/dyon/report"),
+        ("GET", "/api/cognitive/dyon/repo"),
         # Stage 4 — Unified Cognitive Memory Layer
         ("GET",  "/api/memory/snapshot"),
         ("GET",  "/api/memory/timeline"),
@@ -421,6 +447,47 @@ _COCKPIT_ROUTES: frozenset[RouteKey] = frozenset(
 )
 
 
+_EVOLUTION_ROUTES: frozenset[RouteKey] = frozenset(
+    {
+        ("GET",  "/api/evolution/lifecycle"),
+        ("GET",  "/api/evolution/proposals"),
+        ("GET",  "/api/evolution/audit/{proposal_id}"),
+        ("POST", "/api/evolution/governance/{proposal_id}"),
+        ("POST", "/api/evolution/rollback/{proposal_id}"),
+        ("GET",  "/api/evolution/deployment"),
+        ("POST", "/api/evolution/deployment/{proposal_id}"),
+    }
+)
+
+_PAPER_TRADING_ROUTES: frozenset[RouteKey] = frozenset(
+    {
+        ("GET",  "/api/paper/summary"),
+        ("GET",  "/api/paper/portfolios"),
+        ("GET",  "/api/paper/portfolio/{venue}"),
+        ("GET",  "/api/paper/fills/{venue}"),
+        ("POST", "/api/paper/reset/{venue}"),
+        ("POST", "/api/paper/reset"),
+    }
+)
+
+_SIMULATION_ROUTES: frozenset[RouteKey] = frozenset(
+    {
+        # Stage 8 — Simulation Dominance (9 engines + 2 operator actions)
+        ("GET",  "/api/simulation/snapshot"),
+        ("GET",  "/api/simulation/market"),
+        ("GET",  "/api/simulation/arena"),
+        ("GET",  "/api/simulation/reflexive"),
+        ("GET",  "/api/simulation/liquidity"),
+        ("GET",  "/api/simulation/crowd"),
+        ("GET",  "/api/simulation/volatility"),
+        ("GET",  "/api/simulation/macro"),
+        ("GET",  "/api/simulation/exchange"),
+        ("GET",  "/api/simulation/latency"),
+        ("POST", "/api/simulation/macro/activate"),
+        ("POST", "/api/simulation/tick"),
+    }
+)
+
 _CANONICAL_DOMAINS: tuple[str, ...] = (
     "core",
     "credentials",
@@ -436,6 +503,9 @@ _CANONICAL_DOMAINS: tuple[str, ...] = (
     "pages",
     "openapi",
     "cockpit",
+    "simulation",
+    "evolution",
+    "paper_trading",
 )
 
 _DOMAIN_INVENTORY: Mapping[str, frozenset[RouteKey]] = {
@@ -453,6 +523,9 @@ _DOMAIN_INVENTORY: Mapping[str, frozenset[RouteKey]] = {
     "pages": _PAGES_ROUTES,
     "openapi": _OPENAPI_ROUTES,
     "cockpit": _COCKPIT_ROUTES,
+    "simulation": _SIMULATION_ROUTES,
+    "evolution": _EVOLUTION_ROUTES,
+    "paper_trading": _PAPER_TRADING_ROUTES,
 }
 
 

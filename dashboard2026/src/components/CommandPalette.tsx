@@ -63,6 +63,10 @@ const ROUTE_LABELS: Record<Route, string> = {
   audit: "Audit",
   scout: "Scout",
   strategies: "Strategies",
+  observatory: "Observatory",
+  memory: "Memory Layer",
+  fabric: "Event Fabric",
+  simulation: "Simulation",
 };
 
 function buildNavActions(onNavigate: (route: Route) => void): CommandAction[] {

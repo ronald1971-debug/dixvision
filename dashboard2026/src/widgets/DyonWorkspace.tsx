@@ -2,24 +2,17 @@ import { useEffect, useRef, useState } from "react";
 
 import {
   Activity,
-  AlertOctagon,
-  Archive,
   BarChart2,
-  CheckCircle,
   ChevronDown,
   ChevronRight,
-  Clock,
   Code2,
   Cpu,
   FileX,
   GitBranch,
-  GitMerge,
-  Layers,
   Network,
   RefreshCw,
   Shield,
   Wrench,
-  Zap,
 } from "lucide-react";
 
 /**

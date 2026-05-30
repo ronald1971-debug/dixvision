@@ -40,6 +40,8 @@ from execution_engine.adapters.binance import BinanceAdapter
 from execution_engine.adapters.hummingbot import HummingbotAdapter
 from execution_engine.adapters.ibkr import IBKRAdapter
 from execution_engine.adapters.pumpfun import PumpFunAdapter
+from execution_engine.paper_trading.adapter import PaperVenueAdapter
+from execution_engine.paper_trading.venue_config import VENUE_CONFIGS
 from system_engine.credentials.storage import resolve_env
 
 _log = logging.getLogger(__name__)
@@ -117,6 +119,13 @@ def default_registry() -> AdapterRegistry:
             client_id=int(env.get("DIX_IBKR_CLIENT_ID") or 1),
             paper=True,
         ))
+
+        # ---- Stage 9: Paper trading ecosystem (credential-free, always READY) ---
+        # Six venue-realistic deterministic paper adapters:
+        #   binance_paper, coinbase_paper, kraken_paper,
+        #   alpaca_paper, oanda_paper, ibkr_paper
+        for _cfg in VENUE_CONFIGS.values():
+            reg.add(PaperVenueAdapter(_cfg))
 
         # ---- PumpFun (Solana meme token DEX) ------------------------------
         reg.add(PumpFunAdapter())

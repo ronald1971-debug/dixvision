@@ -157,15 +157,6 @@ function stateColor(state: string): string {
   }
 }
 
-function confBar(conf: number): string {
-  const pct = Math.round(conf * 100);
-  let color = "bg-slate-600";
-  if (pct >= 70) color = "bg-teal-500";
-  else if (pct >= 50) color = "bg-sky-500";
-  else if (pct >= 35) color = "bg-amber-500";
-  return `<div style="width:${pct}%" class="h-1 rounded-full ${color}"></div>`;
-}
-
 // ---------------------------------------------------------------------------
 // Sub-renders
 // ---------------------------------------------------------------------------

@@ -30,6 +30,7 @@ export type SystemRoute =
   | "chat"
   | "indira"
   | "dyon"
+  | "observatory"
   | "testing"
   | "onchain"
   | "ai"
@@ -45,7 +46,10 @@ export type SystemRoute =
   | "alerts"
   | "audit"
   | "scout"
-  | "strategies";
+  | "strategies"
+  | "memory"
+  | "fabric"
+  | "simulation";
 
 export type Route = AssetRoute | SystemRoute;
 
@@ -65,6 +69,7 @@ const SYSTEM_ROUTES: readonly SystemRoute[] = [
   "chat",
   "indira",
   "dyon",
+  "observatory",
   "testing",
   "onchain",
   "ai",
@@ -80,6 +85,9 @@ const SYSTEM_ROUTES: readonly SystemRoute[] = [
   "audit",
   "scout",
   "strategies",
+  "memory",
+  "fabric",
+  "simulation",
 ];
 
 const ALL_ROUTES: readonly Route[] = [...ASSET_ROUTES, ...SYSTEM_ROUTES];

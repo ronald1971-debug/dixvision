@@ -1948,6 +1948,40 @@ app.include_router(_build_memory_router())
 from ui.fabric_routes import build_fabric_router as _build_fabric_router
 app.include_router(_build_fabric_router())
 
+# Stage 9 — Paper Trading Ecosystem (Binance, Coinbase, Kraken, Alpaca, OANDA, IBKR)
+# GET  /api/paper/summary               — aggregate P&L + stats across all 6 venues
+# GET  /api/paper/portfolios            — all 6 venue portfolios
+# GET  /api/paper/portfolio/{venue}     — single venue detail (positions, fills, P&L)
+# GET  /api/paper/fills/{venue}         — recent fills for one venue
+# POST /api/paper/reset/{venue}         — reset one paper portfolio
+# POST /api/paper/reset                 — reset all 6 paper portfolios
+from ui.paper_trading_routes import build_paper_trading_router as _build_paper_trading_router
+app.include_router(_build_paper_trading_router())
+
+# Stage 7 — Closed Evolution Lifecycle
+# GET  /api/evolution/lifecycle                  — coordinator snapshot
+# GET  /api/evolution/proposals                  — active + recent proposals
+# GET  /api/evolution/audit/{proposal_id}        — replay audit trail
+# POST /api/evolution/governance/{proposal_id}   — operator approve / reject
+# POST /api/evolution/rollback/{proposal_id}     — operator rollback trigger
+# GET  /api/evolution/deployment                 — deployment registry
+# POST /api/evolution/deployment/{proposal_id}   — operator deployment approval
+from ui.evolution_routes import build_evolution_router as _build_evolution_router
+app.include_router(_build_evolution_router())
+
+# Stage 10 — Governance Hardening (7 subsystems: invariant proving,
+# deterministic replay, mutation containment, policy locking, runtime
+# isolation, trust scoring, execution auditing).
+# Endpoints at /api/governance/hardening/*
+from ui.governance_hardening_routes import build_governance_hardening_router as _build_gov_hardening_router
+app.include_router(_build_gov_hardening_router())
+
+# Stage 8 — Simulation Dominance (9 engines: GBM+Heston+Merton market,
+# adversarial arena, reflexive, liquidity warfare, crowd psychology,
+# vol cascade, macro stress, exchange failure, latency warfare).
+from ui.simulation_routes import build_simulation_router as _build_simulation_router
+app.include_router(_build_simulation_router())
+
 # C-2 / P2-4 / R-1 part 4 — operator-management surface (summary /
 # action / audit / source-trust / learning-override / development-mode
 # / trading-allowed) plus the dash_meme wallet column projection. The

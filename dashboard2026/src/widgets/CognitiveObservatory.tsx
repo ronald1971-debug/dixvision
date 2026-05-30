@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Activity, Brain, Cpu, GitBranch, Network, Shield, Telescope, Zap } from "lucide-react";
+import { Brain, Cpu, Network, Telescope } from "lucide-react";
 
 import {
   fetchCognitiveSpine,
@@ -93,7 +93,7 @@ const SEED: ObsState = {
   simulation: { dominance_achieved: false, dominant_strategy: "vwap_reversion_v3", tournament_runs: 12, scoreboard: { "vwap_reversion_v3": { fitness: 0.72, wins: 8, losses: 2, current_streak: 3 }, "momentum_scalper": { fitness: 0.61, wins: 6, losses: 4, current_streak: 1 }, "macro_swing_v2": { fitness: 0.49, wins: 4, losses: 6, current_streak: 0 } }, dominance_threshold: 60, promoted_count: 2 },
   memory: { timeline_count: 847, index_size: 312, stores: { EPISODIC: 125, SEMANTIC: 234, PROCEDURAL: 89, STRATEGY: 45, TRADER: 23, GOVERNANCE: 12, RUNTIME: 67, REGRET: 8 } },
   governance: { mode_transitions: [{ from_mode: "PAPER", to_mode: "LEARNING", reason: "operator_auth", ts_ns: 0 }, { from_mode: "LEARNING", to_mode: "PAPER", reason: "session_end", ts_ns: 0 }], operator_actions: [], violations: [] },
-  kernel: { active: true, tick_seq: 1247, components: { cross_bus_router: { active: true, type: "CrossBusRouter" }, governance_router: { active: true, type: "GovernanceRouter" }, cognition_scheduler: { active: true, type: "CognitionScheduler" }, memory_coordinator: { active: true, type: "MemoryCoordinator" }, telemetry_aggregator: { active: true, type: "TelemetryAggregator" }, state_sync: { active: true, type: "UnifiedStateSync" }, cognitive_spine: { active: true, type: "CognitiveSpine" } } },
+  kernel: { active: true, tick_seq: 1247, components: { event_fabric: { active: true, type: "UnifiedEventFabric" }, cross_bus_router: { active: true, type: "CrossBusRouter" }, governance_router: { active: true, type: "GovernanceRouter" }, cognition_scheduler: { active: true, type: "CognitionScheduler" }, memory_coordinator: { active: true, type: "MemoryCoordinator" }, telemetry_aggregator: { active: true, type: "TelemetryAggregator" }, state_sync: { active: true, type: "UnifiedStateSync" }, cognitive_spine: { active: true, type: "CognitiveSpine" } } },
   live: false,
   lastUpdate: Date.now(),
 };
@@ -270,7 +270,7 @@ function RegimeMapPanel() {
   );
 }
 
-function UncertaintyPanel({ hypotheses }: { hypotheses: CausalHypothesisRecord[] }) {
+function UncertaintyPanel(_: { hypotheses: CausalHypothesisRecord[] }) {
   const deltas = [+0.14, -0.05, +0.20, +0.06, -0.08, +0.11, +0.03, -0.04];
   const net = deltas.reduce((a, b) => a + b, 0);
   return (
@@ -746,6 +746,7 @@ function SimulationStatePanel({ simulation }: { simulation: SimDominanceResponse
 }
 
 const COMPONENT_LABEL: Record<string, string> = {
+  event_fabric: "Event Fabric",
   cross_bus_router: "CrossBus Router",
   governance_router: "Gov Router",
   cognition_scheduler: "Cog Scheduler",
@@ -760,7 +761,7 @@ function OrchestrationPanel({ kernel }: { kernel: KernelStatusResponse }) {
   const entries = Object.entries(components);
 
   return (
-    <PanelWrap color={SECTION_BORDER.system} title="SYSTEM · ORCHESTRATION" sub="unified cognitive kernel · 7 subsystems">
+    <PanelWrap color={SECTION_BORDER.system} title="SYSTEM · ORCHESTRATION" sub="unified cognitive kernel · 8 subsystems">
       <div className="mb-1.5 flex items-center gap-2">
         <Dot active={kernel.active ?? false} />
         <span className="font-mono text-[10px] text-slate-400">

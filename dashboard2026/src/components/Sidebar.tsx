@@ -1,5 +1,6 @@
 import {
   Activity,
+  Archive,
   Banknote,
   BarChart3,
   Bell,
@@ -20,11 +21,13 @@ import {
   Layers,
   LineChart,
   MessageSquare,
+  Network,
   Puzzle,
   Radar,
   ShieldCheck,
   Sparkles,
   Target,
+  Telescope,
   Wrench,
 } from "lucide-react";
 import { type ComponentType } from "react";
@@ -74,6 +77,12 @@ const SYSTEM_NAV: Record<SystemRoute, NavItem<SystemRoute>> = {
     icon: Brain,
   },
   dyon: { key: "dyon", label: "Dyon learn", href: "#/dyon", icon: Wrench },
+  observatory: {
+    key: "observatory",
+    label: "Observatory",
+    href: "#/observatory",
+    icon: Telescope,
+  },
   testing: {
     key: "testing",
     label: "Testing & Eval",
@@ -168,6 +177,24 @@ const SYSTEM_NAV: Record<SystemRoute, NavItem<SystemRoute>> = {
     key: "strategies",
     label: "Strategies",
     href: "#/strategies",
+    icon: Activity,
+  },
+  memory: {
+    key: "memory",
+    label: "Memory Layer",
+    href: "#/memory",
+    icon: Archive,
+  },
+  fabric: {
+    key: "fabric",
+    label: "Event Fabric",
+    href: "#/fabric",
+    icon: Network,
+  },
+  simulation: {
+    key: "simulation",
+    label: "Simulation",
+    href: "#/simulation",
     icon: Activity,
   },
 };
