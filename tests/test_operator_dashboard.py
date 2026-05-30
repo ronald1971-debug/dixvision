@@ -14,9 +14,7 @@ import importlib
 
 import pytest
 
-pytestmark = pytest.mark.skip(
-    reason="Known deadlock: _live_freeze_policy() lock contention with TestClient threads"
-)
+# Deadlock resolved: _live_freeze_policy() no longer calls current_mode() under STATE.lock
 
 fastapi_testclient = pytest.importorskip("fastapi.testclient")
 TestClient = fastapi_testclient.TestClient

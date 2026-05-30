@@ -44,10 +44,13 @@ class OnchainStreamRegistry:
 
 
 _registry: OnchainStreamRegistry | None = None
+_lock = threading.Lock()
 
 
 def get_onchain_streams() -> OnchainStreamRegistry:
     global _registry
     if _registry is None:
-        _registry = OnchainStreamRegistry()
+        with _lock:
+            if _registry is None:
+                _registry = OnchainStreamRegistry()
     return _registry

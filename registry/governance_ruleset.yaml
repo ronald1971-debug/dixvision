@@ -16,11 +16,13 @@ governance:
     4: financial_governance    # Capital Integrity — becomes co-equal in live phase
 
   # --- Priority Stack (live phase) ---
+  # Operator Sovereignty remains P2 in ALL phases per governance_constitution.yaml §priority_stacks.live
+  # "Operator Sovereignty remains P2 in all phases; it cannot be demoted below Capital"
   priority_live:
     1: cognitive_governance    # Cognitive Integrity — always highest
-    2: financial_governance    # Capital Integrity — co-equal once live capital is deployed
-    3: operator_governance     # Operator Sovereignty
-    4: system_governance       # System Integrity
+    2: operator_governance     # Operator Sovereignty — inviolably P2, never demoted
+    3: system_governance       # System Integrity
+    4: financial_governance    # Capital Integrity — fully enforced in live phase
 
   # --- Operator Sovereignty Constraints (inviolable) ---
   operator_sovereignty:

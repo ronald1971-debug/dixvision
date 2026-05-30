@@ -1116,7 +1116,10 @@ class _State:
                 if self.development_mode_policy is not None
                 else True
             )
-            mode = self.governance.state_transitions.current_mode()
+        # Read mode OUTSIDE STATE.lock to prevent ABBA deadlock with STM's internal lock.
+        # Mode changes are infrequent and governed by their own lock; a narrow inconsistency
+        # window here is acceptable compared to a guaranteed deadlock.
+        mode = self.governance.state_transitions.current_mode()
         effective_override = learning_enabled and development_enabled
         return LearningEvolutionFreezePolicy(mode=mode, operator_override=effective_override)
 

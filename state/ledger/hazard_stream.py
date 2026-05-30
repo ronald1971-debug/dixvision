@@ -15,7 +15,7 @@ from state.ledger.event_store import append_event
 from state.ledger.stream_router import get_stream_router
 from system import time_source
 
-HAZARD_STREAM = "SYSTEM_HAZARD"
+HAZARD_STREAM = "HAZARD"
 
 
 @dataclass(frozen=True, slots=True)

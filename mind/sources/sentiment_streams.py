@@ -44,10 +44,13 @@ class SentimentStreamRegistry:
 
 
 _registry: SentimentStreamRegistry | None = None
+_lock = threading.Lock()
 
 
 def get_sentiment_streams() -> SentimentStreamRegistry:
     global _registry
     if _registry is None:
-        _registry = SentimentStreamRegistry()
+        with _lock:
+            if _registry is None:
+                _registry = SentimentStreamRegistry()
     return _registry

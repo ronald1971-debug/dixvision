@@ -93,15 +93,15 @@ integrations:
 
   # --- GitHub integration (for repo_discovery) ---
   github:
-    enabled: false
+    enabled: true
     requires_credentials: [GITHUB_TOKEN]
     tracked_repos: []
 
   # --- Notification webhooks ---
   notifications:
     slack:
-      enabled: false
+      enabled: true
       requires_credentials: [SLACK_WEBHOOK_URL]
     discord:
-      enabled: false
+      enabled: true
       requires_credentials: [DISCORD_WEBHOOK_URL]

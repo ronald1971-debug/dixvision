@@ -20,12 +20,24 @@ Direct operator action → immediate state change → ledger audit row.
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api", tags=["authority"])
+
+# Operator identity is configured at deploy time via env var.
+# Never hardcoded — a hardcoded id breaks audit trails in any
+# environment where the var is not set (CI, staging, second operator).
+_OPERATOR_ID: str = os.environ.get("OPERATOR_ID", "")
+if not _OPERATOR_ID:
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "OPERATOR_ID env var not set — authority audit trail will be incomplete. "
+        "Set OPERATOR_ID to the operator's canonical identifier."
+    )
 
 
 # --------------------------------------------------------------------------
@@ -89,17 +101,35 @@ class ResearchSubmitRequest(BaseModel):
 
 @router.get("/authority/state")
 def get_authority_state() -> AuthorityStateResponse:
-    """Return the current OperatorAuthority snapshot."""
+    """Return the current OperatorAuthority snapshot from the live kernel."""
+    learning       = "UNKNOWN"
+    practice       = "UNKNOWN"
+    live_execution = "UNKNOWN"
+    trading_modes: dict[str, str] = {}
+
+    try:
+        from core.kernel import get_kernel
+        snap = get_kernel().snapshot()
+        live_execution = "BLOCKED" if snap.live_execution_blocked else "ARMED"
+    except Exception:
+        pass
+
+    try:
+        from cognitive_governance.engine import get_cognitive_governance_engine
+        cge = get_cognitive_governance_engine()
+        gs  = cge.snapshot()
+        learning       = gs.get("learning_authority", "UNKNOWN")
+        practice       = gs.get("practice_authority", "UNKNOWN")
+        trading_modes  = gs.get("trading_modes", {})
+    except Exception:
+        pass
+
     return AuthorityStateResponse(
-        learning="FULL",
-        practice="ON",
-        live_execution="BLOCKED",
-        trading_modes={
-            "NORMAL": "FULL_AUTO",
-            "COPY_TRADING": "SEMI_AUTO",
-            "MEMECOIN": "MANUAL",
-        },
-        operator_id="ronald",
+        learning=learning,
+        practice=practice,
+        live_execution=live_execution,
+        trading_modes=trading_modes,
+        operator_id=_OPERATOR_ID,
     )
 
 

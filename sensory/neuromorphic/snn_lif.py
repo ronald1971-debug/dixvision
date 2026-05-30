@@ -629,7 +629,7 @@ def torch_lif_cell_factory() -> LIFForwardCallable:
             out, new_state = cell(x_t, norse.torch.LIFState(v=v_t, i=v_t * 0))
             spikes = tuple(bool(s > 0.5) for s in out.squeeze(0).tolist())
             new_v = tuple(float(v) for v in new_state.v.squeeze(0).tolist())
-            return LIFState(v=new_v, spike_count=state.spike_count + sum(spikes)), spikes
+            return LIFState(v=new_v), spikes
 
     return _NorseLIFForward()
 

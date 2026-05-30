@@ -45,10 +45,13 @@ class NewsStreamRegistry:
 
 
 _registry: NewsStreamRegistry | None = None
+_lock = threading.Lock()
 
 
 def get_news_streams() -> NewsStreamRegistry:
     global _registry
     if _registry is None:
-        _registry = NewsStreamRegistry()
+        with _lock:
+            if _registry is None:
+                _registry = NewsStreamRegistry()
     return _registry

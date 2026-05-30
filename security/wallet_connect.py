@@ -251,9 +251,20 @@ def approve_live_signing(
 ) -> WalletRecord | None:
     """Governance-gated: enable live signing for this wallet until expiry.
 
+    ``approved_by`` must be a request_id that is GRANTED in the operator
+    approval ledger (``security.operator``). Passing an arbitrary string
+    is rejected — the approval must exist in the ledger before this call.
+
     Requires governance approval. WARMUP phase has been permanently removed;
     live signing is available from day 0 subject to daily USD caps.
     """
+    from security.operator import ApprovalKind, is_granted
+    if not is_granted(ApprovalKind.WALLET_LIVE_SIGNING, address):
+        raise PermissionError(
+            f"approve_live_signing: no GRANTED operator approval for "
+            f"WALLET_LIVE_SIGNING/{address}. "
+            f"Call security.operator.request_approval() first."
+        )
     w = get_wallet(chain, address)
     if w is None:
         return None

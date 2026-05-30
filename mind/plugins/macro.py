@@ -10,6 +10,7 @@ sources. Integrates with the regime router for macro regime detection.
 
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
@@ -59,11 +60,12 @@ class MacroPlugin:
     bias signals for the meta-controller's allocation weighting.
     """
 
-    __slots__ = ("_current_regime", "_events", "_window_size", "_active")
+    __slots__ = ("_current_regime", "_events", "_lock", "_window_size", "_active")
 
     def __init__(self, window_size: int = 50) -> None:
         self._current_regime = MacroRegime.RISK_ON
         self._events: list[MacroSignal] = []
+        self._lock = threading.Lock()
         self._window_size = window_size
         self._active = True
 
@@ -112,10 +114,11 @@ class MacroPlugin:
             source=normalized_payload.get("source_platform", "macro"),
         )
 
-        self._events.append(signal)
-        if len(self._events) > self._window_size:
-            self._events = self._events[-self._window_size :]
-        self._current_regime = regime
+        with self._lock:
+            self._events.append(signal)
+            if len(self._events) > self._window_size:
+                self._events = self._events[-self._window_size :]
+            self._current_regime = regime
 
         return signal
 

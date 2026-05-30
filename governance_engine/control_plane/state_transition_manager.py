@@ -360,8 +360,31 @@ class StateTransitionManager:
                             rejection_code="READINESS_INSUFFICIENT",
                             ledger_seq=entry.seq,
                         )
-                except Exception:
-                    pass  # Fail-open on validator errors (graceful degradation)
+                except Exception as _rv_exc:
+                    # Fail-CLOSED: validator unavailability blocks the transition.
+                    # An unreachable readiness validator is itself a readiness failure.
+                    rejection_payload = {
+                        "requestor": normalised.requestor,
+                        "prev_mode": prev.name,
+                        "target_mode": normalised.target_mode.name,
+                        "reason": normalised.reason,
+                        "rejection_code": "READINESS_VALIDATOR_UNAVAILABLE",
+                        "error": str(_rv_exc),
+                    }
+                    entry = self._ledger.append(
+                        ts_ns=normalised.ts_ns,
+                        kind="MODE_TRANSITION_REJECTED",
+                        payload=rejection_payload,
+                    )
+                    return ModeTransitionDecision(
+                        ts_ns=normalised.ts_ns,
+                        approved=False,
+                        prev_mode=prev,
+                        new_mode=prev,
+                        reason=normalised.reason,
+                        rejection_code="READINESS_VALIDATOR_UNAVAILABLE",
+                        ledger_seq=entry.seq,
+                    )
 
             policy_ok, policy_code = self._policy.permit_mode_transition(normalised)
             if not policy_ok:

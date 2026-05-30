@@ -494,7 +494,7 @@ def spyketorch_intensity_to_latency_factory(*_args: object, **_kwargs: object) -
             return SpikeTrain(
                 num_neurons=len(features),
                 num_steps=num_steps,
-                method=EncodingMethod.LATENCY,
+                method=EncodingMethod.TEMPORAL,
                 seed=0,
                 events=tuple(events),
             )

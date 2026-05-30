@@ -10,10 +10,13 @@ never blocks detection" constraint while keeping durability.
 
 from __future__ import annotations
 
+import logging
 import queue
 import threading
 from dataclasses import dataclass
 from typing import Any
+
+_logger = logging.getLogger(__name__)
 
 from state.ledger.event_store import append_event
 from state.ledger.stream_router import get_stream_router
@@ -76,7 +79,8 @@ class AsyncWriter:
                 continue
             try:
                 self._append_and_route(job)
-            except Exception:
+            except Exception as exc:
+                _logger.error("LedgerWriter: write failed for %s/%s: %s", job.event_type, job.sub_type, exc, exc_info=True)
                 continue
 
     def _append_and_route(self, job: _WriteJob) -> None:

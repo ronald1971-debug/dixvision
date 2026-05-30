@@ -92,14 +92,15 @@ class StrategyArbiter:
             return None
         net = 0.0
         weight = 0.0
-        for sig in signals:
-            st = self._state.get(sig.strategy)
-            w = 0.0 if (st and st.shadow) else 1.0
-            if sig.side == "buy":
-                net += sig.strength * w
-            elif sig.side == "sell":
-                net -= sig.strength * w
-            weight += w
+        with self._lock:
+            for sig in signals:
+                st = self._state.get(sig.strategy)
+                w = 0.0 if (st and st.shadow) else 1.0
+                if sig.side == "buy":
+                    net += sig.strength * w
+                elif sig.side == "sell":
+                    net -= sig.strength * w
+                weight += w
         if weight == 0.0:
             return None
         strength = net / weight

@@ -38,6 +38,17 @@ class Registry:
             self._locked = True
 
     def resolve(self, t: type[T]) -> T:
+        """Resolve a component by type.
+
+        After the registry is locked (post-boot), a missing component raises
+        KeyError immediately — silent stubs mask wiring bugs in production.
+        Before lock (boot-time), a missing component returns a no-op stub with
+        a WARNING so unit tests and early-stage code remain functional.
+        """
+        with self._lock:
+            locked = self._locked
+        if locked:
+            return self.get(t.__name__)  # raises KeyError if not registered
         try:
             return self.get(t.__name__)
         except KeyError:
@@ -45,7 +56,8 @@ class Registry:
 
             logging.getLogger(__name__).warning(
                 "Registry.resolve(%s): not registered — returning stub. "
-                "This may indicate a wiring bug.",
+                "This may indicate a wiring bug. Component will be required "
+                "once the registry is locked at boot.",
                 t.__name__,
             )
             return _stub(t)

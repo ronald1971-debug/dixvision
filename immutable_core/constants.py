@@ -78,8 +78,11 @@ class SafetyAxioms:
     # Kill switch activation cooldown (cannot be re-armed within this period)
     KILL_SWITCH_COOLDOWN_MS: float = 60_000.0
 
-    # Maximum replay divergence tolerance (bits)
-    REPLAY_DIVERGENCE_TOLERANCE_BITS: int = 0
+    # Maximum replay divergence tolerance (bits).
+    # 1 bit allows for IEEE 754 ULP rounding differences across platforms
+    # without masking real determinism failures. 0 fires the kill-switch
+    # on any float drift (1e-16) which is unreachable in practice.
+    REPLAY_DIVERGENCE_TOLERANCE_BITS: int = 1
 
 
 @dataclass(frozen=True)

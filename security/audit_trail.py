@@ -10,7 +10,7 @@ provenance. No deletion. No mutation. Replay-safe.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
@@ -54,7 +54,7 @@ class AuditEntry:
     source: str
     operator_id: str
     payload: dict[str, Any]
-    ts_ns: int = field(default_factory=time_source.wall_ns)
+    ts_ns: int
     trace_id: str = ""
     session_id: str = ""
 
@@ -99,6 +99,7 @@ def audit(
         source=source,
         operator_id=operator_id,
         payload=payload,
+        ts_ns=time_source.wall_ns(),
         trace_id=trace_id,
     )
 

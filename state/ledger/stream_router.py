@@ -11,8 +11,11 @@ Exceptions inside a handler never affect other handlers.
 
 from __future__ import annotations
 
+import logging
 import threading
 from collections.abc import Callable
+
+_logger = logging.getLogger(__name__)
 
 Handler = Callable[[dict], None]
 
@@ -39,7 +42,8 @@ class StreamRouter:
         for h in specific + universal:
             try:
                 h(event)
-            except Exception:
+            except Exception as exc:
+                _logger.error("StreamRouter: handler %s raised for event_type=%s: %s", getattr(h, "__qualname__", h), et, exc, exc_info=True)
                 continue
 
 

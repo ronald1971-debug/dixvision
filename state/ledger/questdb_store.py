@@ -28,6 +28,7 @@ RUNTIME safe for reads (SQL queries via pg wire protocol).
 
 from __future__ import annotations
 
+import os
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
@@ -62,12 +63,16 @@ class QuestDBHotStore:
         ilp_port: int = 9009,
         pg_host: str = "localhost",
         pg_port: int = 8812,
+        pg_user: str | None = None,
+        pg_password: str | None = None,
         in_memory: bool = True,
     ) -> None:
         self._ilp_host = ilp_host
         self._ilp_port = ilp_port
         self._pg_host = pg_host
         self._pg_port = pg_port
+        self._pg_user = pg_user or os.environ.get("QUESTDB_USER", "admin")
+        self._pg_password = pg_password or os.environ.get("QUESTDB_PASSWORD", "quest")
         self._in_memory = in_memory
         self._buffer: list[ILPRow] = []
         self._sender: Any = None
@@ -153,8 +158,8 @@ class QuestDBHotStore:
             conn = psycopg2.connect(
                 host=self._pg_host,
                 port=self._pg_port,
-                user="admin",
-                password="quest",
+                user=self._pg_user,
+                password=self._pg_password,
                 database="qdb",
             )
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:

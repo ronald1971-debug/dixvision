@@ -129,27 +129,56 @@ class OperatorIDE:
         return self._signal_buffer[-limit:]
 
     def get_system_health(self) -> SystemHealthStatus:
-        """Get current system health (placeholder for real checks)."""
+        """Get current system health by querying the kernel's service registry.
+
+        Maps ServiceHealth entries from the kernel snapshot into operator-facing
+        buckets. Falls back to "unknown" for any engine that is unreachable or
+        has not registered with the kernel yet — never fabricates "healthy".
+        """
+        engines: dict[str, str] = {}
+        sensors: dict[str, str] = {}
+        feeds: dict[str, str] = {}
+        databases: dict[str, str] = {}
+
+        _ENGINE_NAMES = {"intelligence", "execution", "governance", "learning", "evolution", "system"}
+        _SENSOR_NAMES = {"market_data", "sentiment", "onchain", "sensory"}
+        _FEED_NAMES   = {"binance_ws", "orderflow", "websocket", "feed"}
+        _DB_NAMES     = {"ledger", "vector_store", "sqlite", "database", "db"}
+
+        try:
+            from core.kernel import get_kernel
+            snap = get_kernel().snapshot()
+            for svc in snap.services:
+                name  = svc.name.lower()
+                label = "healthy" if svc.healthy else f"degraded: {svc.detail}" if svc.detail else "degraded"
+                if any(n in name for n in _ENGINE_NAMES):
+                    engines[svc.name] = label
+                elif any(n in name for n in _SENSOR_NAMES):
+                    sensors[svc.name] = label
+                elif any(n in name for n in _FEED_NAMES):
+                    feeds[svc.name] = label
+                elif any(n in name for n in _DB_NAMES):
+                    databases[svc.name] = label
+                else:
+                    engines[svc.name] = label
+        except Exception:
+            pass
+
+        # Fill known slots that weren't reported with explicit "unknown"
+        # so the dashboard shows gaps rather than fabricated health.
+        for slot in ("intelligence", "execution", "governance", "learning", "evolution"):
+            engines.setdefault(slot, "unknown")
+        for slot in ("market_data", "sentiment", "onchain"):
+            sensors.setdefault(slot, "unknown")
+        for slot in ("binance_ws", "orderflow"):
+            feeds.setdefault(slot, "unknown")
+        for slot in ("ledger", "vector_store"):
+            databases.setdefault(slot, "unknown")
+
         return SystemHealthStatus(
-            engines={
-                "intelligence": "healthy",
-                "execution": "healthy",
-                "governance": "healthy",
-                "learning": "healthy",
-                "evolution": "healthy",
-            },
-            sensors={
-                "market_data": "connected",
-                "sentiment": "connected",
-                "onchain": "connected",
-            },
-            feeds={
-                "binance_ws": "streaming",
-                "orderflow": "streaming",
-            },
+            engines=engines,
+            sensors=sensors,
+            feeds=feeds,
             plugins={},
-            databases={
-                "ledger": "connected",
-                "vector_store": "connected",
-            },
+            databases=databases,
         )

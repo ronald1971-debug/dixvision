@@ -178,7 +178,7 @@ def snapshot() -> PolicySnapshot:
             system_cap_usd=_SYSTEM_DAILY_CAP_USD,
             per_wallet_cap_usd=_PER_WALLET_DAILY_CAP_USD,
             spent_system_24h_usd=spent,
-            live_signing_allowed=True,
+            live_signing_allowed=(spent < _SYSTEM_DAILY_CAP_USD),
         )
 
 

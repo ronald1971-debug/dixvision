@@ -9,6 +9,7 @@ normalizer). Raw trust ≤ 0.5 for external sources per governance policy.
 
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
@@ -46,9 +47,10 @@ class SentimentPlugin:
     scores, and emits SentimentReading into the intelligence pipeline.
     """
 
-    __slots__ = ("_readings", "_window_size", "_active")
+    __slots__ = ("_lock", "_readings", "_window_size", "_active")
 
     def __init__(self, window_size: int = 100) -> None:
+        self._lock = threading.Lock()
         self._readings: list[SentimentReading] = []
         self._window_size = window_size
         self._active = True
@@ -91,15 +93,18 @@ class SentimentPlugin:
             confidence=confidence,
         )
 
-        self._readings.append(reading)
-        if len(self._readings) > self._window_size:
-            self._readings = self._readings[-self._window_size :]
+        with self._lock:
+            self._readings.append(reading)
+            if len(self._readings) > self._window_size:
+                self._readings = self._readings[-self._window_size :]
 
         return reading
 
     def get_aggregate(self, symbol: str) -> SentimentReading | None:
         """Compute aggregate sentiment for a symbol over the rolling window."""
-        relevant = [r for r in self._readings if r.symbol == symbol]
+        with self._lock:
+            readings_copy = list(self._readings)
+        relevant = [r for r in readings_copy if r.symbol == symbol]
         if not relevant:
             return None
 

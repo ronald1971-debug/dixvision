@@ -89,6 +89,7 @@ class PaperBroker:
         *,
         taker_fee_bps: float = 0.0,
         maker_fee_bps: float = 0.0,
+        market_impact_bps_per_unit: float = 0.0,
         latency_ns_base: int = 0,
         latency_ns_jitter: int = 0,
         initial_cash: float = 0.0,
@@ -102,6 +103,8 @@ class PaperBroker:
             raise ValueError("taker_fee_bps must be >= 0")
         if maker_fee_bps < 0.0:
             raise ValueError("maker_fee_bps must be >= 0")
+        if market_impact_bps_per_unit < 0.0:
+            raise ValueError("market_impact_bps_per_unit must be >= 0")
         if latency_ns_base < 0:
             raise ValueError("latency_ns_base must be >= 0")
         if latency_ns_jitter < 0:
@@ -109,6 +112,7 @@ class PaperBroker:
         if fill_ring_size < 0:
             raise ValueError("fill_ring_size must be >= 0")
         self._slippage_bps = slippage_bps
+        self._market_impact_bps_per_unit = market_impact_bps_per_unit
         self._default_qty = default_qty
         self._taker_fee_bps = taker_fee_bps
         self._maker_fee_bps = maker_fee_bps
@@ -191,13 +195,17 @@ class PaperBroker:
                 produced_by_engine="execution_engine",
             )
 
-        slip = mark_price * (self._slippage_bps / 10_000.0)
+        requested_qty, fill_qty = self._qty_for(signal)
+
+        # Size-aware slippage: base bps + linear market-impact term
+        # (bps per unit of fill qty). At default market_impact_bps_per_unit=0
+        # this collapses to the original flat-bps model.
+        effective_bps = self._slippage_bps + self._market_impact_bps_per_unit * fill_qty
+        slip = mark_price * (effective_bps / 10_000.0)
         if signal.side is Side.BUY:
             fill_price = mark_price + slip
         else:  # SELL
             fill_price = mark_price - slip
-
-        requested_qty, fill_qty = self._qty_for(signal)
         partial = fill_qty < requested_qty
         if fill_qty <= 0.0:
             # Cap explicitly drove the fill to zero — emit a REJECTED
@@ -239,6 +247,7 @@ class PaperBroker:
             "cash_after": f"{self._cash:.10g}",
             "position_after": (f"{self._positions.get(signal.symbol, 0.0):.10g}"),
             "latency_ns": str(latency_ns),
+            "effective_slippage_bps": f"{effective_bps:.10g}",
         }
         if partial:
             meta["requested_qty"] = f"{requested_qty:.10g}"

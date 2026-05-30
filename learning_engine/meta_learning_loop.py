@@ -153,7 +153,7 @@ class MetaLearningLoop:
                 reason = "Found improvement — switching to exploitation."
             elif self._cycles_in_mode > self._patience * 3:
                 new_mode = LearningMode.RESET
-                self._lr = self._base_lr * 10.0
+                self._lr = self._base_lr * 3.0  # capped: unbounded 10x could drive params to extremes
                 self._explore = 0.5
                 reason = "Exploration exhausted — resetting learning."
             else:

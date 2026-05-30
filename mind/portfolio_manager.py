@@ -42,7 +42,8 @@ class PortfolioManager:
             )
 
     def apply_fill(self, asset: str, side: str, size: float, price: float) -> None:
-        assert side in {"BUY", "SELL"}
+        if side not in {"BUY", "SELL"}:
+            raise ValueError(f"apply_fill: side must be 'BUY' or 'SELL', got {side!r}")
         signed = size if side == "BUY" else -size
         with self._lock:
             pos = self._snap.positions.setdefault(asset, Position(asset=asset))

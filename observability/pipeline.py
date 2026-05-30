@@ -56,8 +56,8 @@ class ObservabilityPipeline:
         try:
             from observability.metrics import get_metrics_registry
             reg = get_metrics_registry()
-            if hasattr(reg, "increment"):
-                reg.increment(name, value, labels or {})
+            if hasattr(reg, "inc"):
+                reg.inc(name, labels or None)
         except Exception:
             pass
 

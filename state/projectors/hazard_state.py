@@ -31,7 +31,7 @@ class HazardStateProjector:
 
     def apply(self, event: dict[str, Any]) -> None:
         event_type = str(event.get("event_type", ""))
-        if event_type != "SYSTEM_HAZARD":
+        if event_type != "HAZARD":
             return
         payload = event.get("payload", event)
         with self._lock:

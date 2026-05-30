@@ -243,7 +243,7 @@ class MutationFirewall:
             from governance_engine.hardening.trust_scorer import get_trust_scorer
             return get_trust_scorer().score(source_engine)
         except Exception:
-            return 1.0  # default to full trust if scorer unavailable
+            return 0.0  # fail-closed: unavailable scorer means untrusted, not fully-trusted
 
     def _expire_stale(self, ts_ns: int) -> None:
         with self._lock:

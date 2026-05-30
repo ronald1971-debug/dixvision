@@ -20,3 +20,14 @@ mobile/android
 windows/dist
 windows/build
 .devin
+
+# Secrets — never bake credentials into Docker image
+.env
+.env.*
+.env.local
+*.env
+apikeys.env
+*.key
+*.pem
+secrets.yaml
+secrets.json

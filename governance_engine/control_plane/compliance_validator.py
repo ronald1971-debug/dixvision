@@ -107,7 +107,18 @@ class ComplianceValidator:
         legacy in-memory test callers working unchanged; harness
         wiring always passes the current ``wall_ns`` so kill-9 plus
         relaunch resumes from the last committed spend.
+
+        Raises:
+            ValueError: If ts_ns is 0 in CANARY/LIVE/AUTO mode where
+                daily caps are actively enforced. Passing ts_ns=0 in
+                those modes routes spend to the 1970-01-01 bucket,
+                silently bypassing the calendar-day cap.
         """
+        if ts_ns == 0 and mode not in (SystemMode.SAFE, SystemMode.PAPER):
+            raise ValueError(
+                f"validate_order: ts_ns must be supplied in {mode.name} mode; "
+                "ts_ns=0 would route daily-cap spend to 1970-01-01"
+            )
 
         violations: list[str] = []
 

@@ -253,6 +253,8 @@ def _boot_learning() -> None:
 
 def _boot_system() -> None:
     """Verify system engine and ledger are accessible; emit BOOT_START event."""
+    from observability.logs.log_sink import install_global_sink
+    install_global_sink()
     from system_engine import SystemEngine  # noqa: F401
     from state.ledger.event_store import get_event_store, append_event
     # Confirm ledger is writable — emit BOOT_START

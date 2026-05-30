@@ -24,7 +24,7 @@ class PortfolioStateProjector:
     def apply(self, event: dict) -> None:
         et = str(event.get("event_type", "")).upper()
         st = str(event.get("sub_type", "")).upper()
-        if et != "MARKET" or st != "TRADE_EXECUTION":
+        if et != "GOVERNANCE" or st != "TRADE_EXECUTION":
             return
         p = event.get("payload", {}) or {}
         asset = str(p.get("asset", ""))

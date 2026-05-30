@@ -28,6 +28,10 @@ class _CEXProviderBase(Provider):
     kind = SourceKind.MARKET
     symbols: list[str] = []
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.symbols = list(self.__class__.symbols)  # per-instance copy; prevents class-level mutation
+
     def _tick(
         self,
         asset: str,

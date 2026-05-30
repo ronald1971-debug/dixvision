@@ -11,6 +11,7 @@ Pure / deterministic (INV-15): same inputs → same reward.
 from __future__ import annotations
 
 import math
+from collections import deque
 from dataclasses import dataclass
 
 
@@ -70,7 +71,7 @@ class RewardSystem:
 
     def __init__(self, weights: RewardWeights | None = None) -> None:
         self._weights = weights or RewardWeights()
-        self._history: list[float] = []  # rolling PnL for consistency
+        self._history: deque[float] = deque(maxlen=100)  # bounded rolling PnL for consistency
 
     @property
     def weights(self) -> RewardWeights:

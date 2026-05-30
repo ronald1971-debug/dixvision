@@ -53,7 +53,7 @@ class DriftMonitor:
         return DriftStatus(
             strategy=strategy,
             samples=n,
-            drift_score=score,
+            drift_score=min(score, 1.0),
             decayed=score >= self._threshold,
         )
 

@@ -106,14 +106,25 @@ class SnapshotManager:
         """
         ts_ns = time_source.wall_ns()
         snapshot_id = f"snap_{ts_ns}"
-        content = json.dumps(state, default=str, sort_keys=True)
-        content_hash = hashlib.blake2b(content.encode(), digest_size=32).hexdigest()
+        # Hash computed over pure state only (no metadata fields)
+        state_content = json.dumps(state, default=str, sort_keys=True)
+        content_hash = hashlib.blake2b(state_content.encode(), digest_size=32).hexdigest()
+
+        # Stored document embeds hash + metadata alongside state
+        stored: dict[str, Any] = {
+            "_content_hash": content_hash,
+            "_version": 3,
+            "_ts_ns": ts_ns,
+            "_tick_count": self._tick_counter,
+            **state,
+        }
+        stored_text = json.dumps(stored, default=str, sort_keys=True)
 
         filepath = self._base_path / f"{snapshot_id}.json"
         tmp_path = filepath.with_suffix(".tmp")
 
         try:
-            tmp_path.write_text(content)
+            tmp_path.write_text(stored_text)
             os.replace(str(tmp_path), str(filepath))
             status = SnapshotStatus.COMMITTED
         except OSError:
@@ -127,7 +138,7 @@ class SnapshotManager:
             tick_count=self._tick_counter,
             content_hash=content_hash,
             ledger_position=state.get("ledger_position", 0),
-            size_bytes=len(content),
+            size_bytes=len(stored_text),
             status=status,
         )
         self._snapshots.append(metadata)
@@ -146,10 +157,16 @@ class SnapshotManager:
                 content = filepath.read_text()
                 state = json.loads(content)
                 if self._config.verify_on_read:
-                    actual_hash = hashlib.blake2b(content.encode(), digest_size=32).hexdigest()
-                    expected_hash = state.get("_content_hash", actual_hash)
-                    if actual_hash != expected_hash:
-                        continue
+                    expected_hash = state.get("_content_hash")
+                    if expected_hash is not None:
+                        # Re-hash just the state fields (keys not prefixed with _)
+                        state_only = {k: v for k, v in state.items() if not k.startswith("_")}
+                        actual_hash = hashlib.blake2b(
+                            json.dumps(state_only, default=str, sort_keys=True).encode(),
+                            digest_size=32,
+                        ).hexdigest()
+                        if actual_hash != expected_hash:
+                            continue
                 metadata = SnapshotMetadata(
                     snapshot_id=filepath.stem,
                     version=state.get("_version", 3),
