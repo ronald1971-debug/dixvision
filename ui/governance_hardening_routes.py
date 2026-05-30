@@ -25,7 +25,7 @@ Endpoints:
 
 from __future__ import annotations
 
-import time
+from system.time_source import wall_ns
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -63,7 +63,7 @@ class ReplaySnapshotRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 def _ts(ts_ns: int) -> int:
-    return ts_ns if ts_ns else time.time_ns()
+    return ts_ns if ts_ns else wall_ns()
 
 
 def _hardening():

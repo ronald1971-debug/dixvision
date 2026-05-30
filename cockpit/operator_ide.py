@@ -147,7 +147,7 @@ class OperatorIDE:
 
         try:
             from core.kernel import get_kernel
-            snap = get_kernel().snapshot()
+            snap = get_kernel().snapshot  # property, no ()
             for svc in snap.services:
                 name  = svc.name.lower()
                 label = "healthy" if svc.healthy else f"degraded: {svc.detail}" if svc.detail else "degraded"

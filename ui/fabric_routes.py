@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import time
+from system.time_source import wall_ns
 
 _logger = logging.getLogger(__name__)
 
@@ -169,7 +170,7 @@ def build_fabric_router():
             session = rs.start(
                 session_id  = session_id,
                 since_ns    = since_ns,
-                until_ns    = until_ns or time.time_ns(),
+                until_ns    = until_ns or wall_ns(),
                 domain      = domain or None,
                 event_type  = event_type or None,
                 trace_id    = trace_id or None,

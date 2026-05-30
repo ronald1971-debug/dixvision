@@ -158,6 +158,9 @@ def test_compliance_validator_in_memory_default_unchanged() -> None:
     still clears the running map.
     """
 
+    import time as _time
+    _ts = _time.time_ns()
+
     cv = ComplianceValidator()
     for _ in range(4):
         assert (
@@ -165,6 +168,7 @@ def test_compliance_validator_in_memory_default_unchanged() -> None:
                 domain="MEMECOIN",
                 notional_usd=200.0,
                 mode=SystemMode.LIVE,
+                ts_ns=_ts,
             ).passed
             is True
         )
@@ -172,6 +176,7 @@ def test_compliance_validator_in_memory_default_unchanged() -> None:
         domain="MEMECOIN",
         notional_usd=250.0,
         mode=SystemMode.LIVE,
+        ts_ns=_ts,
     )
     assert breach.passed is False
 
@@ -180,6 +185,7 @@ def test_compliance_validator_in_memory_default_unchanged() -> None:
         domain="MEMECOIN",
         notional_usd=200.0,
         mode=SystemMode.LIVE,
+        ts_ns=_ts,
     )
     assert fresh.passed is True
 

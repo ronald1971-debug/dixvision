@@ -200,6 +200,9 @@ _OPERATOR_ROUTES: frozenset[RouteKey] = frozenset(
         ("GET", "/api/operator/runtime/active"),
         ("GET", "/api/operator/runtime/dormant"),
         ("GET", "/api/operator/runtime/capability/{tag}"),
+        # Policy hash anchor — dashboard ModeRibbon reads this to populate
+        # consent_policy_hash before submitting operator actions.
+        ("GET", "/api/operator/policy-hash"),
     }
 )
 

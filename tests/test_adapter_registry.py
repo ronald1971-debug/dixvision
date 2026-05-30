@@ -25,8 +25,16 @@ def test_default_registry_has_three_disconnected():
         assert any(n.startswith("uniswapx:") for n in names)
     else:
         assert len(reg) >= 2
+    # Stage-9 paper venue adapters (binance_paper, coinbase_paper, etc.) are
+    # credential-free and intentionally start READY. Credential-backed adapters
+    # (hummingbot, binance, alpaca, ibkr, pumpfun, uniswapx) must be DISCONNECTED.
+    paper_names = {"binance_paper", "coinbase_paper", "kraken_paper",
+                   "alpaca_paper", "oanda_paper", "ibkr_paper"}
     for s in snap:
-        assert s.state is AdapterState.DISCONNECTED
+        if s.name in paper_names:
+            assert s.state is AdapterState.READY, f"{s.name} should be READY"
+        else:
+            assert s.state is AdapterState.DISCONNECTED, f"{s.name} should be DISCONNECTED"
 
 
 def test_default_registry_is_singleton():

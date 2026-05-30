@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { fetchMode } from "@/api/dashboard";
-import { postOperatorMode, postOperatorUnlock } from "@/api/operator";
+import { fetchPolicyHash, postOperatorMode, postOperatorUnlock } from "@/api/operator";
 
 /**
  * 7-state Mode FSM ribbon — the single most important indicator on
@@ -116,6 +116,14 @@ export function ModeRibbon() {
     refetchInterval: 2_000,
   });
 
+  // Policy hash is stable for a given server version — stale for 10 min, never refetched on window focus.
+  const { data: policyHash } = useQuery({
+    queryKey: ["operator", "policy-hash"],
+    queryFn: ({ signal }) => fetchPolicyHash(signal),
+    staleTime: 10 * 60 * 1_000,
+    refetchOnWindowFocus: false,
+  });
+
   const modeMutation = useMutation({
     mutationFn: async (targetMode: string) => {
       const steps = getStepsTo(currentMode ?? "", targetMode);
@@ -126,7 +134,7 @@ export function ModeRibbon() {
           requestor: "operator",
           operator_authorized: true,
           consent_operator_id: "operator",
-          consent_policy_hash: "dashboard",
+          consent_policy_hash: policyHash ?? "",
           consent_nonce: String(Date.now()),
           consent_ts_ns: Date.now() * 1_000_000,
         });

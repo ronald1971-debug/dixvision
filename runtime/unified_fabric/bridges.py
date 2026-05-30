@@ -20,8 +20,9 @@ from __future__ import annotations
 
 import logging
 import threading
-import time
 from typing import Any
+
+from system.time_source import wall_ns
 
 from runtime.unified_fabric.contracts import FabricDomain, FabricPriority
 
@@ -84,7 +85,7 @@ class CognitiveBusBridge:
             domain, priority = _COGNITIVE_MAP.get(
                 channel_name, (FabricDomain.COGNITIVE, FabricPriority.NORMAL)
             )
-            ts_ns = int(payload.get("ts_ns", time.time_ns()))
+            ts_ns = int(payload.get("ts_ns", wall_ns()))
             bus   = get_central_bus_authority()
             bus.publish(
                 domain     = domain,
@@ -141,7 +142,7 @@ class ExecutionFabricBridge:
     def _forward(self, channel_name: str, domain: FabricDomain, fabric_event: Any) -> None:
         try:
             from runtime.unified_fabric.authority import get_central_bus_authority
-            ts_ns = int(getattr(fabric_event, "ts_ns", time.time_ns()))
+            ts_ns = int(getattr(fabric_event, "ts_ns", wall_ns()))
             event_type = str(getattr(fabric_event, "event_type", channel_name))
             source = str(getattr(fabric_event, "source", f"exec_fabric.{channel_name}"))
             trace_id = str(getattr(fabric_event, "trace_id", ""))
@@ -152,7 +153,7 @@ class ExecutionFabricBridge:
             bus.publish(
                 domain     = domain,
                 event_type = event_type,
-                ts_ns      = ts_ns or time.time_ns(),
+                ts_ns      = ts_ns or wall_ns(),
                 source     = source,
                 payload    = payload,
                 trace_id   = trace_id,

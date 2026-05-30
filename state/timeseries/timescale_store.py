@@ -26,11 +26,21 @@ OFFLINE tier for analytics queries.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
 from system.time_source import wall_ns
+
+_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,62}$")
+
+
+def _safe_ident(name: str) -> str:
+    """Validate a SQL identifier (table/view name) to prevent injection."""
+    if not _IDENT_RE.match(name):
+        raise ValueError(f"Unsafe SQL identifier: {name!r}")
+    return name
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +72,7 @@ class TimescaleStore:
         self._chunk_interval = chunk_interval
         self._in_memory = in_memory
         self._buffer: list[TimeseriesRow] = []
+        self._conn: Any = None  # cached connection; created lazily on first remote use
 
     def write_row(
         self,
@@ -118,8 +129,10 @@ class TimescaleStore:
         """
         if self._in_memory:
             return
+        safe_table = _safe_ident(table)
+        safe_col = _safe_ident(time_column)
         self._exec_sql(
-            f"SELECT create_hypertable('{table}', '{time_column}', "
+            f"SELECT create_hypertable('{safe_table}', '{safe_col}', "
             f"chunk_time_interval => INTERVAL '{self._chunk_interval}')"
         )
 
@@ -139,55 +152,61 @@ class TimescaleStore:
         """
         if self._in_memory:
             return
-        cols = ", ".join(agg_columns) if agg_columns else "*"
+        safe_view = _safe_ident(view_name)
+        safe_table = _safe_ident(table)
+        safe_cols = ", ".join(_safe_ident(c) for c in agg_columns) if agg_columns else "*"
         sql = (
-            f"CREATE MATERIALIZED VIEW {view_name} "
+            f"CREATE MATERIALIZED VIEW {safe_view} "
             f"WITH (timescaledb.continuous) AS "
-            f"SELECT time_bucket('{bucket_seconds} seconds', time) AS bucket, {cols} "
-            f"FROM {table} GROUP BY bucket"
+            f"SELECT time_bucket('{int(bucket_seconds)} seconds', time) AS bucket, {safe_cols} "
+            f"FROM {safe_table} GROUP BY bucket"
         )
         self._exec_sql(sql)
 
     # ---- internals -------------------------------------------------------
 
+    def _get_conn(self) -> Any:
+        """Return the cached psycopg2 connection, opening it on first use."""
+        import psycopg2
+        if self._conn is None or self._conn.closed:
+            self._conn = psycopg2.connect(self._dsn)
+        return self._conn
+
     def _write_remote(self, row: TimeseriesRow) -> None:
         """Write to TimescaleDB via psycopg2."""
         try:
-            import psycopg2  # noqa: F401  # lazy import
-
-            conn = psycopg2.connect(self._dsn)
+            table = _safe_ident(row.table)
+            conn = self._get_conn()
             cur = conn.cursor()
             columns = ["time"] + list(row.tags.keys()) + list(row.fields.keys())
             values = [row.timestamp_ns] + list(row.tags.values()) + list(row.fields.values())
             placeholders = ", ".join(["%s"] * len(values))
-            col_str = ", ".join(columns)
+            col_str = ", ".join(_safe_ident(c) for c in columns)
             cur.execute(
-                f"INSERT INTO {row.table} ({col_str}) VALUES ({placeholders})",
+                f"INSERT INTO {table} ({col_str}) VALUES ({placeholders})",
                 values,
             )
             conn.commit()
             cur.close()
-            conn.close()
         except ImportError:
             self._buffer.append(row)
 
     def _query_remote(self, table: str, *, bucket_seconds: int, limit: int) -> list[dict[str, Any]]:
         """Query TimescaleDB with time_bucket aggregation."""
         try:
-            import psycopg2  # noqa: F401  # lazy import
-
-            conn = psycopg2.connect(self._dsn)
+            safe_table = _safe_ident(table)
+            conn = self._get_conn()
             cur = conn.cursor()
             cur.execute(
-                f"SELECT time_bucket('{bucket_seconds} seconds', time) AS bucket, * "
-                f"FROM {table} ORDER BY bucket DESC LIMIT {limit}"
+                f"SELECT time_bucket('{int(bucket_seconds)} seconds', time) AS bucket, * "
+                f"FROM {safe_table} ORDER BY bucket DESC LIMIT %s",
+                (limit,),
             )
             columns = [desc[0] for desc in cur.description]
             results: list[dict[str, Any]] = []
             for row_data in cur.fetchall():
                 results.append(dict(zip(columns, row_data, strict=False)))
             cur.close()
-            conn.close()
             return results
         except ImportError:
             return []
@@ -210,16 +229,13 @@ class TimescaleStore:
         return results
 
     def _exec_sql(self, sql: str) -> None:
-        """Execute arbitrary SQL."""
+        """Execute arbitrary SQL (DDL only — caller must use _safe_ident for identifiers)."""
         try:
-            import psycopg2  # noqa: F401  # lazy import
-
-            conn = psycopg2.connect(self._dsn)
+            conn = self._get_conn()
             cur = conn.cursor()
             cur.execute(sql)
             conn.commit()
             cur.close()
-            conn.close()
         except ImportError:
             pass
 

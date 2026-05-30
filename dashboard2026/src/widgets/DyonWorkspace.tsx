@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Activity,
   BarChart2,
+  CheckSquare,
   ChevronDown,
   ChevronRight,
   Code2,
@@ -11,6 +12,7 @@ import {
   GitBranch,
   Network,
   RefreshCw,
+  Share2,
   Shield,
   Wrench,
 } from "lucide-react";
@@ -97,6 +99,27 @@ interface WorkspaceData {
     dominant_strategy: string;
     scoreboard: Record<string, { best_fitness: number; wins: number; dominant: boolean }>;
   };
+  dependency_graph?: {
+    total_modules: number;
+    total_edges: number;
+    cycle_count: number;
+    cycles: { path: string[]; length: number; involves_layer: string }[];
+    b1_violation_count: number;
+    b1_violations: { source_module: string; target_package: string; source_layer: string; description: string }[];
+    isolated_module_count: number;
+    isolated_modules: string[];
+    scan_duration_ms?: number;
+  };
+  test_coverage?: {
+    total_modules: number;
+    covered: number;
+    partial: number;
+    uncovered: number;
+    coverage_pct: number;
+    by_layer: Record<string, Record<string, number>>;
+    top_uncovered: { module_path: string; rel_file: string; layer: string; line_count: number }[];
+    scan_duration_ms?: number;
+  };
   latest_report?: {
     report_id: string;
     health_score: number;
@@ -164,6 +187,27 @@ const SEED_DATA: WorkspaceData = {
     tournament_runs: 0,
     dominant_strategy: "",
     scoreboard: {},
+  },
+  dependency_graph: {
+    total_modules: 0,
+    total_edges: 0,
+    cycle_count: 0,
+    cycles: [],
+    b1_violation_count: 0,
+    b1_violations: [],
+    isolated_module_count: 0,
+    isolated_modules: [],
+    scan_duration_ms: 0,
+  },
+  test_coverage: {
+    total_modules: 0,
+    covered: 0,
+    partial: 0,
+    uncovered: 0,
+    coverage_pct: 0,
+    by_layer: {},
+    top_uncovered: [],
+    scan_duration_ms: 0,
   },
   latest_report: {
     report_id: "initialising",
@@ -644,6 +688,193 @@ function PatchValidationPanel({ proposals }: { proposals: PatchProposal[] }) {
   );
 }
 
+// Panel 9: Dependency Graph
+function DependencyGraphPanel({ data }: { data: WorkspaceData["dependency_graph"] }) {
+  const [showCycles, setShowCycles] = useState(false);
+  if (!data) return null;
+  const hasCycles = data.cycle_count > 0;
+  const hasB1 = data.b1_violation_count > 0;
+  return (
+    <section className="flex flex-col rounded border border-border bg-surface h-full">
+      <PanelHeader
+        icon={Share2}
+        title="Dependency Graph"
+        subtitle={`${data.total_modules} modules · ${data.total_edges} edges`}
+        badge={hasB1 ? `${data.b1_violation_count} B1` : hasCycles ? `${data.cycle_count} cycle${data.cycle_count !== 1 ? "s" : ""}` : undefined}
+      />
+      <div className="flex-1 overflow-auto p-3 space-y-2">
+        {/* Summary row */}
+        <div className="grid grid-cols-2 gap-1.5">
+          <div className="rounded bg-bg/60 p-2">
+            <p className="text-[10px] text-slate-500">Cycles</p>
+            <p className={`font-mono text-sm ${hasCycles ? "text-rose-400" : "text-emerald-400"}`}>
+              {data.cycle_count}
+            </p>
+          </div>
+          <div className="rounded bg-bg/60 p-2">
+            <p className="text-[10px] text-slate-500">B1 violations</p>
+            <p className={`font-mono text-sm ${hasB1 ? "text-rose-500" : "text-emerald-400"}`}>
+              {data.b1_violation_count}
+            </p>
+          </div>
+          <div className="rounded bg-bg/60 p-2">
+            <p className="text-[10px] text-slate-500">Isolated</p>
+            <p className={`font-mono text-sm ${data.isolated_module_count > 0 ? "text-amber-400" : "text-slate-400"}`}>
+              {data.isolated_module_count}
+            </p>
+          </div>
+          <div className="rounded bg-bg/60 p-2">
+            <p className="text-[10px] text-slate-500">Edges</p>
+            <p className="font-mono text-sm text-slate-400">{data.total_edges}</p>
+          </div>
+        </div>
+
+        {/* B1 violations — always visible, highest priority */}
+        {hasB1 && (
+          <div className="space-y-1">
+            <p className="text-[10px] text-rose-400 uppercase tracking-wider">⚠ B1 Authority Violations</p>
+            {data.b1_violations.slice(0, 5).map((v, i) => (
+              <div key={i} className="rounded border border-rose-500/20 bg-rose-500/5 px-2 py-1.5 space-y-0.5">
+                <p className="font-mono text-[10px] text-rose-300 truncate">{v.source_module}</p>
+                <p className="text-[10px] text-slate-400 leading-snug">→ {v.target_package} ({v.source_layer})</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Cycles — collapsible */}
+        {hasCycles && (
+          <div className="space-y-1">
+            <button
+              type="button"
+              onClick={() => setShowCycles(!showCycles)}
+              className="flex items-center gap-1 text-[10px] text-amber-400 uppercase tracking-wider"
+            >
+              {showCycles ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+              {data.cycle_count} Import Cycle{data.cycle_count !== 1 ? "s" : ""}
+            </button>
+            {showCycles && (
+              <div className="space-y-1">
+                {data.cycles.slice(0, 5).map((c, i) => (
+                  <div key={i} className="rounded bg-bg/40 px-2 py-1.5">
+                    <p className="font-mono text-[9px] text-amber-300 truncate">
+                      {c.path.join(" → ")}
+                    </p>
+                    {c.involves_layer && (
+                      <p className="text-[9px] text-slate-500 mt-0.5">layer: {c.involves_layer}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!hasCycles && !hasB1 && data.total_modules > 0 && (
+          <p className="text-[11px] text-emerald-400">✓ No cycles or B1 violations detected</p>
+        )}
+        {data.total_modules === 0 && (
+          <p className="text-[11px] text-slate-500">Scan pending (every 300 ticks)</p>
+        )}
+        {data.scan_duration_ms != null && data.scan_duration_ms > 0 && (
+          <p className="text-[10px] text-slate-600 border-t border-border/50 pt-1">scan {fmtMs(data.scan_duration_ms)}</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// Panel 10: Test Coverage Tracker
+function TestCoveragePanel({ data }: { data: WorkspaceData["test_coverage"] }) {
+  if (!data) return null;
+  const pct = data.coverage_pct ?? 0;
+  const barCls = pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-teal-500" : pct >= 40 ? "bg-amber-500" : "bg-rose-500";
+  const layers = Object.entries(data.by_layer).sort((a, b) => a[0].localeCompare(b[0]));
+  return (
+    <section className="flex flex-col rounded border border-border bg-surface h-full">
+      <PanelHeader
+        icon={CheckSquare}
+        title="Test Coverage"
+        subtitle={`${data.total_modules} modules tracked`}
+        badge={`${pct.toFixed(0)}%`}
+      />
+      <div className="flex-1 overflow-auto p-3 space-y-2">
+        {/* Coverage bar */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-[10px]">
+            <span className="text-slate-500">Coverage</span>
+            <span className={`font-mono ${pct >= 80 ? "text-emerald-400" : pct >= 60 ? "text-teal-400" : pct >= 40 ? "text-amber-400" : "text-rose-400"}`}>
+              {pct.toFixed(1)}%
+            </span>
+          </div>
+          <div className="w-full rounded-full bg-bg/60 h-2 overflow-hidden">
+            <div className={`h-full rounded-full ${barCls}`} style={{ width: `${Math.min(pct, 100)}%`, transition: "width 0.5s ease" }} />
+          </div>
+        </div>
+
+        {/* Counts */}
+        <div className="grid grid-cols-3 gap-1.5 text-center">
+          <div className="rounded bg-bg/60 p-1.5">
+            <p className="font-mono text-sm text-emerald-400">{data.covered}</p>
+            <p className="text-[9px] text-slate-500">covered</p>
+          </div>
+          <div className="rounded bg-bg/60 p-1.5">
+            <p className="font-mono text-sm text-amber-400">{data.partial}</p>
+            <p className="text-[9px] text-slate-500">partial</p>
+          </div>
+          <div className="rounded bg-bg/60 p-1.5">
+            <p className="font-mono text-sm text-rose-400">{data.uncovered}</p>
+            <p className="text-[9px] text-slate-500">uncovered</p>
+          </div>
+        </div>
+
+        {/* By-layer breakdown */}
+        {layers.length > 0 && (
+          <div className="space-y-0.5">
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider">By Layer</p>
+            {layers.slice(0, 6).map(([layer, counts]) => {
+              const cov = counts["COVERED"] ?? 0;
+              const par = counts["PARTIAL"] ?? 0;
+              const unc = counts["UNCOVERED"] ?? 0;
+              const tot = cov + par + unc;
+              const layerPct = tot > 0 ? ((cov + par * 0.5) / tot) * 100 : 0;
+              return (
+                <div key={layer} className="flex items-center gap-2">
+                  <span className="w-10 text-right font-mono text-[9px] text-slate-500">{layer}</span>
+                  <div className="flex-1 rounded-full bg-bg/60 h-1.5 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${layerPct >= 80 ? "bg-emerald-500/70" : layerPct >= 50 ? "bg-teal-500/70" : "bg-amber-500/70"}`}
+                      style={{ width: `${layerPct}%` }}
+                    />
+                  </div>
+                  <span className="font-mono text-[9px] text-slate-600">{layerPct.toFixed(0)}%</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Top uncovered */}
+        {data.top_uncovered.length > 0 && (
+          <div className="space-y-0.5 border-t border-border/50 pt-2">
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Largest Uncovered</p>
+            {data.top_uncovered.slice(0, 5).map((m) => (
+              <div key={m.rel_file} className="flex items-center justify-between gap-2">
+                <span className="font-mono text-[9px] text-slate-400 truncate flex-1">{m.rel_file}</span>
+                <span className="font-mono text-[9px] text-slate-600 flex-shrink-0">{m.line_count}L</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {data.total_modules === 0 && (
+          <p className="text-[11px] text-slate-500">Scan pending (every 600 ticks)</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Main DyonWorkspace
 // ---------------------------------------------------------------------------
@@ -696,7 +927,7 @@ export function DyonWorkspace() {
               DYON · Engineering Workspace
             </h3>
             <p className="mt-0.5 text-[10px] text-slate-500">
-              repository · health · mutations · drift · dead modules · governance · sandbox · patches
+              repository · health · mutations · drift · dead modules · governance · sandbox · patches · dep-graph · coverage
             </p>
           </div>
         </div>
@@ -714,19 +945,21 @@ export function DyonWorkspace() {
         </div>
       </header>
 
-      {/* 8-panel grid: 4 columns × 2 rows */}
+      {/* 10-panel grid: 5 columns × 2 rows */}
       <div className="flex-1 overflow-auto p-3">
-        <div className="grid grid-cols-4 gap-3 h-full min-h-0" style={{ gridTemplateRows: "1fr 1fr" }}>
+        <div className="grid grid-cols-5 gap-3 h-full min-h-0" style={{ gridTemplateRows: "1fr 1fr" }}>
           {/* Row 1 */}
           <RepoGraphPanel data={data.repository} />
           <RuntimeHealthPanel drift={data.architecture_drift} report={data.latest_report} />
           <MutationQueuePanel queue={data.mutation_queue} />
           <DriftMonitorPanel drift={data.architecture_drift} />
+          <DependencyGraphPanel data={data.dependency_graph} />
           {/* Row 2 */}
           <DeadModulePanel data={data.dead_code} />
           <GovernanceApprovalPanel queue={data.mutation_queue} />
           <SandboxStreamPanel simulation={data.simulation} />
           <PatchValidationPanel proposals={proposals} />
+          <TestCoveragePanel data={data.test_coverage} />
         </div>
       </div>
 

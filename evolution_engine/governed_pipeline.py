@@ -222,12 +222,19 @@ class GovernedEvolutionPipeline:
         with self._lock:
             active = [r.to_dict() for r in self._records.values()]
             completed = [r.to_dict() for r in self._completed[-limit:]]
+            all_records = list(self._records.values()) + list(self._completed)
+        stage_counts: dict[str, int] = {}
+        for r in all_records:
+            stage_counts[r.stage.value] = stage_counts.get(r.stage.value, 0) + 1
         return {
             "pipeline": "GovernedEvolutionPipeline",
             "tick_count": self._tick_count,
             "active_count": len(active),
             "completed_count": len(self._completed),
+            "total_proposals": len(all_records),
+            "stage_counts": stage_counts,
             "active": active,
+            "proposals": active,        # alias for dashboard compatibility
             "recently_completed": completed,
         }
 
@@ -348,8 +355,9 @@ class GovernedEvolutionPipeline:
     def _apply_to_registry(self, record: PipelineRecord, ts_ns: int) -> None:
         """Promote to strategy registry (best-effort)."""
         try:
-            from governance_engine.strategy_registry import get_strategy_registry
-            reg = get_strategy_registry()
+            import importlib
+            mod = importlib.import_module("governance_engine.strategy_registry")
+            reg = mod.get_strategy_registry()
             if hasattr(reg, "promote"):
                 reg.promote(record.proposal_id, ts_ns=ts_ns)
         except Exception:
@@ -393,10 +401,22 @@ class GovernedEvolutionPipeline:
         except Exception:
             pass
 
+    # Maps governed pipeline stages to (RepairStage, RepairOutcome) for SSE stream
+    _STAGE_TO_REPAIR: dict[str, tuple[str, str]] = {
+        PipelineStage.SANDBOX:      ("SIMULATION",  "IN_PROGRESS"),
+        PipelineStage.BENCHMARK:    ("VALIDATION",  "IN_PROGRESS"),
+        PipelineStage.GOV_REVIEW:   ("VALIDATION",  "IN_PROGRESS"),
+        PipelineStage.PROMOTED:     ("DEPLOYMENT",  "SUCCESS"),
+        PipelineStage.MONITORING:   ("DEPLOYMENT",  "IN_PROGRESS"),
+        PipelineStage.ROLLED_BACK:  ("ROLLBACK",    "ROLLED_BACK"),
+        PipelineStage.AUDITED:      ("DEPLOYMENT",  "SUCCESS"),
+        PipelineStage.REJECTED:     ("ROLLBACK",    "FAILED"),
+    }
+
     def _emit_transition(
         self, proposal_id: str, stage: PipelineStage, ts_ns: int
     ) -> None:
-        """Publish stage transition to DYON event bus channel."""
+        """Publish stage transition to DYON event bus channel and SSE stream."""
         try:
             from state.event_bus import CognitiveChannel, get_event_bus
             get_event_bus().publish(CognitiveChannel.DYON_PROPOSAL, {
@@ -422,6 +442,28 @@ class GovernedEvolutionPipeline:
             )
         except Exception:
             pass
+        # Emit REPAIR_PIPELINE event for all post-PROPOSED stages so the
+        # DyonArchitectureStream widget can surface lifecycle progress.
+        repair_mapping = self._STAGE_TO_REPAIR.get(stage)
+        if repair_mapping is not None:
+            repair_stage, repair_outcome = repair_mapping
+            try:
+                from evolution_engine.charter.dyon_observability_emitter import (
+                    emit_repair_pipeline,
+                )
+                emit_repair_pipeline(
+                    ts_ns=ts_ns,
+                    pipeline_id=f"gp-{proposal_id[:24]}",
+                    stage=repair_stage,
+                    target="governed_pipeline",
+                    description=(
+                        f"Proposal {proposal_id}: {stage.value}"
+                    ),
+                    outcome=repair_outcome,
+                    patch_proposal_id=proposal_id,
+                )
+            except Exception:
+                pass
 
 
 # ---------------------------------------------------------------------------

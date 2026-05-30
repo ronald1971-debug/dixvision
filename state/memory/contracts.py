@@ -70,8 +70,8 @@ class MemoryRecord:
     @property
     def age_ns(self) -> int:
         """Nanoseconds since this record was created (not replay-safe; informational only)."""
-        import time
-        return time.time_ns() - self.ts_ns
+        from system.time_source import wall_ns
+        return wall_ns() - self.ts_ns
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

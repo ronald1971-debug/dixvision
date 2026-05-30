@@ -17,7 +17,7 @@ Surfaces:
 from __future__ import annotations
 
 import logging
-import time
+from system.time_source import wall_ns
 
 _logger = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ def build_memory_router():
             from state.memory.replay import get_memory_replay_engine
             eng      = get_memory_replay_engine()
             kinds    = [k.strip().upper() for k in kind.split(",") if k.strip()] or None
-            until    = until_ns or time.time_ns()
+            until    = until_ns or wall_ns()
             session  = eng.start_replay(
                 session_id=session_id,
                 since_ns=since_ns,

@@ -268,19 +268,19 @@ class RuntimeBootstrap:
 
                 # Phase 1: Reconciliation (every 10 ticks)
                 if tick_count % 10 == 0 and self._reconciler:
-                    self._reconciler.tick()
+                    await asyncio.to_thread(self._reconciler.tick)
 
                 # Phase 2: Replay validation (handled internally by validator)
                 if self._replay:
-                    self._replay.tick()
+                    await asyncio.to_thread(self._replay.tick)
 
                 # Phase 3: Expire stale intents
                 if self._lifecycle_mgr:
-                    self._lifecycle_mgr.expire_stale()
+                    await asyncio.to_thread(self._lifecycle_mgr.expire_stale)
 
                 # Phase 4: Health check (every 50 ticks)
                 if tick_count % 50 == 0 and self._readiness:
-                    self._readiness.assess()
+                    await asyncio.to_thread(self._readiness.assess)
 
                 tick_count += 1
                 elapsed_ms = (time_source.now_ns() - tick_start) / 1_000_000

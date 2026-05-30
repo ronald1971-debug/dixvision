@@ -133,8 +133,8 @@ class TraderModelingRuntime:
             def _on_tick(payload: dict[str, Any]) -> None:
                 ts_ns = int(payload.get("ts_ns", 0))
                 if ts_ns <= 0:
-                    import time
-                    ts_ns = time.time_ns()
+                    from system.time_source import wall_ns
+                    ts_ns = wall_ns()
                 try:
                     get_profile_extractor().ingest(payload, ts_ns)
                     with self._lock:

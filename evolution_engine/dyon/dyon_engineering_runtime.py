@@ -45,6 +45,8 @@ _logger = logging.getLogger(__name__)
 # Tick cadences
 REPO_INSPECT_INTERVAL: int = 300
 DEAD_CODE_INTERVAL: int = 600
+DEPENDENCY_GRAPH_INTERVAL: int = 300   # co-cadence with repo inspector
+TEST_COVERAGE_INTERVAL: int = 600      # co-cadence with dead code detector
 REPORT_INTERVAL: int = 100
 
 # Architecture grade → status colour for operator display
@@ -174,6 +176,14 @@ class DyonEngineeringRuntime:
         if tick % DEAD_CODE_INTERVAL == 0:
             self._tick_dead_code_detector(ts_ns)
 
+        # --- Phase 3b: Dependency graph analysis (co-cadence with repo inspector) ---
+        if tick % DEPENDENCY_GRAPH_INTERVAL == 0:
+            self._tick_dependency_graph(ts_ns)
+
+        # --- Phase 3c: Test coverage tracking (co-cadence with dead code) ---
+        if tick % TEST_COVERAGE_INTERVAL == 0:
+            self._tick_test_coverage_tracker(ts_ns)
+
         # --- Phase 4: Evolution report generation ---
         if tick % REPORT_INTERVAL == 0:
             self._generate_report(ts_ns)
@@ -224,6 +234,20 @@ class DyonEngineeringRuntime:
             out["dead_code"] = get_dead_code_detector(repo_root=self._root).snapshot()
         except Exception as exc:
             out["dead_code"] = {"error": str(exc)}
+
+        # Dependency graph (cycle + B1 violation analysis)
+        try:
+            from evolution_engine.dyon.dependency_graph import get_dependency_graph
+            out["dependency_graph"] = get_dependency_graph().snapshot_dict()
+        except Exception as exc:
+            out["dependency_graph"] = {"error": str(exc)}
+
+        # Test coverage (which modules have tests, which don't)
+        try:
+            from evolution_engine.dyon.test_coverage_tracker import get_test_coverage_tracker
+            out["test_coverage"] = get_test_coverage_tracker(repo_root=self._root).snapshot()
+        except Exception as exc:
+            out["test_coverage"] = {"error": str(exc)}
 
         # Governed pipeline (mutation queue + governance stream)
         try:
@@ -317,6 +341,25 @@ class DyonEngineeringRuntime:
                 self._emit_dead_code_narrative(detected, ts_ns)
         except Exception as exc:
             _logger.debug("DyonEngineeringRuntime._tick_dead_code_detector error: %s", exc)
+
+    def _tick_dependency_graph(self, ts_ns: int) -> None:
+        """Run dependency graph analysis (cycle + B1 violation detection)."""
+        try:
+            from evolution_engine.dyon.dependency_graph import get_dependency_graph
+            snap = get_dependency_graph().scan(ts_ns)
+            if snap.b1_violations or snap.cycles:
+                self._emit_dependency_narrative(snap, ts_ns)
+        except Exception as exc:
+            _logger.debug("DyonEngineeringRuntime._tick_dependency_graph error: %s", exc)
+
+    def _tick_test_coverage_tracker(self, ts_ns: int) -> None:
+        """Run test coverage scan."""
+        try:
+            from evolution_engine.dyon.test_coverage_tracker import get_test_coverage_tracker
+            snap = get_test_coverage_tracker(repo_root=self._root).scan(ts_ns)
+            self._emit_coverage_narrative(snap, ts_ns)
+        except Exception as exc:
+            _logger.debug("DyonEngineeringRuntime._tick_test_coverage_tracker error: %s", exc)
 
     def _generate_report(self, ts_ns: int) -> EvolutionReport | None:
         """Generate a structured evolution report for this period."""
@@ -503,6 +546,53 @@ class DyonEngineeringRuntime:
                 "narrative": (
                     f"Dead code scan: {orphans} orphaned, {isolated} isolated, "
                     f"{stubs} stub modules detected"
+                ),
+                "ts_ns": ts_ns,
+            })
+        except Exception:
+            pass
+
+    def _emit_dependency_narrative(self, snap: Any, ts_ns: int) -> None:
+        try:
+            cycles = getattr(snap, "cycles", [])
+            b1 = getattr(snap, "b1_violations", [])
+            from state.event_bus import CognitiveChannel, get_event_bus
+            get_event_bus().publish(CognitiveChannel.DYON_SCAN_COMPLETE, {
+                "source": "dependency_graph",
+                "scan_count": 0,
+                "files_scanned": getattr(snap, "total_modules", 0),
+                "violation_count": len(b1),
+                "critical_count": len(b1),
+                "warning_count": len(cycles),
+                "clean": len(b1) == 0 and len(cycles) == 0,
+                "scan_duration_ms": getattr(snap, "scan_duration_ms", 0.0),
+                "narrative": (
+                    f"Dependency graph: {len(cycles)} import cycles, "
+                    f"{len(b1)} B1 boundary violations detected"
+                ),
+                "ts_ns": ts_ns,
+            })
+        except Exception:
+            pass
+
+    def _emit_coverage_narrative(self, snap: Any, ts_ns: int) -> None:
+        try:
+            covered = getattr(snap, "covered", 0)
+            uncovered = getattr(snap, "uncovered", 0)
+            pct = getattr(snap, "coverage_pct", 0.0)
+            from state.event_bus import CognitiveChannel, get_event_bus
+            get_event_bus().publish(CognitiveChannel.DYON_SCAN_COMPLETE, {
+                "source": "test_coverage_tracker",
+                "scan_count": 0,
+                "files_scanned": getattr(snap, "total_modules", 0),
+                "violation_count": uncovered,
+                "critical_count": 0,
+                "warning_count": uncovered,
+                "clean": uncovered == 0,
+                "scan_duration_ms": getattr(snap, "scan_duration_ms", 0.0),
+                "narrative": (
+                    f"Test coverage: {covered} covered, {uncovered} uncovered "
+                    f"({pct:.1f}% effective coverage)"
                 ),
                 "ts_ns": ts_ns,
             })

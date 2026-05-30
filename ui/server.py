@@ -375,6 +375,11 @@ class _State:
         # SystemKernel — canonical runtime state authority.
         # All services register here; UI reads via StateProjection.
         self.system_kernel = SystemKernel()
+        # Register as module singleton so core.kernel.get_kernel() works
+        # from any callsite (cockpit, ui, observability) without threading
+        # the instance through every call chain.
+        from core.kernel import set_kernel as _set_kernel
+        _set_kernel(self.system_kernel)
         self.state_projection: StateProjection = init_state_projection(
             self.system_kernel,
         )
@@ -2157,6 +2162,17 @@ def health() -> dict[str, Any]:
         "readiness": str(_runtime.readiness) if _runtime.readiness else "not_booted",
     }
     return {"engines": out}
+
+
+@app.get("/api/operator/policy-hash")
+def get_policy_hash() -> dict[str, str]:
+    """Return the live governance policy decision-table hash (Hardening-S1 item 8).
+
+    The dashboard ModeRibbon uses this to populate ``consent_policy_hash``
+    when constructing an :class:`OperatorConsent` envelope for the two
+    consent-required edges (SAFE→PAPER, LIVE→AUTO).
+    """
+    return {"policy_hash": STATE.governance.state_transitions._policy.table_hash}
 
 
 @app.get("/api/kernel/state")

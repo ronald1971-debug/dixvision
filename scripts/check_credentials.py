@@ -40,6 +40,7 @@ from system_engine.credentials import (  # noqa: E402  (path bootstrap above)
     presence_status,
     requirements_for_registry,
 )
+from system_engine.credentials.storage import resolve_env  # noqa: E402
 from system_engine.scvs.source_registry import (  # noqa: E402
     load_source_registry,
 )
@@ -95,7 +96,7 @@ def main(argv: list[str] | None = None) -> int:
 
     registry = load_source_registry(SOURCE_REGISTRY_PATH)
     requirements = requirements_for_registry(registry)
-    statuses = presence_status(requirements, os.environ)
+    statuses = presence_status(requirements, resolve_env())
 
     counts = {state: 0 for state in PresenceState}
     for st in statuses:

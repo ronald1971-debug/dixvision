@@ -20,7 +20,7 @@ Real capital deployment is permanently disabled.
 """
 from __future__ import annotations
 
-import time
+from system.time_source import wall_ns
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -104,12 +104,12 @@ def build_simulation_router() -> APIRouter:
                 status_code=400,
                 detail=f"Unknown macro scenario: {body.scenario!r}",
             )
-        return {"activated": body.scenario, "ts_ns": time.time_ns()}
+        return {"activated": body.scenario, "ts_ns": wall_ns()}
 
     @router.post("/tick")
     async def simulation_tick() -> dict[str, Any]:
         """Advance all 9 engines by one tick. For testing/dev use only."""
         orch.tick()
-        return {"ticked": True, "ts_ns": time.time_ns()}
+        return {"ticked": True, "ts_ns": wall_ns()}
 
     return router

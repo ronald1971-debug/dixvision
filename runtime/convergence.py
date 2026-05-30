@@ -81,6 +81,34 @@ class RuntimeConvergence:
     def snapshot(self) -> RuntimeSnapshot:
         return self._store.snapshot
 
+    def set_operator_authority(self, authority: object) -> None:
+        """Write a new OperatorAuthority snapshot through the execution_fabric token.
+
+        The token is issued during boot; if called before boot the write is
+        applied via a temporary token so the pre-boot dashboard can still set
+        authority switches without raising.
+        """
+        from system import time_source
+
+        token = self._writer_token
+        if token is None:
+            token = self._store.issue_writer_token("execution_fabric")
+        token.write(time_source.wall_ns(), operator_authority=authority)
+
+    def set_execution_blocked(self, blocked: bool) -> None:
+        """Toggle the live_execution_blocked flag via the execution_fabric token.
+
+        This is the canonical path for the authority dashboard to arm or block
+        live execution. The write propagates to any bound SystemKernel via the
+        RuntimeAuthorityStore's kernel-delegation logic (_KERNEL_FIELDS).
+        """
+        from system import time_source
+
+        token = self._writer_token
+        if token is None:
+            token = self._store.issue_writer_token("execution_fabric")
+        token.write(time_source.wall_ns(), live_execution_blocked=blocked)
+
     async def boot(self) -> bool:
         """Boot the converged runtime.
 

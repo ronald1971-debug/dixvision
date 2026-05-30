@@ -43,6 +43,16 @@ if not defined DIXVISION_LEDGER_PATH (
     set "DIXVISION_LEDGER_PATH=%APPDATA%\DIX VISION\governance.db"
 )
 
+REM --- kill any previous DIX VISION instance so launcher.log is released -------
+REM Tee-Object holds launcher.log with an exclusive handle; inherited handles
+REM in sub-processes survive after uvicorn exits. Kill the port-8080 listener
+REM first so the log file is released before we truncate it.
+for /f "tokens=5" %%P in ('netstat -ano 2^>nul ^| findstr ":%DASH_PORT% " ^| findstr "LISTENING"') do (
+    echo Stopping previous instance ^(PID %%P^) on port %DASH_PORT%...
+    taskkill /PID %%P /F >nul 2>&1
+    timeout /t 2 /nobreak >nul
+)
+
 REM Truncate the previous launcher.log so each run starts clean and the
 REM operator (or Devin Review) can paste the latest failure verbatim.
 break > "%LAUNCHER_LOG%" 2>nul
@@ -238,7 +248,7 @@ if %errorlevel%==0 (
     REM caused uvicorn to reject ``^`` as an unexpected positional
     REM argument ("Got unexpected extra argument (^)"). Plain ``|`` is
     REM what PowerShell needs to see; cmd leaves it alone within ``"…"``.
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%VENV_PY%' -m uvicorn ui.server:app --host 127.0.0.1 --port %DASH_PORT% 2>&1 | Tee-Object -FilePath '%LAUNCHER_LOG%'; exit $LASTEXITCODE"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%VENV_PY%' -m uvicorn ui.server:app --host 127.0.0.1 --port %DASH_PORT% 2>&1 | Tee-Object -FilePath '%LAUNCHER_LOG%' -Append; exit $LASTEXITCODE"
     set "EXITCODE=!errorlevel!"
 ) else (
     REM Fallback: no PowerShell available. Capture to log file only;

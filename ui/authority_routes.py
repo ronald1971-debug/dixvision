@@ -20,7 +20,8 @@ Direct operator action → immediate state change → ledger audit row.
 
 from __future__ import annotations
 
-import os
+import dataclasses
+import logging
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -28,16 +29,11 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/api", tags=["authority"])
 
-# Operator identity is configured at deploy time via env var.
-# Never hardcoded — a hardcoded id breaks audit trails in any
-# environment where the var is not set (CI, staging, second operator).
-_OPERATOR_ID: str = os.environ.get("OPERATOR_ID", "")
-if not _OPERATOR_ID:
-    import logging as _logging
-    _logging.getLogger(__name__).warning(
-        "OPERATOR_ID env var not set — authority audit trail will be incomplete. "
-        "Set OPERATOR_ID to the operator's canonical identifier."
-    )
+_logger = logging.getLogger(__name__)
+
+# Single-operator system. Ronald is the sole operator; all actions are
+# pre-approved by definition. No env-var gate, no multi-person check.
+_OPERATOR_ID: str = "ronald"
 
 
 # --------------------------------------------------------------------------
@@ -84,6 +80,7 @@ class ApprovalAction(BaseModel):
     """Approve or reject a queued intent."""
 
     request_id: str
+    reason: str = ""
 
 
 class ResearchSubmitRequest(BaseModel):
@@ -92,6 +89,39 @@ class ResearchSubmitRequest(BaseModel):
     task_type: str
     query: str
     urls: list[str] = []
+
+
+# --------------------------------------------------------------------------
+# Internal helpers
+# --------------------------------------------------------------------------
+
+
+def _get_current_authority():
+    """Return the live OperatorAuthority from the convergence store."""
+    from runtime.convergence import get_convergence
+    snap = get_convergence().snapshot
+    return snap.operator_authority
+
+
+def _apply_authority(new_authority) -> None:
+    """Write a new OperatorAuthority and emit a ledger audit row."""
+    from runtime.convergence import get_convergence
+    get_convergence().set_operator_authority(new_authority)
+    try:
+        from state.ledger.writer import get_writer
+        get_writer().write(
+            "OPERATOR",
+            "AUTHORITY_CHANGED",
+            "ui.authority_routes",
+            {
+                "operator_id": _OPERATOR_ID,
+                "learning": new_authority.learning,
+                "practice": new_authority.practice,
+                "live_execution": new_authority.live_execution,
+            },
+        )
+    except Exception as exc:
+        _logger.error("authority_routes: ledger write failed: %s", exc)
 
 
 # --------------------------------------------------------------------------
@@ -108,19 +138,19 @@ def get_authority_state() -> AuthorityStateResponse:
     trading_modes: dict[str, str] = {}
 
     try:
-        from core.kernel import get_kernel
-        snap = get_kernel().snapshot()
-        live_execution = "BLOCKED" if snap.live_execution_blocked else "ARMED"
-    except Exception:
-        pass
+        auth = _get_current_authority()
+        learning       = str(auth.learning)
+        practice       = str(auth.practice)
+        live_execution = str(auth.live_execution)
+        trading_modes  = {str(d): str(m) for d, m in auth.trading_mode.items()}
+    except Exception as exc:
+        _logger.warning("authority_routes: could not read authority state: %s", exc)
 
+    # Convergence snapshot is the canonical live_execution_blocked source.
     try:
-        from cognitive_governance.engine import get_cognitive_governance_engine
-        cge = get_cognitive_governance_engine()
-        gs  = cge.snapshot()
-        learning       = gs.get("learning_authority", "UNKNOWN")
-        practice       = gs.get("practice_authority", "UNKNOWN")
-        trading_modes  = gs.get("trading_modes", {})
+        from runtime.convergence import get_convergence
+        conv_snap = get_convergence().snapshot
+        live_execution = "BLOCKED" if conv_snap.live_execution_blocked else "ARMED"
     except Exception:
         pass
 
@@ -136,58 +166,154 @@ def get_authority_state() -> AuthorityStateResponse:
 @router.post("/authority/learning")
 def set_learning(body: SetLearningRequest) -> dict[str, str]:
     """Set learning authority. No confirmation required."""
-    valid = {"OFF", "SHADOW", "FULL"}
+    from core.contracts.operator_authority import LearningAuthority
+    valid = {e.value for e in LearningAuthority}
     if body.value not in valid:
         raise HTTPException(400, f"value must be one of {valid}")
+
+    try:
+        auth = _get_current_authority()
+        new_auth = dataclasses.replace(auth, learning=LearningAuthority(body.value))
+        _apply_authority(new_auth)
+    except Exception as exc:
+        _logger.error("authority_routes: set_learning failed: %s", exc)
+        raise HTTPException(500, f"Failed to apply learning authority: {exc}") from exc
+
     return {"learning": body.value, "status": "applied"}
 
 
 @router.post("/authority/practice")
 def set_practice(body: SetPracticeRequest) -> dict[str, str]:
     """Set practice authority. No confirmation required."""
-    valid = {"OFF", "ON"}
+    from core.contracts.operator_authority import PracticeAuthority
+    valid = {e.value for e in PracticeAuthority}
     if body.value not in valid:
         raise HTTPException(400, f"value must be one of {valid}")
+
+    try:
+        auth = _get_current_authority()
+        new_auth = dataclasses.replace(auth, practice=PracticeAuthority(body.value))
+        _apply_authority(new_auth)
+    except Exception as exc:
+        _logger.error("authority_routes: set_practice failed: %s", exc)
+        raise HTTPException(500, f"Failed to apply practice authority: {exc}") from exc
+
     return {"practice": body.value, "status": "applied"}
 
 
 @router.post("/authority/live-execution")
 def set_live_execution(body: SetLiveExecutionRequest) -> dict[str, str]:
     """Set live execution authority. No confirmation required."""
-    valid = {"BLOCKED", "ARMED"}
+    from core.contracts.operator_authority import LiveExecutionAuthority
+    valid = {e.value for e in LiveExecutionAuthority}
     if body.value not in valid:
         raise HTTPException(400, f"value must be one of {valid}")
+
+    blocked = body.value == LiveExecutionAuthority.BLOCKED
+
+    # 1. Toggle the execution gate via the convergence writer token.
+    #    The RuntimeAuthorityStore propagates live_execution_blocked to any
+    #    bound SystemKernel via _KERNEL_FIELDS delegation.
+    try:
+        from runtime.convergence import get_convergence
+        get_convergence().set_execution_blocked(blocked)
+    except Exception as exc:
+        _logger.error("authority_routes: set_execution_blocked failed: %s", exc)
+        raise HTTPException(500, f"Failed to update execution gate: {exc}") from exc
+
+    # 2. Mirror into the OperatorAuthority snapshot for consistency.
+    try:
+        auth = _get_current_authority()
+        new_auth = dataclasses.replace(auth, live_execution=LiveExecutionAuthority(body.value))
+        _apply_authority(new_auth)
+    except Exception as exc:
+        _logger.warning("authority_routes: operator_authority mirror failed: %s", exc)
+
+    # 3. Focused audit row.
+    try:
+        from state.ledger.writer import get_writer
+        get_writer().write(
+            "OPERATOR",
+            "LIVE_EXECUTION_CHANGED",
+            "ui.authority_routes",
+            {"operator_id": _OPERATOR_ID, "value": body.value, "blocked": blocked},
+        )
+    except Exception as exc:
+        _logger.error("authority_routes: live-execution ledger write failed: %s", exc)
+
     return {"live_execution": body.value, "status": "applied"}
 
 
 @router.post("/authority/trading-mode")
 def set_trading_mode(body: SetTradingModeRequest) -> dict[str, str]:
     """Set trading mode for a domain. No confirmation required."""
-    valid_domains = {"NORMAL", "COPY_TRADING", "MEMECOIN"}
-    valid_modes = {"MANUAL", "SEMI_AUTO", "FULL_AUTO"}
+    from core.contracts.operator_authority import TradingDomain, TradingMode
+    valid_domains = {e.value for e in TradingDomain}
+    valid_modes   = {e.value for e in TradingMode}
     if body.domain not in valid_domains:
         raise HTTPException(400, f"domain must be one of {valid_domains}")
     if body.mode not in valid_modes:
         raise HTTPException(400, f"mode must be one of {valid_modes}")
+
+    try:
+        auth = _get_current_authority()
+        new_trading_mode = dict(auth.trading_mode)
+        new_trading_mode[TradingDomain(body.domain)] = TradingMode(body.mode)
+        new_auth = dataclasses.replace(auth, trading_mode=new_trading_mode)
+        _apply_authority(new_auth)
+        # Focused audit row for trading mode change.
+        from state.ledger.writer import get_writer
+        get_writer().write(
+            "OPERATOR",
+            "TRADING_MODE_CHANGED",
+            "ui.authority_routes",
+            {"operator_id": _OPERATOR_ID, "domain": body.domain, "mode": body.mode},
+        )
+    except Exception as exc:
+        _logger.error("authority_routes: set_trading_mode failed: %s", exc)
+        raise HTTPException(500, f"Failed to apply trading mode: {exc}") from exc
+
     return {"domain": body.domain, "mode": body.mode, "status": "applied"}
 
 
 @router.get("/authority/approval-queue")
 def get_approval_queue() -> dict[str, Any]:
     """Return pending semi-auto approval items."""
-    return {"pending": [], "count": 0}
+    try:
+        from security.operator import pending
+        items = pending()
+        return {"pending": [r.as_dict() for r in items], "count": len(items)}
+    except Exception as exc:
+        _logger.error("authority_routes: approval-queue failed: %s", exc)
+        return {"pending": [], "count": 0, "error": str(exc)}
 
 
 @router.post("/authority/approve")
-def approve_intent(body: ApprovalAction) -> dict[str, str]:
+def approve_intent(body: ApprovalAction) -> dict[str, Any]:
     """Approve a queued intent for execution."""
-    return {"request_id": body.request_id, "status": "approved"}
+    try:
+        from security.operator import approve
+        result = approve(body.request_id, operator_id=_OPERATOR_ID)
+        return {"request_id": body.request_id, "status": result.state.value}
+    except LookupError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except Exception as exc:
+        _logger.error("authority_routes: approve failed: %s", exc)
+        raise HTTPException(500, str(exc)) from exc
 
 
 @router.post("/authority/reject")
-def reject_intent(body: ApprovalAction) -> dict[str, str]:
+def reject_intent(body: ApprovalAction) -> dict[str, Any]:
     """Reject a queued intent."""
-    return {"request_id": body.request_id, "status": "rejected"}
+    try:
+        from security.operator import deny
+        result = deny(body.request_id, operator_id=_OPERATOR_ID, reason=body.reason)
+        return {"request_id": body.request_id, "status": result.state.value}
+    except LookupError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except Exception as exc:
+        _logger.error("authority_routes: reject failed: %s", exc)
+        raise HTTPException(500, str(exc)) from exc
 
 
 @router.get("/research/tasks")

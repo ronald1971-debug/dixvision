@@ -84,6 +84,7 @@ class CognitiveSpine:
         self._dyon_every = max(1, dyon_every)
         self._phase_errors: dict[str, int] = {
             "cogov": 0, "memory": 0, "trader": 0, "indira": 0, "dyon": 0,
+            "market_pump": 0,
         }
         # Lazy singletons (cached after first successful load)
         self._cogov: Any = None
@@ -160,8 +161,9 @@ class CognitiveSpine:
         else:
             ran["trader"] = False
 
-        # Phase 3 — INDIRA
+        # Phase 3 — INDIRA + market tick pump (feed live ticks to MARKET_TICK channel)
         if seq % self._indira_every == 0:
+            self._run_market_tick_pump(ts_ns)
             self._run_indira(ts_ns)
             ran["indira"] = True
         else:
@@ -259,6 +261,31 @@ class CognitiveSpine:
         except Exception as exc:
             self._phase_errors["indira"] += 1
             _logger.debug("CognitiveSpine.indira error: %s", exc)
+
+    def _run_market_tick_pump(self, ts_ns: int) -> None:
+        """Pull all registered market ticks and publish to MARKET_TICK channel.
+
+        This is the publisher side of the MARKET_TICK event bus.  TraderModelingRuntime
+        subscribes to that channel; without this pump it would never receive live data.
+        """
+        try:
+            from mind.sources.market_streams import get_market_streams
+            from state.event_bus import CognitiveChannel, get_event_bus
+            ticks = get_market_streams().pull_all()
+            if not ticks:
+                return
+            bus = get_event_bus()
+            for tick in ticks:
+                bus.publish(CognitiveChannel.MARKET_TICK, {
+                    "symbol": getattr(tick, "symbol", ""),
+                    "price": getattr(tick, "price", 0.0),
+                    "volume": getattr(tick, "volume", 0.0),
+                    "ts_ns": getattr(tick, "ts_ns", ts_ns),
+                    "source": getattr(tick, "source", "market_stream"),
+                })
+        except Exception as exc:
+            self._phase_errors["market_pump"] += 1
+            _logger.debug("CognitiveSpine.market_pump error: %s", exc)
 
     def _run_dyon(self, ts_ns: int) -> None:
         try:

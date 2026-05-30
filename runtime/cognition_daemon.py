@@ -116,13 +116,13 @@ class CognitionDaemon:
         await asyncio.sleep(self._config.startup_delay_ms / 1000.0)
         interval_s = self._config.spine_interval_ms / 1000.0
 
-        # Activate the full kernel (idempotent):
-        # wires cross-bus, governance routing, scheduler, memory coordinator,
-        # telemetry, and cognitive spine with all sub-activations.
+        # Activate the full kernel (idempotent) in a thread so the event loop
+        # stays responsive during the one-time boot of all cognitive subsystems
+        # (memory coordinator, INDIRA, DYON, telemetry, etc.).
         kernel = self._get_kernel()
         if kernel is not None:
             try:
-                kernel.activate()
+                await asyncio.to_thread(kernel.activate)
             except Exception as exc:
                 _logger.debug("CognitionDaemon: kernel.activate error: %s", exc)
 
@@ -133,7 +133,9 @@ class CognitionDaemon:
             try:
                 k = self._get_kernel()
                 if k is not None:
-                    k.tick(ts_ns=ts_ns)
+                    # Run the synchronous cognitive tick in a thread pool so the
+                    # asyncio event loop remains responsive during INDIRA/DYON work.
+                    await asyncio.to_thread(k.tick, ts_ns=ts_ns)
                     self._tick_seq += 1
             except Exception as exc:
                 _logger.debug("CognitionDaemon: kernel tick error: %s", exc)

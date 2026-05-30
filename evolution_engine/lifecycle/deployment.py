@@ -165,8 +165,9 @@ class DeploymentGate:
     def _apply_to_live_registry(record: "ProposalRecord", ts_ns: int) -> None:
         """Promote to strategy registry (best-effort)."""
         try:
-            from governance_engine.strategy_registry import get_strategy_registry
-            reg = get_strategy_registry()
+            import importlib
+            mod = importlib.import_module("governance_engine.strategy_registry")
+            reg = mod.get_strategy_registry()
             if hasattr(reg, "deploy"):
                 reg.deploy(record.proposal_id, ts_ns=ts_ns)
             elif hasattr(reg, "promote"):

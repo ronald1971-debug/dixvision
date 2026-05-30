@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import threading
 import time
+from system.time_source import wall_ns
 from typing import Any
 
 from simulation.engines.synthetic_market    import get_synthetic_market_engine
@@ -60,7 +61,7 @@ class Stage8SimulationOrchestrator:
     def tick(self, ts_ns: int | None = None) -> None:
         """Single coordinated tick across all 9 engines with cross-signal routing."""
         if ts_ns is None:
-            ts_ns = time.time_ns()
+            ts_ns = wall_ns()
 
         try:
             with self._lock:
@@ -156,7 +157,7 @@ class Stage8SimulationOrchestrator:
 
     # Macro scenario injection (operator API)
     def activate_macro_scenario(self, name: str) -> bool:
-        return self._macro.activate_scenario(name, time.time_ns())
+        return self._macro.activate_scenario(name, wall_ns())
 
 
 # ── Singleton ──────────────────────────────────────────────────────────────────

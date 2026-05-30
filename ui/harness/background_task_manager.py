@@ -178,17 +178,23 @@ class HarnessBackgroundTaskManager:
                 if await request.is_disconnected():
                     return
                 state = self._state_supplier()
-                with state.lock:
-                    # ``events`` is appended-left so the newest record
-                    # is at index 0; iterate oldest-first so consumers
-                    # see the natural chronological order.
-                    snapshot = [
-                        dict(record)
-                        for record in reversed(state.events)
-                        if isinstance(record, Mapping)
-                        and isinstance(record.get("seq"), int)
-                        and record["seq"] > last_seq
-                    ]
+                # Run the threading.Lock acquisition in the default executor so the
+                # asyncio event loop is never stalled waiting for a background thread
+                # (Binance feed, evolution ticker, etc.) to release STATE.lock.
+                _last_seq = last_seq
+
+                def _locked_snapshot() -> list[dict]:
+                    with state.lock:
+                        return [
+                            dict(record)
+                            for record in reversed(state.events)
+                            if isinstance(record, Mapping)
+                            and isinstance(record.get("seq"), int)
+                            and record["seq"] > _last_seq
+                        ]
+
+                loop = asyncio.get_event_loop()
+                snapshot = await loop.run_in_executor(None, _locked_snapshot)
                 for record in snapshot:
                     last_seq = max(last_seq, int(record.get("seq", last_seq)))
                     stream_event = {

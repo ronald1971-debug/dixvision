@@ -254,19 +254,22 @@ class RuntimeInvariantMonitor:
         return results
 
     def _check_gate_wired(self) -> list[InvariantResult]:
-        try:
-            from execution_engine.execution_gate import AuthorityGuard
+        # Governance must never import execution_engine directly (B1/B20).
+        # Use importlib.util.find_spec to verify the module is on sys.path
+        # without triggering an actual cross-engine import.
+        import importlib.util
+        spec = importlib.util.find_spec("execution_engine.execution_gate")
+        if spec is not None:
             return [InvariantResult(
                 invariant_id="GATE-WIRED",
                 severity=InvariantSeverity.HOLDS,
-                detail="AuthorityGuard importable (execution gate reachable)",
+                detail="execution gate module is present in sys.path",
             )]
-        except Exception as exc:
-            return [InvariantResult(
-                invariant_id="GATE-WIRED",
-                severity=InvariantSeverity.VIOLATED,
-                detail=f"execution gate not importable: {exc}",
-            )]
+        return [InvariantResult(
+            invariant_id="GATE-WIRED",
+            severity=InvariantSeverity.VIOLATED,
+            detail="execution_engine.execution_gate not found on sys.path",
+        )]
 
     # ------------------------------------------------------------------
     # Live system parameter extraction

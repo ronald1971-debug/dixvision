@@ -552,6 +552,8 @@ def test_genome_mutation_deterministic():
 
 def test_research_service_returns_result():
     """Research service produces structured results."""
+    from unittest.mock import patch
+
     from intelligence_engine.research.browser_research_service import (
         BrowserResearchService,
         ResearchRequest,
@@ -564,6 +566,11 @@ def test_research_service_returns_result():
         query="Ed Seykota",
         target_urls=("https://example.com/seykota",),
     )
-    result = svc.fetch_research(request, ts_ns=1000)
+    # Patch the network call so the test runs without internet access.
+    with patch(
+        "intelligence_engine.research.browser_research_service._fetch_url",
+        return_value=("Ed Seykota – Trend Follower", "Ed Seykota is a legendary trend-following trader."),
+    ):
+        result = svc.fetch_research(request, ts_ns=1000)
     assert result.status == "COMPLETED"
     assert result.task_type == ResearchTaskType.TRADER_PROFILE

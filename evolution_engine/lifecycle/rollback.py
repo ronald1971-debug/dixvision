@@ -134,8 +134,9 @@ class RollbackEngine:
     def _capture_registry_state(proposal_id: str, ts_ns: int) -> dict[str, Any]:
         """Capture current strategy registry state (best-effort)."""
         try:
-            from governance_engine.strategy_registry import get_strategy_registry
-            reg = get_strategy_registry()
+            import importlib
+            mod = importlib.import_module("governance_engine.strategy_registry")
+            reg = mod.get_strategy_registry()
             if hasattr(reg, "snapshot"):
                 return {"registry": reg.snapshot(), "proposal_id": proposal_id, "ts_ns": ts_ns}
         except Exception:
@@ -149,8 +150,9 @@ class RollbackEngine:
             reg_snap = payload.get("registry")
             if reg_snap is None:
                 return
-            from governance_engine.strategy_registry import get_strategy_registry
-            reg = get_strategy_registry()
+            import importlib
+            mod = importlib.import_module("governance_engine.strategy_registry")
+            reg = mod.get_strategy_registry()
             if hasattr(reg, "rollback"):
                 reg.rollback(proposal_id, ts_ns=ts_ns)
         except Exception as exc:

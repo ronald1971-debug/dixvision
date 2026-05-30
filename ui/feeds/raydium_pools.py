@@ -50,7 +50,13 @@ DEFAULT_TIMEOUT_S = 10.0
 
 #: Default reconnect / retry backoff.
 DEFAULT_RETRY_DELAY_S = 5.0
-DEFAULT_RETRY_DELAY_MAX_S = 60.0
+DEFAULT_RETRY_DELAY_MAX_S = 300.0   # raised from 60 — Raydium penalty bans reach 294s
+
+#: Minimum wait enforced after any 429 response, regardless of what the
+#: Retry-After header says. Raydium's retry-after values are unreliable:
+#: observed pattern 26s→5s→291s penalty on the 3rd consecutive request.
+#: 120s ensures we never hammer the penalty tier.
+_RATE_LIMIT_FLOOR_S = 120.0
 
 #: Venue tag stamped onto every emitted ``PoolSnapshot``.
 VENUE_TAG = "RAYDIUM"
@@ -257,11 +263,16 @@ class RaydiumPoolPoller:
                 else:
                     self._consecutive_errors += 1
                     if self._retry_after_s is not None:
-                        sleep_for = self._retry_after_s
+                        # Honor server's window but never sleep less than our
+                        # current exponential floor, so consecutive 429s keep
+                        # backing off even when Raydium returns small retry-after.
+                        sleep_for = max(self._retry_after_s, delay)
                         self._retry_after_s = None
                     else:
                         sleep_for = delay
-                        delay = min(delay * 2.0, self._retry_delay_max_s)
+                    # Always advance exponential floor on any failure so repeated
+                    # 429s escalate rather than staying at the server-provided floor.
+                    delay = min(delay * 2.0, self._retry_delay_max_s)
                 if self._stop_event.is_set():
                     break
                 try:
@@ -282,20 +293,21 @@ class RaydiumPoolPoller:
             self._errors += 1
             raw_retry = resp.headers.get("Retry-After", "")
             try:
-                self._retry_after_s = max(float(raw_retry), self._retry_delay_s)
+                self._retry_after_s = max(float(raw_retry), _RATE_LIMIT_FLOOR_S)
             except (ValueError, TypeError):
-                self._retry_after_s = None
+                self._retry_after_s = _RATE_LIMIT_FLOOR_S
             consecutive = self._consecutive_errors + 1
-            if consecutive <= 1 or self._retry_after_s is not None:
+            if consecutive <= 3:
                 LOG.warning(
                     "raydium_pools: GET %s -> 429 (rate-limited); "
-                    "retry-after=%.0fs",
+                    "retry-after=%.0fs (consecutive=%d)",
                     self._url,
                     self._retry_after_s or self._retry_delay_s,
+                    consecutive,
                 )
-            elif consecutive == 5:
+            elif consecutive == 4:
                 LOG.warning(
-                    "raydium_pools: %d consecutive 429s; further rate-limit "
+                    "raydium_pools: %d consecutive 429s — further rate-limit "
                     "warnings suppressed until successful poll",
                     consecutive,
                 )

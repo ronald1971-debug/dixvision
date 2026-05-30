@@ -392,3 +392,33 @@ class SystemKernel:
                 listener(snap)
             except Exception:
                 _logger.exception("Kernel: snapshot listener failed")
+
+
+# ---------------------------------------------------------------------------
+# Module-level singleton — registered at boot by boot_integration
+# ---------------------------------------------------------------------------
+
+_kernel_singleton: "SystemKernel | None" = None
+_kernel_singleton_lock = threading.Lock()
+
+
+def get_kernel() -> "SystemKernel":
+    """Return the live SystemKernel registered at boot.
+
+    Callers: ``cockpit``, ``ui``, observability.  Must not be called before
+    ``boot_integration`` has called ``set_kernel()``.  Creates a cold kernel
+    if not yet registered so unit tests without a full boot still import safely.
+    """
+    global _kernel_singleton
+    if _kernel_singleton is None:
+        with _kernel_singleton_lock:
+            if _kernel_singleton is None:
+                _kernel_singleton = SystemKernel()
+    return _kernel_singleton
+
+
+def set_kernel(kernel: "SystemKernel") -> None:
+    """Register the authoritative SystemKernel created during boot."""
+    global _kernel_singleton
+    with _kernel_singleton_lock:
+        _kernel_singleton = kernel

@@ -18,6 +18,7 @@ Authority: ui.* only; coordinator is lazy-imported per B1.
 
 from __future__ import annotations
 
+from system.time_source import wall_ns
 import logging
 from typing import Any
 
@@ -113,8 +114,7 @@ def build_evolution_router() -> APIRouter:
         if coord is None:
             raise HTTPException(status_code=503, detail="coordinator unavailable")
 
-        import time
-        ts_ns = int(time.time_ns())
+        ts_ns = int(wall_ns())
 
         if body.action == "approve":
             ok = coord.approve_governance(
@@ -150,8 +150,7 @@ def build_evolution_router() -> APIRouter:
         if coord is None:
             raise HTTPException(status_code=503, detail="coordinator unavailable")
 
-        import time
-        ts_ns = int(time.time_ns())
+        ts_ns = int(wall_ns())
         ok = coord.trigger_rollback(
             proposal_id,
             reason=body.reason,
@@ -192,8 +191,7 @@ def build_evolution_router() -> APIRouter:
         if coord is None:
             raise HTTPException(status_code=503, detail="coordinator unavailable")
 
-        import time
-        ts_ns = int(time.time_ns())
+        ts_ns = int(wall_ns())
         ok = coord.approve_deployment(
             proposal_id, operator_id=body.operator_id, ts_ns=ts_ns
         )

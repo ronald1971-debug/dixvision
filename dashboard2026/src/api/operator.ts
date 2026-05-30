@@ -120,6 +120,20 @@ export async function postTradingAllowed(
   return (await res.json()) as TradingAllowedResponse;
 }
 
+export async function fetchPolicyHash(
+  signal?: AbortSignal,
+): Promise<string> {
+  const res = await fetch(`${BASE}/api/operator/policy-hash`, {
+    signal,
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) {
+    throw new Error(`GET /api/operator/policy-hash failed: ${res.status}`);
+  }
+  const data = (await res.json()) as { policy_hash: string };
+  return data.policy_hash;
+}
+
 export async function postOperatorMode(
   body: OperatorModeRequest,
 ): Promise<OperatorActionResponse> {
