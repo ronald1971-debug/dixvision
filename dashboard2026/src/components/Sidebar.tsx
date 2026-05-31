@@ -25,10 +25,12 @@ import {
   Puzzle,
   Radar,
   ShieldCheck,
+  Shield,
   Sparkles,
   Target,
   Telescope,
   Wrench,
+  Zap,
 } from "lucide-react";
 import { type ComponentType } from "react";
 
@@ -196,6 +198,36 @@ const SYSTEM_NAV: Record<SystemRoute, NavItem<SystemRoute>> = {
     label: "Simulation",
     href: "#/simulation",
     icon: Activity,
+  },
+  signals: {
+    key: "signals",
+    label: "Signals",
+    href: "#/signals",
+    icon: Zap,
+  },
+  forms: {
+    key: "forms",
+    label: "Trading Forms",
+    href: "#/forms",
+    icon: Layers,
+  },
+  adapters: {
+    key: "adapters",
+    label: "Adapters",
+    href: "#/adapters",
+    icon: Network,
+  },
+  ledger: {
+    key: "ledger",
+    label: "Ledger",
+    href: "#/ledger",
+    icon: Archive,
+  },
+  security: {
+    key: "security",
+    label: "Security",
+    href: "#/security",
+    icon: Shield,
   },
 };
 
