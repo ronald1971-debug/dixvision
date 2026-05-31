@@ -82,6 +82,33 @@ class MemoryCoordinator:
         except Exception as exc:
             _logger.debug("MemoryCoordinator.activate error: %s", exc)
 
+    def sync(self, *, ts_ns: int) -> dict[str, Any]:
+        """Tier-2 memory synchronization — consolidate tensor + unified layer.
+
+        Called from :class:`runtime.unified_kernel.UnifiedCognitiveKernel`
+        each tick so episodic buffers flush into semantic stores.
+        """
+        result: dict[str, Any] = {"ts_ns": ts_ns, "orchestrator": False, "unified_compress": 0}
+        try:
+            from state.memory_tensor.memory_orchestrator import get_memory_orchestrator
+
+            get_memory_orchestrator().consolidate(ts_ns=ts_ns)
+            result["orchestrator"] = True
+        except Exception as exc:
+            _logger.debug("MemoryCoordinator.sync orchestrator: %s", exc)
+        try:
+            from state.memory.unified import get_unified_memory_layer
+
+            layer = get_unified_memory_layer()
+            if not layer._active:  # noqa: SLF001 — boot ordering guard
+                layer.activate()
+            result["unified_compress"] = layer.compress(ts_ns=ts_ns)
+        except Exception as exc:
+            _logger.debug("MemoryCoordinator.sync unified: %s", exc)
+        with self._lock:
+            result["counts"] = dict(self._counts)
+        return result
+
     def snapshot(self) -> dict[str, Any]:
         with self._lock:
             return {"active": self._active, "counts": dict(self._counts)}

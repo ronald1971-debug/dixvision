@@ -1,0 +1,643 @@
+=============================================================================
+DIX VISION v42.2
+REPOSITORY-ALIGNED CANONICAL DIRECTORY TREE
+(ACTUAL ZIP + INTENDED ARCHITECTURE RECONCILIATION)
+===================================================
+
+# ROOT
+
+C:\dix_vision_v42
+│
+├── bootstrap_kernel.py
+├── main.py
+├── start.py
+├── dix.py
+├── cockpit.py
+├── VERSION
+│
+├── pyproject.toml
+├── requirements.txt
+├── requirements-dev.txt
+├── requirements-windows.txt
+├── Makefile
+├── build.ps1
+├── run.ps1
+│
+├── README.md
+├── LICENSE
+└── .github/
+
+=============================================================================
+TIER 0 — IMMUTABLE TRUST ROOT
+=============================
+
+immutable_core/
+│
+├── safety_axioms.lean
+├── foundation.hash
+├── genesis.json
+├── constants.py
+├── system_identity.py
+├── kill_switch.py
+└── integrity/
+
+Purpose:
+System invariants.
+Lean4 verification.
+Root-of-trust.
+
+Authority:
+Highest.
+
+=============================================================================
+TIER 1 — CORE SYSTEM SKELETON
+=============================
+
+core/
+│
+├── bootstrap/
+├── runtime/
+├── lifecycle/
+├── dependency_graph/
+├── registry/
+├── contracts/
+├── exceptions/
+├── secrets/
+└── utilities/
+
+Contains:
+
+* startup
+* shutdown
+* dependency injection
+* contract definitions
+* runtime primitives
+
+Status:
+Mostly implemented.
+
+=============================================================================
+TIER 2 — RUNTIME FOUNDATION
+===========================
+
+runtime/
+│
+├── scheduler/
+├── async/
+├── event_bus/
+├── service_registry/
+├── orchestration/
+├── task_manager/
+└── coordination/
+
+Purpose:
+Cross-system execution framework.
+
+Status:
+Partial integration.
+
+=============================================================================
+TIER 3 — GLOBAL REGISTRY
+========================
+
+registry/
+│
+├── service_registry/
+├── plugin_registry/
+├── model_registry/
+├── adapter_registry/
+├── workflow_registry/
+└── governance_registry/
+
+Purpose:
+System-wide discovery layer.
+
+Status:
+Partially wired.
+
+=============================================================================
+TIER 4 — INDIRA MARKET DOMAIN
+=============================
+
+mind/
+│
+├── engine.py
+├── intent_producer.py
+├── execution_router.py
+├── order_manager.py
+├── portfolio_manager.py
+├── risk_cache.py
+│
+├── knowledge/
+├── memory/
+├── cognition/
+├── sources/
+├── plugins/
+└── strategies/
+
+Authority:
+Market cognition only.
+
+Produces:
+ExecutionIntent
+
+=============================================================================
+TIER 5 — INTELLIGENCE ENGINE
+============================
+
+intelligence_engine/
+│
+├── reasoning/
+├── cognition/
+├── event_intelligence/
+├── market_intelligence/
+├── signal_processing/
+├── attribution/
+├── forecasting/
+├── scenario_analysis/
+├── pattern_discovery/
+└── decision_support/
+
+Purpose:
+High-level intelligence.
+
+Status:
+Most mature subsystem.
+
+=============================================================================
+TIER 6 — LEARNING SYSTEMS
+=========================
+
+learning_engine/
+│
+├── adaptation/
+├── memory_learning/
+├── reinforcement/
+├── feedback_loops/
+├── performance_learning/
+└── policy_learning/
+
+Purpose:
+Continuous improvement.
+
+Status:
+Partially implemented.
+
+=============================================================================
+TIER 7 — EVOLUTION SYSTEMS
+==========================
+
+evolution_engine/
+│
+├── evolution_orchestrator/
+├── governed_evolution/
+├── optimization/
+├── mutation/
+├── simulation_feedback/
+├── dyon_evolution/
+└── lifecycle/
+
+Purpose:
+Experimental self-improvement.
+
+Status:
+Incomplete.
+
+=============================================================================
+TIER 8 — EXECUTION STACK
+========================
+
+execution_engine/
+│
+├── orchestration/
+├── routing/
+├── execution_control/
+├── adapter_management/
+├── lifecycle/
+└── confirmations/
+
+execution/
+│
+├── engine.py
+├── trade_executor.py
+├── emergency_executor.py
+├── adapter_router.py
+│
+├── adapters/
+│   ├── binance/
+│   ├── coinbase/
+│   ├── kraken/
+│   ├── raydium/
+│   └── uniswap/
+│
+└── confirmations/
+
+Purpose:
+Actual market actions.
+
+Authority:
+Executes only.
+
+=============================================================================
+TIER 9 — DYON SYSTEM DOMAIN
+===========================
+
+system_monitor/
+│
+├── engine.py
+├── hazard_detector.py
+├── telemetry_ingest.py
+├── anomaly_models.py
+├── heartbeat_monitor.py
+│
+├── checks/
+├── emitters/
+└── diagnostics/
+
+Authority:
+System awareness only.
+
+Cannot trade.
+
+=============================================================================
+TIER 10 — GOVERNANCE SUPERSTRUCTURE
+===================================
+
+governance/
+│
+├── kernel/
+├── policy_engine/
+├── constraint_compiler/
+├── risk_engine/
+├── emergency_policy/
+├── modes/
+└── oracle/
+
+PRIMARY AUTHORITY
+
+---
+
+governance_engine/
+│
+├── governance_runtime/
+├── constraint_management/
+├── risk_models/
+├── policy_execution/
+└── validation/
+
+---
+
+cognitive_governance/
+│
+├── cognition_constraints/
+├── intelligence_controls/
+└── reasoning_policies/
+
+---
+
+financial_governance/
+│
+├── capital_controls/
+├── portfolio_limits/
+└── exposure_controls/
+
+---
+
+operator_governance/
+│
+├── approvals/
+├── overrides/
+└── escalation/
+
+---
+
+system_governance/
+│
+├── infrastructure_policy/
+├── service_policy/
+└── runtime_policy/
+
+Purpose:
+Repository currently contains multiple governance domains.
+
+Future target:
+Unified governance kernel.
+
+=============================================================================
+TIER 11 — HAZARD INTERRUPT SYSTEM
+=================================
+
+interrupt/
+│
+├── dispatcher.py
+├── resolver.py
+├── policy_cache.py
+└── interrupt_executor.py
+
+Purpose:
+Deterministic emergency actions.
+
+=============================================================================
+TIER 12 — STATE + LEDGER
+========================
+
+state/
+│
+├── ledger/
+│   ├── event_store/
+│   ├── hash_chain/
+│   ├── writer/
+│   └── stream_router/
+│
+├── projectors/
+├── snapshots/
+├── replay/
+└── checkpointing/
+
+Purpose:
+Global memory.
+
+=============================================================================
+TIER 13 — DATA + SENSORY SYSTEMS
+================================
+
+sensory/
+│
+├── ingestion/
+├── feeds/
+├── indicators/
+├── telemetry/
+└── preprocessing/
+
+data/
+│
+├── sqlite/
+├── faiss/
+├── caches/
+├── snapshots/
+└── logs/
+
+data_pipeline/
+data_sources/
+
+Purpose:
+System inputs.
+
+=============================================================================
+TIER 14 — SECURITY
+==================
+
+security/
+│
+├── secrets_manager.py
+├── encryption.py
+├── authentication.py
+├── authorization.py
+├── keyring_adapter.py
+└── audit_trail.py
+
+=============================================================================
+TIER 15 — ENFORCEMENT
+=====================
+
+enforcement/
+│
+├── runtime_guardian.py
+├── policy_enforcer.py
+├── resource_enforcer.py
+├── decorators.py
+└── kill_switch.py
+
+Purpose:
+Non-bypassable controls.
+
+=============================================================================
+TIER 16 — OBSERVABILITY
+=======================
+
+observability/
+│
+├── logs/
+├── metrics/
+├── tracing/
+├── alerts/
+├── dashboards/
+└── reporting/
+
+Purpose:
+Visibility and diagnostics.
+
+=============================================================================
+TIER 17 — SIMULATION + RESEARCH
+===============================
+
+simulation/
+│
+├── backtesting/
+├── market_replay/
+├── scenario_testing/
+├── chaos_testing/
+└── validation/
+
+simulation_engine/
+│
+└── runtime/
+
+trader_modeling/
+opponent_model/
+risk/
+
+Purpose:
+Research and testing.
+
+=============================================================================
+TIER 18 — USER INTERFACES
+=========================
+
+dashboard2026/
+│
+├── governance_panels/
+├── trading_views/
+├── operator_views/
+├── risk_views/
+├── system_health/
+├── widgets/
+└── controls/
+
+---
+
+dashboard_backend/
+│
+├── api/
+├── websocket/
+└── state_bridge/
+
+---
+
+cockpit/
+│
+├── operator_console/
+├── diagnostics/
+└── administration/
+
+---
+
+ui/
+│
+├── components/
+├── views/
+└── assets/
+
+---
+
+dash_meme/
+│
+└── legacy dashboard generation
+
+Status:
+Legacy branch retained.
+
+=============================================================================
+TIER 19 — WINDOWS DEPLOYMENT
+============================
+
+windows/
+│
+├── service/
+├── tray/
+├── installer/
+├── updater/
+└── watchdog/
+
+Purpose:
+Production deployment.
+
+=============================================================================
+TIER 20 — INTEGRATIONS
+======================
+
+integrations/
+│
+├── exchanges/
+├── brokers/
+├── messaging/
+├── cloud/
+└── external_services/
+
+Purpose:
+External connectivity.
+
+=============================================================================
+TIER 21 — DEVOPS
+================
+
+.github/workflows/
+│
+├── ci.yml
+├── release.yml
+├── test.yml
+├── shadow.yml
+└── security.yml
+
+tools/
+scripts/
+
+=============================================================================
+TIER 22 — TESTING
+=================
+
+tests/
+│
+├── unit/
+├── integration/
+├── simulation/
+├── validation/
+├── governance/
+├── execution/
+├── intelligence/
+└── regression/
+
+=============================================================================
+TIER 23 — LEGACY / TRANSITIONAL LAYERS
+======================================
+
+legacy/
+│
+├── deprecated_execution/
+├── deprecated_governance/
+├── dashboard_legacy/
+├── migration_targets/
+└── compatibility_shims/
+
+NOTE:
+
+Repository currently contains code that effectively behaves as
+legacy/transitional layers even when not physically located here.
+
+Examples:
+
+* duplicate governance implementations
+* duplicate execution paths
+* dashboard generations
+* experimental cognition modules
+* partial evolution systems
+
+These should eventually be consolidated.
+
+=============================================================================
+KNOWN INTEGRATION GAPS
+======================
+
+1. governance ↔ governance_engine duplication
+
+2. execution ↔ execution_engine overlap
+
+3. mind ↔ intelligence_engine partial boundary ambiguity
+
+4. learning_engine ↔ evolution_engine incomplete wiring
+
+5. dashboard2026 ↔ backend state synchronization issues
+
+6. registry ↔ runtime service discovery inconsistency
+
+7. multiple governance domains lacking unified authority graph
+
+8. experimental subsystems bypassing finalized contracts
+
+=============================================================================
+ARCHITECTURAL REALITY
+=====================
+
+Production Core:
+immutable_core
+core
+runtime
+governance
+execution
+system_monitor
+state
+enforcement
+
+Mature Systems:
+intelligence_engine
+dashboard2026
+
+Partial Systems:
+learning_engine
+governance_engine
+registry
+integrations
+
+Experimental Systems:
+evolution_engine
+trader_modeling
+opponent_model
+
+Legacy/Transitional:
+dash_meme
+duplicated governance layers
+duplicated execution layers
+
+=============================================================================
+END OF REPOSITORY-ALIGNED AOR
+=============================

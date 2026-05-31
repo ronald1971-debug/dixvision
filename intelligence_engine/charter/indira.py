@@ -60,8 +60,10 @@ INDIRA_CHARTER = Charter(
         "introspection queries.",
     ],
     why=[
-        "Manifest §5 — execution authority: INDIRA is the sole authorised "
-        "intelligence actor; all execution paths originate here.",
+        "Manifest §5 (Cognitive Expansion) — execution-adjacent: INDIRA is the "
+        "sole authorised market cognition actor; intents form on the hot path and "
+        "flow through governance-gated execution — execution and capital never "
+        "govern cognition.",
         "Manifest §1 INV-54 — agent introspection: every AGT-XX agent exposes "
         "state_snapshot() + recent_decisions() for HITL on-demand visibility.",
         "Manifest §1 INV-15 — replay determinism: all intelligence paths are "
@@ -76,8 +78,9 @@ INDIRA_CHARTER = Charter(
         "governance_engine or execution_engine internals; contracts only.",
     ],
     not_do=[
-        "NEVER execute trades directly — all execution flows through the "
-        "Governance gate and ExecutionEngine.execute(intent).",
+        "NEVER execute trades without governance-gated intents — INDIRA is "
+        "execution-adjacent (intent formation on hot path); ExecutionEngine "
+        "performs ACTION under precomputed governance constraints.",
         "NEVER modify learning parameters at runtime — submit LearningUpdate "
         "proposals; COGNITIVE GOVERNANCE must approve via governance patch pipeline.",
         "NEVER override operator sovereignty — any OPERATOR_OVERRIDE event is "

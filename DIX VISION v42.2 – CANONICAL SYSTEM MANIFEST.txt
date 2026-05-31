@@ -4,10 +4,11 @@ DIX VISION v42.2 – FULL CANONICAL MANIFEST (EXTENDED • FINAL LOCK)
 
 version: 42.2.0
 codename: "Janus-Interrupt"
+cognitive_aor: docs/manifest_v42.2_cognitive_expansion.md (supersedes narrative below)
 system: DIX_VISION_WINDOWS_PRODUCTION
 status: PRODUCTION_READY_DEPLOYABLE_FINAL
 integrity: LEAN4_VERIFIED_HASH_LOCKED
-architecture: Contract-First + Dual-Domain Split Authority + Event-Sourced Ledger + Fast Path + Hazard Interrupt
+architecture: Cognitive OS + Dual-Domain + Governance + Ledger + INDIRA Execution-Adjacent Fast Path + Hazard Interrupt
 platform: Windows 10/11 (64-bit only)
 deployment: PowerShell + NSSM + Python venv + Tray Service + CI/CD
 root: C:\dix_vision_v42\
@@ -16,19 +17,25 @@ root: C:\dix_vision_v42\
 0. CORE ARCHITECTURAL TRUTH (FINAL LOCK)
 =============================================================================
 
-INDIRA = Market Intelligence + Decision + Trade Execution Authority
+INDIRA = Market Intelligence + Execution-Adjacent Intent Formation (hot path)
 DYON   = System Monitoring + Hazard Detection + Infrastructure Maintenance
 
 GOVERNANCE = Control Plane (rules + constraints + emergency policies)
+EXECUTION  = Action layer (adapters, order lifecycle) — downstream of cognition
 LEDGER     = Immutable Memory (all events, all time)
 
-CRITICAL SEPARATION:
+CRITICAL SEPARATION (see docs/manifest_v42.2_cognitive_expansion.md):
 
-- Indira operates in MARKET REALITY
+- Indira operates in MARKET REALITY (execution-adjacent, not architecture)
 - Dyon operates in SYSTEM REALITY
-- Governance defines rules for BOTH
-- Execution layer enforces actions
+- Governance defines rules for BOTH; governs cross-domain channels only:
+    SYSTEM_HAZARD (Dyon→Governance)
+    GOVERNED_MARKET_CONTEXT (Dyon/Risk→Governance→Indira read-only)
+- Execution layer enforces actions; does not govern cognition
+- Capital layer governs exposure; does not govern cognition
 - Ledger records everything
+
+Primary product: governed intelligence. Trading is downstream.
 
 Shared knowledge ≠ Shared authority
 
@@ -67,17 +74,21 @@ required_behaviors:
 -----------------------------------------------------------------------------
 
 =============================================================================
-2. FAST PATH EXECUTION (INDIRA – MARKET DOMAIN)
+2. FAST PATH EXECUTION (INDIRA – EXECUTION-ADJACENT MARKET DOMAIN)
 =============================================================================
 
 DEFINITION:
-Ultra-low latency execution pipeline for live trading.
+Ultra-low latency market cognition pipeline adjacent to execution. INDIRA forms
+ExecutionIntent; ExecutionEngine and adapters perform ACTION under precomputed
+governance constraints (async governance never blocks the hot path).
 
 FLOW:
 
 Market Data
     ↓
-Indira (analysis + decision + execution)
+Indira (analysis + decision + intent)
+    ↓
+Precomputed governance constraints
     ↓
 Execution adapters (exchange APIs)
     ↓
@@ -90,16 +101,16 @@ INDIRA RESPONSIBILITIES:
 ✓ market analysis
 ✓ signal generation
 ✓ strategy selection
-✓ trade execution
-✓ order management (create / cancel / modify)
-✓ exchange API interaction (trading endpoints only)
+✓ execution intent formation (governance-gated)
+✓ order intent via ExecutionEngine (create / cancel / modify)
+✓ coordination with exchange adapters on the hot path
 
 -----------------------------------------------------------------------------
 
 CRITICAL RULES:
 
-✔ Indira executes trades directly
-✔ No runtime governance blocking
+✔ Indira is execution-adjacent — intents on hot path, ACTION in execution layer
+✔ No runtime governance blocking on hot path (precomputed constraints only)
 ✔ All actions obey PRECOMPUTED constraints
 ✔ Execution must be deterministic
 

@@ -4,7 +4,7 @@ DIX VISION v42.2 – COMPLETE EXECUTIVE SUMMARY
 =============================================================================
 
 version: 42.2.0
-codename: "Janus-Sentinel"
+
 system: DIX_VISION_WINDOWS_PRODUCTION
 status: PRODUCTION_READY_DEPLOYABLE
 integrity: LEAN4_VERIFIED_HASH_LOCKED
@@ -25,7 +25,8 @@ Signal generation
 Trade execution
 API calls to exchanges (trading only)
 Order lifecycle management
-DYON (SYSTEM DOMAIN)
+DYON (SYSTEM DOMAIN) 
+Api calls
 Infrastructure monitoring
 System maintenance
 Health observation
@@ -44,7 +45,7 @@ Produces final EXECUTION_REQUEST events
 =============================================================================
 
 max_drawdown = 4% (hard stop, operator override ≤ 15%)
-max_loss_per_trade = 1%
+max_loss_per_trade = 5%
 fail_closed = true
 credentials never leave machine
 all actions are event-sourced + hash chained

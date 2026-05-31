@@ -3,21 +3,26 @@ DIX VISION v42.2 – CANONICAL BUILD PLAN
 =============================================================================
 
 version: 42.2.0
-architecture: Dual-Domain (Indira / Dyon) + Governance Firewall + SYSTEM_HAZARD Layer + Event-Sourced Ledger
-goal: Production-grade deterministic trading + system orchestration platform
+cognitive_aor: docs/manifest_v42.2_cognitive_expansion.md
+architecture: Cognitive OS + Dual-Domain + Governance + Ledger + INDIRA Execution-Adjacent Fast Path
+goal: Governed cognitive operating system with deterministic trading as downstream capability
 deployment: Windows 10/11 (NSSM + PowerShell + Python venv)
 
 =============================================================================
 0. BUILD PHILOSOPHY (NON-NEGOTIABLE DESIGN RULES)
 =============================================================================
 Everything is event-sourced (no hidden state)
-Authority is strictly separated:
-Indira → market execution
-Dyon → system infrastructure + hazard detection
-Governance → all decision translation
-SYSTEM_HAZARD is the only emergency signal channel
+Authority is strictly separated (Tier 0 Operator → Tier 4 Capital):
+Indira → market cognition + execution-adjacent intent (hot path)
+Dyon → system infrastructure + hazard detection (no trading)
+Governance → all decision translation + governed cross-domain projection
+Cross-domain channels only:
+  SYSTEM_HAZARD (Dyon → Governance)
+  GOVERNED_MARKET_CONTEXT (Dyon/Risk → Governance → Indira)
+Cognitive development pipeline (§6) precedes trading pipeline scheduling priority
 No component can directly bypass Governance
 Ledger is the single source of truth
+Build priority: Governance → Ledger → Dyon → Indira → Learning → Evolution → Viz → Sim → Paper → Live
 =============================================================================
 1. PHASE 0 – BOOTSTRAP & CONTRACT LOCK (WEEK 1–2)
 =============================================================================

@@ -88,6 +88,7 @@ class UnifiedCognitiveKernel:
         "_governance_router",
         "_spine",
         "_event_fabric",         # Stage 5 — Unified Event Fabric
+        "_tier_report",
     )
 
     def __init__(self) -> None:
@@ -105,6 +106,7 @@ class UnifiedCognitiveKernel:
         self._governance_router: Any = None
         self._spine: Any = None
         self._event_fabric: Any = None
+        self._tier_report: Any = None
 
     # ------------------------------------------------------------------
     # Activation
@@ -161,6 +163,14 @@ class UnifiedCognitiveKernel:
                                   "runtime.cognitive_spine",
                                   "get_cognitive_spine")
 
+        try:
+            from runtime.tier_wiring import complete_tier_runtime
+
+            self._tier_report = complete_tier_runtime(kernel=None, state=None)
+        except Exception as exc:
+            _logger.debug("UnifiedCognitiveKernel: tier_wiring: %s", exc)
+            self._tier_report = None
+
         _logger.info(
             "UnifiedCognitiveKernel: ACTIVE — %d/%d components live",
             self._count_active(),
@@ -204,7 +214,16 @@ class UnifiedCognitiveKernel:
                 errors += 1
                 _logger.debug("UnifiedCognitiveKernel: spine error: %s", exc)
 
-        # Phase C — telemetry gauge sampling
+        # Phase C — memory synchronization (Tier 2)
+        if self._memory_coordinator is not None and seq % 5 == 0:
+            try:
+                if hasattr(self._memory_coordinator, "sync"):
+                    self._memory_coordinator.sync(ts_ns=ts_ns)
+            except Exception as exc:
+                errors += 1
+                _logger.debug("UnifiedCognitiveKernel: memory sync error: %s", exc)
+
+        # Phase D — telemetry gauge sampling
         if self._telemetry_aggregator is not None:
             try:
                 self._telemetry_aggregator.poll(ts_ns)
@@ -240,6 +259,15 @@ class UnifiedCognitiveKernel:
             "active": active,
             "tick_seq": seq,
             "error_count": errs,
+            "tier_wiring": (
+                {
+                    "tier0_complete": self._tier_report.tier0_complete,
+                    "tier1_complete": self._tier_report.tier1_complete,
+                    "tier2_complete": self._tier_report.tier2_complete,
+                }
+                if self._tier_report is not None
+                else None
+            ),
             "components": {
                 "scheduler":          self._scheduler is not None,
                 "state_sync":         self._state_sync is not None,

@@ -66,6 +66,8 @@ class CognitiveChannel(StrEnum):
     RESEARCH_COMPLETE = auto()
     MARKET_TICK = auto()          # PriceTick from live ingestion or paper feed
     RISK_BREACH = auto()          # RiskTracker kill condition triggered
+    # Manifest §5: governance.market_context_projector → INDIRA learning bridge
+    GOVERNED_MARKET_CONTEXT = auto()
 
 
 Handler = Callable[[dict[str, Any]], None]

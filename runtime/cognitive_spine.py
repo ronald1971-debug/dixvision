@@ -11,7 +11,9 @@ one CognitiveSpine; all cognitive ticks flow through it in a fixed sequence:
 
 On activate():
   - CognitiveTelemetry  subscribed to all 8 event bus channels (spans)
-  - DyonSignalBridge    subscribed to DYON + risk channels (INDIRA coupling)
+  - MarketContextProjector  Dyon/Risk → GOVERNED_MARKET_CONTEXT (governance)
+  - DyonSignalBridge        INDIRA consumes governed context only
+  - CognitiveDevelopmentPipeline  Manifest §6 FSM
   - TraderIntelligence  seeded with 86 historical archetypes
 
 Replaces the duplicate driving in RuntimeBootstrap._tick_loop() phases 5-7
@@ -63,6 +65,7 @@ class CognitiveSpine:
         "_governed_pipeline",
         "_sim_dominance",
         "_dyon_engineering",
+        "_cognitive_pipeline",
     )
 
     def __init__(
@@ -96,6 +99,7 @@ class CognitiveSpine:
         self._governed_pipeline: Any = None
         self._sim_dominance: Any = None
         self._dyon_engineering: Any = None
+        self._cognitive_pipeline: Any = None
 
     # ------------------------------------------------------------------
     # Activation — idempotent, safe to call from any thread
@@ -114,6 +118,7 @@ class CognitiveSpine:
         _logger.info("CognitiveSpine: activating all cognitive subsystems")
 
         self._activate_telemetry()
+        self._activate_market_context_projector()
         self._activate_signal_bridge()
         self._activate_trader_intelligence()
         self._activate_dyon_engineering()
@@ -139,7 +144,9 @@ class CognitiveSpine:
 
         ran: dict[str, bool] = {}
 
-        # Phase 0 — CognitiveGovernance integrity gate
+        # Phase 0 — Cognitive development pipeline (§6) + CognitiveGovernance
+        self._run_cognitive_pipeline(ts_ns)
+        ran["cognitive_pipeline"] = True
         if seq % self._cogov_every == 0:
             self._run_cogov(ts_ns)
             ran["cogov"] = True
@@ -345,13 +352,29 @@ class CognitiveSpine:
         except Exception as exc:
             _logger.debug("CognitiveSpine: CognitiveTelemetry unavailable: %s", exc)
 
+    def _activate_market_context_projector(self) -> None:
+        try:
+            from governance.market_context_projector import get_market_context_projector
+            get_market_context_projector().activate()
+            _logger.info("CognitiveSpine: MarketContextProjector activated")
+        except Exception as exc:
+            _logger.debug("CognitiveSpine: MarketContextProjector unavailable: %s", exc)
+
     def _activate_signal_bridge(self) -> None:
         try:
             from intelligence_engine.cognitive.dyon_signal_bridge import get_dyon_signal_bridge
             get_dyon_signal_bridge().activate()
-            _logger.info("CognitiveSpine: DyonSignalBridge activated")
+            _logger.info("CognitiveSpine: DyonSignalBridge activated (governed channel)")
         except Exception as exc:
             _logger.debug("CognitiveSpine: DyonSignalBridge unavailable: %s", exc)
+
+    def _run_cognitive_pipeline(self, ts_ns: int) -> None:
+        try:
+            obj = self._get_cognitive_pipeline()
+            if obj is not None:
+                obj.tick(ts_ns=ts_ns)
+        except Exception as exc:
+            _logger.debug("CognitiveSpine.cognitive_pipeline error: %s", exc)
 
     def _activate_trader_intelligence(self) -> None:
         try:
@@ -378,6 +401,7 @@ class CognitiveSpine:
         self._get_indira()
         self._get_evolution()
         self._get_governed_pipeline()
+        self._get_cognitive_pipeline()
         self._get_sim_dominance()
         self._get_dyon_engineering()
 
@@ -469,6 +493,17 @@ class CognitiveSpine:
             except Exception:
                 pass
         return self._dyon_engineering
+
+    def _get_cognitive_pipeline(self) -> Any:
+        if self._cognitive_pipeline is None:
+            try:
+                from intelligence_engine.cognitive.cognitive_development_pipeline import (
+                    get_cognitive_development_pipeline,
+                )
+                self._cognitive_pipeline = get_cognitive_development_pipeline()
+            except Exception:
+                pass
+        return self._cognitive_pipeline
 
     def _activate_dyon_engineering(self) -> None:
         try:

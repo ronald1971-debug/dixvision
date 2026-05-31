@@ -316,6 +316,7 @@ class _State:
     """Single-process holder for engines + ring buffer."""
 
     def __init__(self) -> None:
+        self._tier_completion: Any = None
         # P1.2 — the historic ~480-line constructor was split into
         # named ``_build_*`` sections on this class so a reader can
         # navigate one concern at a time. Construction order is
@@ -1261,13 +1262,24 @@ class _State:
         for _name, engine in self.all_engines().items():
             self.system_kernel.register_service(EngineServiceAdapter(engine))
 
-        # Wire system_monitor + mind plugins into kernel (Step 10 follow-up)
+        # Tier 1 — extended service registration + Tier 2 runtime wiring
         try:
-            from runtime.service_wiring import register_all_services
+            from runtime.service_registry import register_tier_services
+            from runtime.tier_wiring import complete_tier_runtime
 
-            register_all_services(self.system_kernel)
+            register_tier_services(self.system_kernel)
+            self._tier_completion = complete_tier_runtime(
+                kernel=self.system_kernel,
+                state=self,
+            )
+            _logger.info(
+                "[BOOT] tier_wiring: T0=%s T1=%s T2=%s",
+                self._tier_completion.tier0_complete,
+                self._tier_completion.tier1_complete,
+                self._tier_completion.tier2_complete,
+            )
         except Exception as exc:
-            _logger.warning("[BOOT] service_wiring: %s", exc)
+            _logger.warning("[BOOT] tier_wiring: %s", exc)
 
         self.system_kernel.boot()
 

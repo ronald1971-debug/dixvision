@@ -198,6 +198,22 @@ class RuntimeBootstrap:
             self._kernel.on_snapshot_change(_on_kernel_snapshot)
             logger.info("Kernel snapshot listener registered for governance alignment")
 
+        # Tier 1–2 completion (contracts, services, plugins, evolution, learning, memory)
+        try:
+            from runtime.tier_wiring import complete_tier_runtime
+
+            report = complete_tier_runtime(kernel=getattr(state, "system_kernel", None), state=state)
+            logger.info(
+                "Tier wiring: T0=%s T1=%s T2=%s (services=%d plugins=%d)",
+                report.tier0_complete,
+                report.tier1_complete,
+                report.tier2_complete,
+                report.services_registered,
+                report.plugins_loaded,
+            )
+        except Exception as exc:
+            logger.debug("Tier wiring skipped: %s", exc)
+
         # Run initial readiness check
         report = self._readiness.assess()
         logger.info(
