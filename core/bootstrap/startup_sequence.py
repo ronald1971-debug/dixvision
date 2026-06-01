@@ -6,7 +6,7 @@ Defines the exact sequence of operations for system startup:
 3. Load operator authority from registry
 4. Boot governance engine (StateTransitionManager)
 5. Boot intelligence engine (Indira)
-6. Boot execution engine (adapters + gate)
+6. Boot execution engine (adapters )
 7. Boot learning engine (vector memory + evolution)
 8. Boot system engine (monitors + heartbeat)
 9. Register plugins (auto-activate all connected)

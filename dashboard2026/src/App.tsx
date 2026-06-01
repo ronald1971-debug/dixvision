@@ -36,6 +36,11 @@ import { StrategiesPage } from "@/pages/StrategiesPage";
 import { SystemHealthPage } from "@/pages/SystemHealthPage";
 import { TestingPage } from "@/pages/TestingPage";
 import { TradingPage } from "@/pages/TradingPage";
+import { SignalsPage } from "@/pages/SignalsPage";
+import { FormsPage } from "@/pages/FormsPage";
+import { AdaptersPage } from "@/pages/AdaptersPage";
+import { LedgerPage } from "@/pages/LedgerPage";
+import { SecurityPage } from "@/pages/SecurityPage";
 import { DexPage } from "@/pages/asset/DexPage";
 import { ForexPage } from "@/pages/asset/ForexPage";
 import { NftPage } from "@/pages/asset/NftPage";
@@ -111,6 +116,16 @@ function renderRoute(route: Route) {
       return <FabricPage />;
     case "simulation":
       return <SimulationPage />;
+    case "signals":
+      return <SignalsPage />;
+    case "forms":
+      return <FormsPage />;
+    case "adapters":
+      return <AdaptersPage />;
+    case "ledger":
+      return <LedgerPage />;
+    case "security":
+      return <SecurityPage />;
   }
 }
 
