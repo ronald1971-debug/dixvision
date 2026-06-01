@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchTradingForms, submitOrder, cancelOrder, cancelAllOrders, activateStrategy, pauseStrategy, fetchOpenOrders, fetchRecentFills } from "@/api/signals";
+import type { TradingFormsPayload } from "@/api/signals";
+import { fetchTradingForms, submitOrder, activateStrategy, pauseStrategy, cancelAllOrders } from "@/api/signals";
 
 const FORM_LIST = ["SPOT", "MARGIN", "PERP", "FUTURES", "OPTIONS", "DEX_SWAP", "DEX_LP"] as const;
 
@@ -8,7 +9,7 @@ function FormTile({
   q,
 }: {
   name: (typeof FORM_LIST)[number];
-  q: ReturnType<typeof useQuery>;
+  q: { data?: TradingFormsPayload };
 }) {
   const data = q.data?.forms?.find((f: { form: string }) => f.form === name);
   const queryClient = useQueryClient();
@@ -91,7 +92,8 @@ export function FormsPage() {
   });
 
   const cancelAll = useMutation({
-    mutationFn: cancelAllOrders,
+    mutationFn: ({ signal }: { signal?: AbortSignal } = {}) =>
+      cancelAllOrders(signal),
   });
 
   return (

@@ -84,7 +84,7 @@ export function LedgerPage() {
                 </td>
               </tr>
             )}
-            {(events as Array<{ seq: number; ts_utc: string; stream: string; sub_type: string; hash_prefix: string }>).map((e) => (
+            {(events as LedgerEvent[]).map((e) => (
               <tr key={e.seq} className="border-t border-border">
                 <td className="px-3 py-1.5 font-mono text-slate-300">{e.seq}</td>
                 <td className="px-3 py-1.5 font-mono text-slate-400">{e.ts_utc?.split("T")[1]?.split("Z")[0] ?? e.ts_utc}</td>

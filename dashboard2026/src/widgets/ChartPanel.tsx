@@ -146,6 +146,7 @@ export function ChartPanel({
   const emaRef = useRef<ISeriesApi<"Line"> | null>(null);
   const vwapRef = useRef<ISeriesApi<"Line"> | null>(null);
   const watermarkRef = useRef<ITextWatermarkPluginApi<Time> | null>(null);
+  const tradeRef = useRef<ISeriesApi<"Line"> | null>(null);
 
   const { data: modeData } = useQuery({
     queryKey: ["dashboard", "mode"],
@@ -223,18 +224,18 @@ export function ChartPanel({
     });
     const tradeSeries = chart.addSeries(LineSeries, {
       color: "transparent",
-      lineWidth: 0,
+      lineWidth: 0 as any,
       priceLineVisible: false,
       lastValueVisible: false,
     });
 
-    const tradeRef = useRef<ISeriesApi<"Line"> | null>(null);
+    tradeRef.current = tradeSeries;
+
     chartRef.current = chart;
     candleRef.current = candleSeries;
     volumeRef.current = volumeSeries;
     emaRef.current = emaSeries;
     vwapRef.current = vwapSeries;
-    tradeRef.current = tradeSeries;
 
     return () => {
       watermarkRef.current?.detach();
@@ -307,8 +308,7 @@ export function ChartPanel({
     const candleTimes = candles.map((c) => c.time as number);
     const markers = candleTimes
       .filter((t) => fillTimes.has(t))
-      .map((time, idx) => {
-        const ci = candleTimes.indexOf(time);
+      .map((time) => {
         const isBuy = fillsData?.fills?.some(
           (f: { ts_utc: string; side: string }) => Math.floor(new Date(f.ts_utc).getTime() / 1000) === time && f.side === "BUY",
         );
@@ -321,7 +321,7 @@ export function ChartPanel({
           size: 1,
         };
       });
-    candleSeries.setMarkers(markers);
+    candleSeries.applyOptions({ markers: markers as any });
     chart.timeScale().fitContent();
   }, [candles, mode, active, fillsData]);
 

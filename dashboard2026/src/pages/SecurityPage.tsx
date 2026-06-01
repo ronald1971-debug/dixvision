@@ -15,7 +15,7 @@ export function SecurityPage() {
   });
 
   const ksQ = useMutation({
-    mutationFn: triggerKillSwitch,
+    mutationFn: () => triggerKillSwitch(""),
   });
 
   const totalViolations = secQ.data?.total ?? 0;

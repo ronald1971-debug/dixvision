@@ -120,7 +120,8 @@ export function OpenOrdersTable() {
   });
 
   const cancelAllM = useMutation({
-    mutationFn: cancelAllOrders,
+    mutationFn: ({ signal }: { signal?: AbortSignal } = {}) =>
+      cancelAllOrders(signal),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["orders/open"] }),
   });
 
