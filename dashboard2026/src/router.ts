@@ -54,7 +54,8 @@ export type SystemRoute =
   | "forms"
   | "adapters"
   | "ledger"
-  | "security";
+  | "security"
+  | "hazards";
 
 export type Route = AssetRoute | SystemRoute;
 
@@ -98,6 +99,7 @@ const SYSTEM_ROUTES: readonly SystemRoute[] = [
   "adapters",
   "ledger",
   "security",
+  "hazards",
 ];
 
 const ALL_ROUTES: readonly Route[] = [...ASSET_ROUTES, ...SYSTEM_ROUTES];

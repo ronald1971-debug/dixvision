@@ -17,7 +17,13 @@ export type HotkeyAction =
   | "go-governance"
   | "go-testing"
   | "go-ai"
-  | "kill-switch";
+  | "kill-switch"
+  | "go-signals"
+  | "go-forms"
+  | "go-adapters"
+  | "go-ledger"
+  | "go-security"
+  | "go-hazards";
 
 export interface HotkeyBinding {
   action: HotkeyAction;
@@ -32,6 +38,10 @@ export const HOTKEY_DEFAULTS: readonly HotkeyBinding[] = [
   { action: "go-governance", combo: "ctrl+2", label: "Go to governance" },
   { action: "go-testing", combo: "ctrl+3", label: "Go to testing" },
   { action: "go-ai", combo: "ctrl+4", label: "Go to AI" },
+  { action: "go-signals", combo: "ctrl+5", label: "Go to signals" },
+  { action: "go-forms", combo: "ctrl+6", label: "Go to forms" },
+  { action: "go-ledger", combo: "ctrl+7", label: "Go to ledger" },
+  { action: "go-security", combo: "ctrl+8", label: "Go to security" },
   { action: "kill-switch", combo: "ctrl+shift+k", label: "Kill switch" },
 ];
 

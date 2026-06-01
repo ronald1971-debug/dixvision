@@ -16,6 +16,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { fetchMode } from "@/api/dashboard";
+import { fetchRecentFills } from "@/api/signals";
 
 /**
  * Main chart panel — TradingView Lightweight Charts v5 (PR-#2 spec
@@ -153,6 +154,12 @@ export function ChartPanel({
   });
   const mode = modeData?.current_mode ?? "SAFE";
 
+  const { data: fillsData } = useQuery({
+    queryKey: ["fills", "chart"],
+    queryFn: ({ signal }) => fetchRecentFills(20, signal),
+    refetchInterval: 5000,
+  });
+
   const candles = useMemo(
     () => generateMockCandles(symbol, timeframe),
     [symbol, timeframe],
@@ -214,12 +221,20 @@ export function ChartPanel({
       color: "#3aa0ff",
       lineWidth: 2,
     });
+    const tradeSeries = chart.addSeries(LineSeries, {
+      color: "transparent",
+      lineWidth: 0,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
 
+    const tradeRef = useRef<ISeriesApi<"Line"> | null>(null);
     chartRef.current = chart;
     candleRef.current = candleSeries;
     volumeRef.current = volumeSeries;
     emaRef.current = emaSeries;
     vwapRef.current = vwapSeries;
+    tradeRef.current = tradeSeries;
 
     return () => {
       watermarkRef.current?.detach();
@@ -230,6 +245,7 @@ export function ChartPanel({
       volumeRef.current = null;
       emaRef.current = null;
       vwapRef.current = null;
+      tradeRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -241,7 +257,8 @@ export function ChartPanel({
     const volumeSeries = volumeRef.current;
     const emaSeries = emaRef.current;
     const vwapSeries = vwapRef.current;
-    if (!chart || !candleSeries || !volumeSeries || !emaSeries || !vwapSeries) {
+    const tradeSeries = tradeRef.current;
+    if (!chart || !candleSeries || !volumeSeries || !emaSeries || !vwapSeries || !tradeSeries) {
       return;
     }
     watermarkRef.current?.applyOptions({
@@ -280,8 +297,33 @@ export function ChartPanel({
     volumeSeries.setData(volumeData);
     emaSeries.setData(active.has("EMA(20)") ? emaData : []);
     vwapSeries.setData(active.has("VWAP") ? vwapData : []);
+    const fillTimes = new Set<number>();
+    if (fillsData?.fills) {
+      for (const f of fillsData.fills) {
+        const tsSec = Math.floor(new Date(f.ts_utc).getTime() / 1000);
+        fillTimes.add(tsSec);
+      }
+    }
+    const candleTimes = candles.map((c) => c.time as number);
+    const markers = candleTimes
+      .filter((t) => fillTimes.has(t))
+      .map((time, idx) => {
+        const ci = candleTimes.indexOf(time);
+        const isBuy = fillsData?.fills?.some(
+          (f: { ts_utc: string; side: string }) => Math.floor(new Date(f.ts_utc).getTime() / 1000) === time && f.side === "BUY",
+        );
+        return {
+          time: time as Time,
+          position: isBuy ? "below" : "above",
+          color: isBuy ? "#3ddc84" : "#ff5a5a",
+          shape: "circle" as const,
+          text: isBuy ? "BUY" : "SELL",
+          size: 1,
+        };
+      });
+    candleSeries.setMarkers(markers);
     chart.timeScale().fitContent();
-  }, [candles, mode, active]);
+  }, [candles, mode, active, fillsData]);
 
   return (
     <div className="flex h-full flex-col rounded border border-border bg-surface">

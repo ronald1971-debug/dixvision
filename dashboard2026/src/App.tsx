@@ -11,6 +11,15 @@ import { PromoteChain } from "@/components/PromoteChain";
 import { Sidebar } from "@/components/Sidebar";
 import { ToastHost } from "@/components/ToastHost";
 import { WidgetTogglePanel } from "@/components/WidgetTogglePanel";
+import { KillSwitchPill } from "@/components/KillSwitchPill";
+import { DomainIndicator } from "@/components/DomainIndicator";
+import { TradingStatusPill } from "@/components/TradingStatusPill";
+import { SignalsPage } from "@/pages/SignalsPage";
+import { FormsPage } from "@/pages/FormsPage";
+import { AdaptersPage } from "@/pages/AdaptersPage";
+import { LedgerPage } from "@/pages/LedgerPage";
+import { SecurityPage } from "@/pages/SecurityPage";
+import { HazardsPage } from "@/pages/HazardsPage";
 import { AIPage } from "@/pages/AIPage";
 import { AlertsPage } from "@/pages/AlertsPage";
 import { AuditPage } from "@/pages/AuditPage";
@@ -20,8 +29,6 @@ import { CredentialsPage } from "@/pages/CredentialsPage";
 import { DyonLearningPage } from "@/pages/DyonLearningPage";
 import { FabricPage } from "@/pages/FabricPage";
 import { MemoryPage } from "@/pages/MemoryPage";
-import { SimulationPage } from "@/pages/SimulationPage";
-import { ObservatoryPage } from "@/pages/ObservatoryPage";
 import { GovernancePage } from "@/pages/GovernancePage";
 import { IndiraLearningPage } from "@/pages/IndiraLearningPage";
 import { MarketContextPage } from "@/pages/MarketContextPage";
@@ -36,11 +43,8 @@ import { StrategiesPage } from "@/pages/StrategiesPage";
 import { SystemHealthPage } from "@/pages/SystemHealthPage";
 import { TestingPage } from "@/pages/TestingPage";
 import { TradingPage } from "@/pages/TradingPage";
-import { SignalsPage } from "@/pages/SignalsPage";
-import { FormsPage } from "@/pages/FormsPage";
-import { AdaptersPage } from "@/pages/AdaptersPage";
-import { LedgerPage } from "@/pages/LedgerPage";
-import { SecurityPage } from "@/pages/SecurityPage";
+import { SimulationPage } from "@/pages/SimulationPage";
+import { ObservatoryPage } from "@/pages/ObservatoryPage";
 import { DexPage } from "@/pages/asset/DexPage";
 import { ForexPage } from "@/pages/asset/ForexPage";
 import { NftPage } from "@/pages/asset/NftPage";
@@ -126,6 +130,10 @@ function renderRoute(route: Route) {
       return <LedgerPage />;
     case "security":
       return <SecurityPage />;
+    case "hazards":
+      return <HazardsPage />;
+    default:
+      return <OperatorPage />;
   }
 }
 
@@ -151,6 +159,12 @@ export function App() {
     "go-governance": () => goRoute("governance"),
     "go-testing": () => goRoute("testing"),
     "go-ai": () => goRoute("ai"),
+    "go-signals": () => goRoute("signals"),
+    "go-forms": () => goRoute("forms"),
+    "go-adapters": () => goRoute("adapters"),
+    "go-ledger": () => goRoute("ledger"),
+    "go-security": () => goRoute("security"),
+    "go-hazards": () => goRoute("hazards"),
     "kill-switch": () => {
       pushToast("Kill switch armed", {
         tone: "danger",
@@ -194,6 +208,9 @@ export function App() {
             <ModeRibbon />
           </div>
           <AutonomyRibbon />
+          <KillSwitchPill />
+          <DomainIndicator />
+          <TradingStatusPill />
           <LiveStatusPill />
           <PreferencesBar />
         </div>

@@ -5,6 +5,7 @@ import { FundingHistory } from "@/widgets/positions/FundingHistory";
 import { IntradayPnLCurve } from "@/widgets/positions/IntradayPnLCurve";
 import { OpenOrdersPanel } from "@/widgets/positions/OpenOrdersPanel";
 import { RiskParityAllocator } from "@/widgets/positions/RiskParityAllocator";
+import { PositionManager } from "@/widgets/positions/PositionManager";
 import { WidgetSlot } from "@/components/WidgetSlot";
 
 export function PositionsPage() {
@@ -21,6 +22,9 @@ export function PositionsPage() {
       </WidgetSlot>
       <WidgetSlot widgetKey="positions:ExposureBreakdown" className="min-h-[360px]">
         <ExposureBreakdown />
+      </WidgetSlot>
+      <WidgetSlot widgetKey="positions:PositionManager" className="min-h-[360px] xl:col-span-2">
+        <PositionManager />
       </WidgetSlot>
       <WidgetSlot widgetKey="positions:FillsHistory" className="min-h-[360px] xl:col-span-2">
         <FillsHistory />

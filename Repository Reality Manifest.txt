@@ -1,7 +1,7 @@
 =============================================================================
 DIX VISION v42.2
 REPOSITORY-ALIGNED CANONICAL DIRECTORY TREE
-(ACTUAL ZIP + INTENDED ARCHITECTURE RECONCILIATION)
+ INTENDED ARCHITECTURE RECONCILIATION)
 ===================================================
 
 # ROOT

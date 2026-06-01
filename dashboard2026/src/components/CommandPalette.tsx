@@ -67,6 +67,12 @@ const ROUTE_LABELS: Record<Route, string> = {
   memory: "Memory Layer",
   fabric: "Event Fabric",
   simulation: "Simulation",
+  signals: "Signals",
+  forms: "Forms",
+  adapters: "Adapters",
+  ledger: "Ledger",
+  security: "Security",
+  hazards: "Hazards",
 };
 
 function buildNavActions(onNavigate: (route: Route) => void): CommandAction[] {

@@ -3,7 +3,6 @@ import {
   Archive,
   Banknote,
   BarChart3,
-  Bell,
   Bot,
   Brain,
   Briefcase,
@@ -25,12 +24,14 @@ import {
   Puzzle,
   Radar,
   ShieldCheck,
-  Shield,
+  ShieldAlert,
   Sparkles,
   Target,
   Telescope,
   Wrench,
   Zap,
+  FileText,
+  AlertTriangle,
 } from "lucide-react";
 import { type ComponentType } from "react";
 
@@ -58,177 +59,63 @@ const ASSET_NAV: Record<AssetRoute, NavItem<AssetRoute>> = {
   nft: { key: "nft", label: "NFT", href: "#/nft", icon: ImageIcon },
 };
 
+const DYON_NAV: Record<string, NavItem<SystemRoute>> = {
+  signals: { key: "signals", label: "Signals", href: "#/signals", icon: Zap },
+  adapters: { key: "adapters", label: "Adapters", href: "#/adapters", icon: Network },
+  hazards: { key: "hazards", label: "Hazards", href: "#/hazards", icon: AlertTriangle },
+  syshealth: { key: "syshealth", label: "Sys Health", href: "#/syshealth", icon: Heart },
+};
+
+const INDIRA_NAV: Record<string, NavItem<SystemRoute>> = {
+  forms: { key: "forms", label: "Forms", href: "#/forms", icon: Layers },
+  trading: { key: "trading", label: "Trading", href: "#/trading", icon: Target },
+  positions: { key: "positions", label: "Positions", href: "#/positions", icon: Briefcase },
+  strategies: { key: "strategies", label: "Strategies", href: "#/strategies", icon: Activity },
+};
+
+const GOVERNANCE_NAV: Record<string, NavItem<SystemRoute>> = {
+  security: { key: "security", label: "Security", href: "#/security", icon: ShieldCheck },
+  governance: { key: "governance", label: "Governance", href: "#/governance", icon: ShieldAlert },
+  killswitch: { key: "hazards", label: "Kill Switch", href: "#/hazards", icon: ShieldAlert },
+};
+
+const LEDGER_NAV: Record<string, NavItem<SystemRoute>> = {
+  ledger: { key: "ledger", label: "Ledger", href: "#/ledger", icon: FileText },
+  audit: { key: "audit", label: "Audit", href: "#/audit", icon: ClipboardList },
+};
+
 const SYSTEM_NAV: Record<SystemRoute, NavItem<SystemRoute>> = {
-  operator: {
-    key: "operator",
-    label: "Operator",
-    href: "#/operator",
-    icon: Bot,
-  },
-  credentials: {
-    key: "credentials",
-    label: "Credentials",
-    href: "#/credentials",
-    icon: KeyRound,
-  },
+  operator: { key: "operator", label: "Operator", href: "#/operator", icon: Bot },
+  credentials: { key: "credentials", label: "Credentials", href: "#/credentials", icon: KeyRound },
   chat: { key: "chat", label: "Chat", href: "#/chat", icon: MessageSquare },
-  indira: {
-    key: "indira",
-    label: "Indira learn",
-    href: "#/indira",
-    icon: Brain,
-  },
+  indira: { key: "indira", label: "Indira learn", href: "#/indira", icon: Brain },
   dyon: { key: "dyon", label: "Dyon learn", href: "#/dyon", icon: Wrench },
-  observatory: {
-    key: "observatory",
-    label: "Observatory",
-    href: "#/observatory",
-    icon: Telescope,
-  },
-  testing: {
-    key: "testing",
-    label: "Testing & Eval",
-    href: "#/testing",
-    icon: CheckSquare,
-  },
-  onchain: {
-    key: "onchain",
-    label: "On-chain",
-    href: "#/onchain",
-    icon: Coins,
-  },
-  ai: {
-    key: "ai",
-    label: "AI · ASKB",
-    href: "#/ai",
-    icon: Sparkles,
-  },
-  orderflow: {
-    key: "orderflow",
-    label: "Order Flow",
-    href: "#/orderflow",
-    icon: CandlestickChart,
-  },
-  governance: {
-    key: "governance",
-    label: "Governance",
-    href: "#/governance",
-    icon: ShieldCheck,
-  },
-  risk: {
-    key: "risk",
-    label: "Risk",
-    href: "#/risk",
-    icon: Gauge,
-  },
-  charting: {
-    key: "charting",
-    label: "Charting",
-    href: "#/charting",
-    icon: LineChart,
-  },
-  market: {
-    key: "market",
-    label: "Market",
-    href: "#/market",
-    icon: Compass,
-  },
-  positions: {
-    key: "positions",
-    label: "Positions",
-    href: "#/positions",
-    icon: Briefcase,
-  },
-  trading: {
-    key: "trading",
-    label: "Trading",
-    href: "#/trading",
-    icon: Target,
-  },
-  plugins: {
-    key: "plugins",
-    label: "Plugins",
-    href: "#/plugins",
-    icon: Puzzle,
-  },
-  syshealth: {
-    key: "syshealth",
-    label: "Sys Health",
-    href: "#/syshealth",
-    icon: Heart,
-  },
-  alerts: {
-    key: "alerts",
-    label: "Alerts",
-    href: "#/alerts",
-    icon: Bell,
-  },
-  audit: {
-    key: "audit",
-    label: "Audit",
-    href: "#/audit",
-    icon: ClipboardList,
-  },
-  scout: {
-    key: "scout",
-    label: "Scout",
-    href: "#/scout",
-    icon: Radar,
-  },
-  strategies: {
-    key: "strategies",
-    label: "Strategies",
-    href: "#/strategies",
-    icon: Activity,
-  },
-  memory: {
-    key: "memory",
-    label: "Memory Layer",
-    href: "#/memory",
-    icon: Archive,
-  },
-  fabric: {
-    key: "fabric",
-    label: "Event Fabric",
-    href: "#/fabric",
-    icon: Network,
-  },
-  simulation: {
-    key: "simulation",
-    label: "Simulation",
-    href: "#/simulation",
-    icon: Activity,
-  },
-  signals: {
-    key: "signals",
-    label: "Signals",
-    href: "#/signals",
-    icon: Zap,
-  },
-  forms: {
-    key: "forms",
-    label: "Trading Forms",
-    href: "#/forms",
-    icon: Layers,
-  },
-  adapters: {
-    key: "adapters",
-    label: "Adapters",
-    href: "#/adapters",
-    icon: Network,
-  },
-  ledger: {
-    key: "ledger",
-    label: "Ledger",
-    href: "#/ledger",
-    icon: Archive,
-  },
-  security: {
-    key: "security",
-    label: "Security",
-    href: "#/security",
-    icon: Shield,
-  },
+  observatory: { key: "observatory", label: "Observatory", href: "#/observatory", icon: Telescope },
+  testing: { key: "testing", label: "Testing & Eval", href: "#/testing", icon: CheckSquare },
+  onchain: { key: "onchain", label: "On-chain", href: "#/onchain", icon: Coins },
+  ai: { key: "ai", label: "AI ASKB", href: "#/ai", icon: Sparkles },
+  orderflow: { key: "orderflow", label: "Order Flow", href: "#/orderflow", icon: CandlestickChart },
+  governance: { key: "governance", label: "Governance", href: "#/governance", icon: ShieldAlert },
+  risk: { key: "risk", label: "Risk", href: "#/risk", icon: Gauge },
+  charting: { key: "charting", label: "Charting", href: "#/charting", icon: LineChart },
+  market: { key: "market", label: "Market", href: "#/market", icon: Compass },
+  positions: { key: "positions", label: "Positions", href: "#/positions", icon: Briefcase },
+  trading: { key: "trading", label: "Trading", href: "#/trading", icon: Target },
+  plugins: { key: "plugins", label: "Plugins", href: "#/plugins", icon: Puzzle },
+  syshealth: { key: "syshealth", label: "Sys Health", href: "#/syshealth", icon: Heart },
+  alerts: { key: "alerts", label: "Alerts", href: "#/alerts", icon: AlertTriangle },
+  audit: { key: "audit", label: "Audit", href: "#/audit", icon: ClipboardList },
+  scout: { key: "scout", label: "Scout", href: "#/scout", icon: Radar },
+  strategies: { key: "strategies", label: "Strategies", href: "#/strategies", icon: Activity },
+  memory: { key: "memory", label: "Memory Layer", href: "#/memory", icon: Archive },
+  fabric: { key: "fabric", label: "Event Fabric", href: "#/fabric", icon: Network },
+  simulation: { key: "simulation", label: "Simulation", href: "#/simulation", icon: Activity },
+  signals: { key: "signals", label: "Signals", href: "#/signals", icon: Zap },
+  forms: { key: "forms", label: "Forms", href: "#/forms", icon: Layers },
+  adapters: { key: "adapters", label: "Adapters", href: "#/adapters", icon: Network },
+  ledger: { key: "ledger", label: "Ledger", href: "#/ledger", icon: FileText },
+  security: { key: "security", label: "Security", href: "#/security", icon: ShieldCheck },
+  hazards: { key: "hazards", label: "Hazards", href: "#/hazards", icon: AlertTriangle },
 };
 
 export interface SidebarProps {
@@ -259,6 +146,50 @@ export function Sidebar({ active, collapsed, onToggle }: SidebarProps) {
           <ChevronLeft className="h-4 w-4" />
         )}
       </button>
+
+      <SidebarSection title="DYON (System)" collapsed={collapsed}>
+        {Object.values(DYON_NAV).map((item) => (
+          <SidebarLink
+            key={item.key}
+            item={item}
+            isActive={active === item.key}
+            collapsed={collapsed}
+          />
+        ))}
+      </SidebarSection>
+
+      <SidebarSection title="INDIRA (Market)" collapsed={collapsed}>
+        {Object.values(INDIRA_NAV).map((item) => (
+          <SidebarLink
+            key={item.key}
+            item={item}
+            isActive={active === item.key}
+            collapsed={collapsed}
+          />
+        ))}
+      </SidebarSection>
+
+      <SidebarSection title="GOVERNANCE" collapsed={collapsed}>
+        {Object.values(GOVERNANCE_NAV).map((item) => (
+          <SidebarLink
+            key={item.key}
+            item={item}
+            isActive={active === item.key}
+            collapsed={collapsed}
+          />
+        ))}
+      </SidebarSection>
+
+      <SidebarSection title="LEDGER" collapsed={collapsed}>
+        {Object.values(LEDGER_NAV).map((item) => (
+          <SidebarLink
+            key={item.key}
+            item={item}
+            isActive={active === item.key}
+            collapsed={collapsed}
+          />
+        ))}
+      </SidebarSection>
 
       <SidebarSection title="Assets" collapsed={collapsed}>
         {ASSET_ROUTE_LIST.map((key) => (
